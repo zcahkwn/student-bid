@@ -328,7 +328,7 @@ export const deleteClassAtomic = async (classId: string): Promise<ClassDeletionR
 // Update selection results in the database after admin selection
 export const updateSelectionResults = async (
   opportunityId: string,
-  classId: string,
+  classId: string, // Keep this parameter, even if not directly used by RPC
   selectedStudentIds: string[],
   allBidderIds: string[]
 ): Promise<void> => {
@@ -339,7 +339,7 @@ export const updateSelectionResults = async (
     console.log('Selected students:', selectedStudentIds)
     console.log('All bidders:', allBidderIds)
 
-    // Step 0: Verify bids exist for this opportunity
+    // Step 0: Verify bids exist for this opportunity (optional, can be removed if RPC handles this check)
     console.log('=== STEP 0: VERIFY BIDS EXIST ===')
     const { data: existingBids, error: verifyError } = await supabase
       .from('bids')
@@ -354,8 +354,8 @@ export const updateSelectionResults = async (
     console.log('Existing bids found:', existingBids?.length || 0)
     console.log('Existing bids details:', existingBids)
 
-    // Use a single RPC call to update all bids atomically
-    console.log('=== STEP 1: UPDATING BIDS USING RPC FUNCTION ===')
+    // Use a single RPC call to update all bids and enrollments atomically
+    console.log('=== STEP 1: CALLING RPC FUNCTION TO UPDATE SELECTION RESULTS ===')
     
     const { data: rpcResult, error: rpcError } = await supabase.rpc('update_selection_results_atomic', {
       p_opportunity_id: opportunityId,
@@ -370,53 +370,7 @@ export const updateSelectionResults = async (
 
     console.log('RPC function result:', rpcResult)
 
-    // Verify the update worked
-    console.log('=== VERIFICATION: CHECKING UPDATED BIDS ===')
-    const { data: verificationBids, error: verifyError2 } = await supabase
-      .from('bids')
-      .select('id, user_id, is_winner, bid_status')
-      .eq('opportunity_id', opportunityId)
-
-    if (!verifyError2) {
-      console.log('Final state of all bids for this opportunity:', verificationBids)
-      const winners = verificationBids?.filter(bid => bid.is_winner === true) || []
-      const losers = verificationBids?.filter(bid => bid.is_winner === false) || []
-      console.log(`Final count - Winners: ${winners.length}, Losers: ${losers.length}`)
-      console.log('Winners bid_status:', winners.map(w => w.bid_status))
-      console.log('Losers bid_status:', losers.map(l => l.bid_status))
-    }
-
-    // Step 3: Update student_enrollments table - set bidding_result for winners
-    if (selectedStudentIds.length > 0) {
-      console.log('=== STEP 2A: UPDATING WINNERS IN STUDENT_ENROLLMENTS TABLE ===')
-      const { error: winnersEnrollmentError } = await supabase
-        .from('student_enrollments')
-        .update({ bidding_result: 'won' })
-        .eq('class_id', classId)
-        .in('user_id', selectedStudentIds)
-
-      if (winnersEnrollmentError) {
-        throw new Error(`Failed to update winners in student_enrollments table: ${winnersEnrollmentError.message}`)
-      }
-      console.log(`Updated ${selectedStudentIds.length} winners in student_enrollments table`)
-    }
-
-    // Step 4: Update student_enrollments table - set bidding_result for losers
-    const nonSelectedBidders = allBidderIds.filter(id => !selectedStudentIds.includes(id))
-    if (nonSelectedBidders.length > 0) {
-      console.log('=== STEP 2B: UPDATING LOSERS IN STUDENT_ENROLLMENTS TABLE ===')
-      const { error: losersEnrollmentError } = await supabase
-        .from('student_enrollments')
-        .update({ bidding_result: 'lost' })
-        .eq('class_id', classId)
-        .in('user_id', nonSelectedBidders)
-
-      if (losersEnrollmentError) {
-        throw new Error(`Failed to update losers in student_enrollments table: ${losersEnrollmentError.message}`)
-      }
-      console.log(`Updated ${nonSelectedBidders.length} losers in student_enrollments table`)
-    }
-
+    // Verification logs can be simplified or removed as the RPC function guarantees atomicity
     console.log('=== SELECTION RESULTS UPDATE COMPLETED ===')
   } catch (error) {
     console.error('Error updating selection results:', error)
