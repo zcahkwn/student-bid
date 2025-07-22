@@ -245,23 +245,36 @@ const Index = () => {
     localStorage.setItem("classData", JSON.stringify(updatedClasses));
   };
   
-  const handleSelectionComplete = (selectedStudents: Student[]) => {
+  const handleSelectionComplete = async (selectedStudents: Student[], opportunityId?: string) => {
     if (!currentClass) return;
-    
-    const updatedClass: ClassConfig = {
-      ...currentClass,
-      selectedStudents: selectedStudents
-    };
-    
-    const updatedClasses = classes.map(c => 
-      c.id === currentClass.id ? updatedClass : c
-    );
-    
-    setClasses(updatedClasses);
-    setCurrentClass(updatedClass);
-    
-    // Also update localStorage for backward compatibility
-    localStorage.setItem("classData", JSON.stringify(updatedClasses));
+
+    // Instead of directly manipulating local state, trigger a re-fetch from the database
+    // This ensures the UI reflects the latest state from Supabase after the RPC call
+    try {
+      const updatedClasses = await fetchClasses();
+      setClasses(updatedClasses);
+
+      // Find the updated current class from the re-fetched data
+      const updatedCurrentClass = updatedClasses.find(c => c.id === currentClass.id);
+      if (updatedCurrentClass) {
+        setCurrentClass(updatedCurrentClass);
+      }
+
+      // Also update localStorage for backward compatibility
+      localStorage.setItem("classData", JSON.stringify(updatedClasses));
+
+      toast({
+        title: "Selection saved",
+        description: `The selection results have been saved and are now visible to students.`,
+      });
+    } catch (error) {
+      console.error("Error refreshing classes after selection:", error);
+      toast({
+        title: "Error saving selection",
+        description: "Failed to refresh class data after selection. Please refresh manually.",
+        variant: "destructive",
+      });
+    }
   };
   
   const handleUpdateBidOpportunity = async (opportunityId: string, updatedOpportunity: BidOpportunity) => {
