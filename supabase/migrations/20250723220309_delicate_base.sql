@@ -10,6 +10,7 @@
     - Maintain existing security policies
     - Ensure functions work with authenticated users
 */
+DROP FUNCTION reset_opportunity_selection(uuid);
 
 -- Drop the text[] version of update_selection_results_atomic if it exists
 DROP FUNCTION IF EXISTS public.update_selection_results_atomic(
