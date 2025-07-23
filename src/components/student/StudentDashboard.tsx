@@ -320,10 +320,9 @@ const StudentDashboard = () => {
                               <Badge variant="outline" className="text-xs">Bid Placed</Badge>
                             </div>
                             <div>
-                              {studentBidOpportunity.selectedStudents && 
-                               studentBidOpportunity.selectedStudents.some(s => s.id === student.id) ? (
+                              {studentInCurrentClass?.biddingResult === 'won' ? (
                                 <Badge variant="default" className="bg-green-500 text-xs">Selected</Badge>
-                              ) : getBidOpportunityStatus(studentBidOpportunity) === "Completed" ? (
+                              ) : studentInCurrentClass?.biddingResult === 'lost' ? (
                                 <Badge variant="secondary" className="text-xs">Not Selected</Badge>
                               ) : (
                                 <Badge variant="outline" className="text-xs">Pending</Badge>
