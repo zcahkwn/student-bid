@@ -192,6 +192,9 @@ export async function submitStudentBid(request: StudentBidRequest): Promise<Stud
 // Get real-time user status for a specific class
 export async function getUserStatus(userId: string, classId: string): Promise<Student | null> {
   try {
+    console.log('=== FETCHING USER STATUS ===');
+    console.log('User ID:', userId, 'Class ID:', classId);
+    
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('*')
@@ -209,6 +212,10 @@ export async function getUserStatus(userId: string, classId: string): Promise<St
       console.error('Error fetching user status:', userError || enrollmentError);
       return null;
     }
+
+    console.log('=== USER STATUS FETCHED ===');
+    console.log('User data:', user);
+    console.log('Enrollment data:', enrollment);
 
     return {
       id: user.id,
@@ -233,7 +240,8 @@ export function subscribeToUserEnrollmentUpdates(
   classId: string,
   onUpdate: (student: Student) => void
 ) {
-  console.log('Setting up real-time subscription for user:', userId, 'class:', classId);
+  console.log('=== SETTING UP REAL-TIME SUBSCRIPTION ===');
+  console.log('User ID:', userId, 'Class ID:', classId);
   
   const channel = supabase
     .channel(`user-enrollment-${userId}-${classId}`)
@@ -246,8 +254,11 @@ export function subscribeToUserEnrollmentUpdates(
         filter: `user_id=eq.${userId}.and.class_id=eq.${classId}`,
       },
       async (payload) => {
-        console.log('User enrollment update received:', payload);
-        console.log('Updated enrollment data:', payload.new);
+        console.log('=== REAL-TIME ENROLLMENT UPDATE ===');
+        console.log('Payload:', payload);
+        console.log('Previous data:', payload.old);
+        console.log('New data:', payload.new);
+        
         const updatedData = payload.new;
         
         // Fetch user data to get name, email, etc.
@@ -270,7 +281,11 @@ export function subscribeToUserEnrollmentUpdates(
             biddingResult: updatedData.bidding_result
           };
           
-          console.log('Calling onUpdate with student:', student);
+          console.log('=== CALLING onUpdate CALLBACK ===');
+          console.log('Updated student object:', student);
+          console.log('Token status changed:', payload.old?.token_status, '->', updatedData.token_status);
+          console.log('Bidding result changed:', payload.old?.bidding_result, '->', updatedData.bidding_result);
+          
           onUpdate(student);
         }
       }
@@ -284,7 +299,8 @@ export function subscribeToUserEnrollmentUpdates(
         filter: `id=eq.${userId}`,
       },
       async (payload) => {
-        console.log('User update received:', payload);
+        console.log('=== REAL-TIME USER UPDATE ===');
+        console.log('User payload:', payload);
         const updatedUserData = payload.new;
         
         // Fetch enrollment data
@@ -308,16 +324,18 @@ export function subscribeToUserEnrollmentUpdates(
             biddingResult: enrollment.bidding_result
           };
           
+          console.log('=== USER UPDATE - CALLING onUpdate ===');
+          console.log('Updated student from user change:', student);
           onUpdate(student);
         }
       }
     )
     .subscribe();
 
-  console.log('Real-time subscription established');
+  console.log('=== REAL-TIME SUBSCRIPTION ESTABLISHED ===');
   
   return () => {
-    console.log('Unsubscribing from real-time updates');
+    console.log('=== UNSUBSCRIBING FROM REAL-TIME UPDATES ===');
     supabase.removeChannel(channel);
   };
 }

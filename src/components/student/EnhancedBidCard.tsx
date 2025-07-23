@@ -121,14 +121,19 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
           {/* Real-time Status Indicator */}
           <div className="p-3 bg-gray-50 rounded-md">
             <div className="flex items-center gap-2 mb-2">
-              <Shield className="w-4 h-4 text-blue-500" />
-              <span className="text-sm font-medium">Live Status</span>
-            </div>
+              {/* Enhanced Token Status Display */}
+              {student?.tokenStatus === 'used' || student?.hasUsedToken === true ? (
+                <Badge variant="secondary" className="bg-red-100 text-red-800 animate-pulse">
+                  Token Used
             <div className="text-xs text-muted-foreground">
               User: {student?.name} | 
-              Status: {student?.hasUsedToken === true ? 'Token Used' : 'Ready to Bid'}
+              Status: {student?.tokenStatus === 'used' || student?.hasUsedToken === true ? 'Token Used' : 'Ready to Bid'}
               {student?.tokensRemaining !== undefined && (
                 <span> | Tokens: {student.tokensRemaining}</span>
+              )}
+              {/* Display bidding result if available */}
+              {student?.biddingResult && student.biddingResult !== 'pending' && (
+                <span> | Result: {student.biddingResult === 'won' ? 'Selected' : 'Not Selected'}</span>
               )}
             </div>
           </div>
@@ -166,6 +171,30 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
                   
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Status:</span>
+                    {/* Your Result Column - Display bidding outcome */}
+                    {hasStudentBid ? (
+                      <div className="flex items-center gap-2">
+                        {student.biddingResult === 'won' ? (
+                          <Badge className="bg-green-500 text-white">
+                            Won
+                          </Badge>
+                        ) : student.biddingResult === 'lost' ? (
+                          <Badge variant="secondary" className="bg-red-100 text-red-800">
+                            Lost
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
+                            Pending
+                          </Badge>
+                        )}
+                      </div>
+                    ) : (
+                      <Badge variant="outline" className="text-gray-400">
+                        No Bid
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     <Badge variant={getBidOpportunityStatus(opportunity) === "Open for Bidding" ? "default" : "secondary"}>
                       {getBidOpportunityStatus(opportunity)}
                     </Badge>
@@ -185,18 +214,25 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
                   {hasStudentBid && (
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Your Result:</span>
-                      {student.biddingResult === 'won' ? (
-                        <Badge className="bg-green-500">Selected</Badge>
-                      ) : student.biddingResult === 'lost' ? (
-                        <Badge variant="secondary">Not Selected</Badge>
+                      {/* Enhanced Result Display with Real-time Updates */}
+                      {student?.biddingResult === 'won' ? (
+                        <Badge className="bg-green-500 text-white animate-bounce">
+                          🎉 Selected
+                        </Badge>
+                      ) : student?.biddingResult === 'lost' ? (
+                        <Badge variant="secondary" className="bg-red-100 text-red-800">
+                          Not Selected
+                        </Badge>
                       ) : (
-                        <Badge variant="outline">Pending</Badge>
+                        <Badge variant="outline" className="bg-yellow-100 text-yellow-800 animate-pulse">
+                          Pending Selection
+                        </Badge>
                       )}
                     </div>
                   )}
                   
                   {/* Success Message */}
-                  {student.biddingResult === 'won' && hasStudentBid && (
+                  {student?.biddingResult === 'won' && hasStudentBid && (
                     <Alert>
                       <CheckCircle className="h-4 w-4" />
                       <AlertDescription>
@@ -237,7 +273,7 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
                   <Button 
                     className="w-full mt-4" 
                     onClick={() => handleSubmitBid(opportunity.id)}
-                    disabled={!canSubmitBid || isSubmitting}
+                    disabled={!canSubmitBid || isSubmitting || student?.tokenStatus === 'used'}
                   >
                     {isSubmitting ? (
                       <>
@@ -246,7 +282,7 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
                       </>
                     ) : hasStudentBid ? (
                       "Bid Already Submitted"
-                    ) : student?.hasUsedToken === true ? (
+                    ) : student?.tokenStatus === 'used' || student?.hasUsedToken === true ? (
                       "Token Unavailable"
                     ) : getBidOpportunityStatus(opportunity) !== "Open for Bidding" ? (
                       "Bidding Not Open"

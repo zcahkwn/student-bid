@@ -37,20 +37,28 @@ const StudentDashboard = () => {
       return;
     }
 
-    console.log('Setting up real-time subscription for user:', student.id, 'class:', currentClass.id);
+    console.log('=== SETTING UP REAL-TIME SUBSCRIPTION ===');
+    console.log('Student ID:', student.id, 'Class ID:', currentClass.id);
 
     const unsubscribe = subscribeToUserEnrollmentUpdates(
       student.id,
       currentClass.id,
       async (updatedStudent) => {
-        console.log('Received user enrollment update:', updatedStudent);
-        console.log('Updated bidding result:', updatedStudent.biddingResult);
+        console.log('=== REAL-TIME UPDATE RECEIVED ===');
+        console.log('Updated student data:', updatedStudent);
+        console.log('Token status:', updatedStudent.tokenStatus);
+        console.log('Bidding result:', updatedStudent.biddingResult);
+        console.log('Tokens remaining:', updatedStudent.tokensRemaining);
         
         // Store previous student state for comparison
         const previousStudent = student;
         
+        // Check for significant changes to show notifications
+        const tokenStatusChanged = previousStudent?.tokenStatus !== updatedStudent.tokenStatus;
+        const biddingResultChanged = previousStudent?.biddingResult !== updatedStudent.biddingResult;
+        
         // Directly update the student state with the latest enrollment data
-        console.log('Setting student state to:', updatedStudent);
+        console.log('=== UPDATING STUDENT STATE ===');
         setStudent(updatedStudent);
 
         // Update currentClass with the updated student data
@@ -148,24 +156,29 @@ const StudentDashboard = () => {
           })
         );
         
+        // Show appropriate toast notifications for status changes
         // Show toast notification for token status change
-        if (updatedStudent.hasUsedToken && !previousStudent?.hasUsedToken) {
+        if (tokenStatusChanged && updatedStudent.tokenStatus === 'used') {
           toast({
             title: "Token Status Updated",
-            description: "Your token has been used for bidding",
+            description: "Your token has been used for bidding. You can now see your bid status.",
           });
         }
         
         // Show toast notification for bidding result change
-        if (updatedStudent.biddingResult && 
-            updatedStudent.biddingResult !== previousStudent?.biddingResult &&
-            updatedStudent.biddingResult !== 'pending') {
+        if (biddingResultChanged && updatedStudent.biddingResult !== 'pending') {
+          console.log('=== BIDDING RESULT CHANGED ===');
+          console.log('Previous result:', previousStudent?.biddingResult);
+          console.log('New result:', updatedStudent.biddingResult);
+          
           const resultMessage = updatedStudent.biddingResult === 'won' 
-            ? "Congratulations! You have been selected!" 
-            : "You were not selected this time.";
+            ? "🎉 Congratulations! You have been selected for the opportunity!" 
+            : "Unfortunately, you were not selected this time. Better luck next time!";
+            
           toast({
             title: "Bidding Result Updated",
             description: resultMessage,
+            duration: updatedStudent.biddingResult === 'won' ? 10000 : 5000, // Show longer for wins
           });
         }
       }
@@ -379,7 +392,7 @@ const StudentDashboard = () => {
                         </div>
                         <div className="text-center">
                           <div className="text-2xl font-bold">
-                            {student?.hasUsedToken === true ? (
+                            {student?.tokenStatus === 'used' || student?.hasUsedToken === true ? (
                               <span className="text-red-600">0</span>
                             ) : (
                               <span className="text-green-600">1</span>
@@ -408,31 +421,62 @@ const StudentDashboard = () => {
                     <CardContent>
                       <div className="flex items-center justify-between">
                         <span>Your bidding token:</span>
-                        {student?.hasUsedToken === true ? (
-                          <Badge variant="secondary">Used</Badge>
+                        {student?.tokenStatus === 'used' || student?.hasUsedToken === true ? (
+                          <Badge variant="secondary" className="bg-red-100 text-red-800">Token Used</Badge>
                         ) : (
-                          <Badge className="bg-academy-blue">Available</Badge>
+                          <Badge className="bg-academy-blue animate-pulse">Token Available</Badge>
                         )}
                       </div>
                       
-                      {studentBidOpportunity && student?.biddingResult && ( // Ensure student.biddingResult exists
+                      {/* Enhanced Bid Status Display */}
+                      {studentBidOpportunity && student?.biddingResult && (
                         <div className="mt-4 p-3 bg-gray-50 rounded-md">
-                          <h4 className="font-medium mb-2 text-green-600">Your Bid Status</h4>
+                          <h4 className="font-medium mb-2 flex items-center gap-2">
+                            <Trophy className="w-4 h-4" />
+                            Your Bid Status
+                          </h4>
                           <div className="grid grid-cols-3 gap-2 text-sm">
                             <div className="font-medium">Event</div>
                             <div className="font-medium">Status</div>
                             <div className="font-medium">Result</div>
                             <div>{studentBidOpportunity.title}</div>
                             <div>
-                              <Badge variant="outline" className="text-xs">Bid Placed</Badge>
+                              <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800">
+                                Bid Submitted
+                              </Badge>
                             </div>
                             <div>
+                              {/* Real-time Result Display */}
                               {student.biddingResult === 'won' ? (
-                                <Badge variant="default" className="bg-green-500 text-xs">Selected</Badge>
+                                <Badge variant="default" className="bg-green-500 text-white text-xs animate-bounce">
+                                  🎉 Selected
+                                </Badge>
                               ) : student.biddingResult === 'lost' ? (
-                                <Badge variant="secondary" className="text-xs">Not Selected</Badge>
+                                <Badge variant="secondary" className="bg-red-100 text-red-800 text-xs">
+                                  Not Selected
+                                </Badge>
                               ) : (
-                                <Badge variant="outline" className="text-xs">Pending</Badge>
+                                <Badge variant="outline" className="bg-yellow-100 text-yellow-800 text-xs animate-pulse">
+                                  Pending Selection
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Additional Status Information */}
+                          <div className="mt-3 pt-3 border-t border-gray-200">
+                            <div className="text-xs text-gray-600">
+                              <div className="flex justify-between">
+                                <span>Token Status:</span>
+                                <span className={student.tokenStatus === 'used' ? 'text-red-600 font-medium' : 'text-green-600 font-medium'}>
+                                  {student.tokenStatus === 'used' ? 'Used' : 'Available'}
+                                </span>
+                              </div>
+                              {student.tokensRemaining !== undefined && (
+                                <div className="flex justify-between mt-1">
+                                  <span>Tokens Remaining:</span>
+                                  <span className="font-medium">{student.tokensRemaining}</span>
+                                </div>
                               )}
                             </div>
                           </div>
@@ -464,8 +508,23 @@ const StudentDashboard = () => {
                               <Badge variant={getBidOpportunityStatus(opportunity) === "Open for Bidding" ? "default" : "secondary"} className="mb-1">
                                 {getBidOpportunityStatus(opportunity)}
                               </Badge>
+                              {/* Enhanced Bid Status Display */}
                               {opportunity.bidders && opportunity.bidders.some(bidder => bidder.id === student.id) && (
-                                <span className="text-xs text-academy-blue">You've placed a bid</span>
+                                <div className="flex flex-col items-end gap-1">
+                                  <span className="text-xs text-academy-blue font-medium">✓ Bid Submitted</span>
+                                  {student.biddingResult && student.biddingResult !== 'pending' && (
+                                    <Badge 
+                                      variant={student.biddingResult === 'won' ? 'default' : 'secondary'}
+                                      className={`text-xs ${
+                                        student.biddingResult === 'won' 
+                                          ? 'bg-green-500 text-white' 
+                                          : 'bg-red-100 text-red-800'
+                                      }`}
+                                    >
+                                      {student.biddingResult === 'won' ? 'Selected' : 'Not Selected'}
+                                    </Badge>
+                                  )}
+                                </div>
                               )}
                             </div>
                           </div>
@@ -513,7 +572,24 @@ const StudentDashboard = () => {
                             </div>
                             {opportunity.bidders && opportunity.bidders.some(bidder => bidder.id === student.id) && (
                               <div className="mt-2">
-                                <Badge variant="outline" className="text-xs">You've placed a bid</Badge>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800">
+                                    Bid Submitted
+                                  </Badge>
+                                  {/* Show result if available */}
+                                  {student.biddingResult && student.biddingResult !== 'pending' && (
+                                    <Badge 
+                                      variant={student.biddingResult === 'won' ? 'default' : 'secondary'}
+                                      className={`text-xs ${
+                                        student.biddingResult === 'won' 
+                                          ? 'bg-green-500 text-white' 
+                                          : 'bg-red-100 text-red-800'
+                                      }`}
+                                    >
+                                      {student.biddingResult === 'won' ? '🎉 Selected' : 'Not Selected'}
+                                    </Badge>
+                                  )}
+                                </div>
                               </div>
                             )}
                           </div>
@@ -554,6 +630,21 @@ const StudentDashboard = () => {
                           <div className="text-sm text-muted-foreground">Classes Enrolled:</div>
                           <div className="col-span-2">{classes.length}</div>
                         </div>
+                        <div className="grid grid-cols-3 gap-1">
+                          <div className="text-sm text-muted-foreground">Token Status:</div>
+                          <div className="col-span-2">
+                            <Badge 
+                              variant={student?.tokenStatus === 'used' ? 'secondary' : 'default'}
+                              className={`text-xs ${
+                                student?.tokenStatus === 'used' 
+                                  ? 'bg-red-100 text-red-800' 
+                                  : 'bg-green-100 text-green-800'
+                              }`}
+                            >
+                              {student?.tokenStatus === 'used' ? 'Token Used' : 'Token Available'}
+                            </Badge>
+                          </div>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -570,13 +661,21 @@ const StudentDashboard = () => {
                             <div key={classItem.id} className="p-3 border rounded-md">
                               <div className="flex justify-between items-start mb-2">
                                 <h4 className="font-medium">{classItem.className}</h4>
-                                <Badge variant={studentInClass?.hasUsedToken === true ? "secondary" : "default"}>
-                                  {studentInClass?.hasUsedToken === true ? "Token Used" : "Token Available"}
+                                <Badge variant={studentInClass?.tokenStatus === 'used' || studentInClass?.hasUsedToken === true ? "secondary" : "default"}>
+                                  {studentInClass?.tokenStatus === 'used' || studentInClass?.hasUsedToken === true ? "Token Used" : "Token Available"}
                                 </Badge>
                               </div>
                               <div className="text-sm text-muted-foreground">
                                 {classItem.bidOpportunities?.length || 0} opportunities • 
                                 {classItem.bidders?.filter(b => b.id === student.id).length || 0} bids placed
+                                {/* Show bidding results summary */}
+                                {studentInClass?.biddingResult && studentInClass.biddingResult !== 'pending' && (
+                                  <span className={`ml-2 font-medium ${
+                                    studentInClass.biddingResult === 'won' ? 'text-green-600' : 'text-red-600'
+                                  }`}>
+                                    • {studentInClass.biddingResult === 'won' ? 'Selected' : 'Not Selected'}
+                                  </span>
+                                )}
                               </div>
                             </div>
                           );
