@@ -161,149 +161,42 @@ export const deleteClassAtomic = async (classId: string): Promise<ClassDeletionR
   console.log('Class ID to delete:', classId)
   console.log('Supabase client status:', !!supabase)
   
-  // Initialize validation outside try block to avoid undefined errors
-  let validation = {
-    valid: false,
-    className: 'Unknown'
-  }
-  
   try {
-    console.log('=== STEP 1: VALIDATING CLASS ===')
-
-    // Step 1: Validate class exists and get info
-    validation = await validateClassForDeletion(classId)
-    console.log('Validation result:', validation)
+    console.log('=== CALLING DATABASE RPC FUNCTION ===')
     
-    if (!validation.valid) {
-      console.log('=== VALIDATION FAILED ===')
-      return {
-        success: false,
-        classId,
-        className: 'Unknown',
-        deletedRecords: { students: 0, enrollments: 0, opportunities: 0, bids: 0, tokenHistory: 0, dinnerTables: 0 },
-        error: validation.error || 'Class validation failed',
-        timestamp
-      }
+    // Use the database RPC function to handle deletion atomically
+    const { data: rpcResult, error: rpcError } = await supabase.rpc('delete_class_atomic', {
+      p_class_id: classId
+    })
+
+    console.log('RPC function result:', rpcResult)
+
+    if (rpcError) {
+      console.error('RPC error during class deletion:', rpcError)
+      throw new Error(`Failed to delete class: ${rpcError.message}`)
     }
 
-    const className = validation.className!
-    console.log('=== VALIDATION PASSED ===')
-    console.log(`Class name: ${className}`)
-    console.log(`Class ID: ${classId}`)
-
-    console.log('=== STEP 2: STARTING CASCADING DELETION ===')
-    let deletedCounts = {
-      students: 0,
-      enrollments: 0,
-      opportunities: 0,
-      bids: 0,
-      tokenHistory: 0,
-      dinnerTables: 0
-    }
-
-    console.log('=== STEP 2A: GETTING OPPORTUNITY IDS ===')
-    const { data: opportunities, error: oppError } = await supabase
-      .from('opportunities')
-      .select('id')
-      .eq('class_id', classId)
-
-    console.log('Opportunities query result:', { data: opportunities, error: oppError })
-
-    if (oppError) {
-      console.error('Error fetching opportunities:', oppError)
-      throw new Error(`Failed to fetch opportunities: ${oppError.message}`)
-    }
-
-    const opportunityIds = opportunities?.map(opp => opp.id) || []
-    console.log('Opportunity IDs found:', opportunityIds)
-
-    console.log('=== STEP 2B: DELETING BIDS ===')
-    if (opportunityIds.length > 0) {
-      console.log('Deleting bids for opportunities:', opportunityIds)
-      const { error: bidsError, count: bidsCount, data: bidsData } = await supabase
-        .from('bids')
-        .delete({ count: 'exact' })
-        .in('opportunity_id', opportunityIds)
-
-      console.log('Bids deletion result:', { error: bidsError, count: bidsCount, data: bidsData })
-
-      if (bidsError) {
-        console.error('Error deleting bids:', bidsError)
-        throw new Error(`Failed to delete bids: ${bidsError.message}`)
-      }
-      deletedCounts.bids = bidsCount || 0
-      console.log(`Deleted ${deletedCounts.bids} bids`)
-    } else {
-      console.log('No opportunities found, skipping bid deletion')
-    }
-
-    console.log('=== STEP 2C: DELETING TOKEN HISTORY ===')
-    if (opportunityIds.length > 0) {
-      console.log('Deleting token history for opportunities:', opportunityIds)
-      const { error: tokenError, count: tokenCount, data: tokenData } = await supabase
-        .from('token_history')
-        .delete({ count: 'exact' })
-        .in('opportunity_id', opportunityIds)
-
-      console.log('Token history deletion result:', { error: tokenError, count: tokenCount, data: tokenData })
-
-      if (tokenError) {
-        console.error('Error deleting token history:', tokenError)
-        throw new Error(`Failed to delete token history: ${tokenError.message}`)
-      }
-      deletedCounts.tokenHistory = tokenCount || 0
-      console.log(`Deleted ${deletedCounts.tokenHistory} token history records`)
-    } else {
-      console.log('No opportunities found, skipping token history deletion')
-    }
-
-    console.log('=== STEP 2D: DELETING OPPORTUNITIES ===')
-    console.log('Deleting opportunities for class:', classId)
-    const { error: oppDeleteError, count: oppCount, data: oppData } = await supabase
-      .from('opportunities')
-      .delete({ count: 'exact' })
-      .eq('class_id', classId)
-
-    console.log('Opportunities deletion result:', { error: oppDeleteError, count: oppCount, data: oppData })
-
-    if (oppDeleteError) {
-      console.error('Error deleting opportunities:', oppDeleteError)
-      throw new Error(`Failed to delete opportunities: ${oppDeleteError.message}`)
-    }
-    deletedCounts.opportunities = oppCount || 0
-
-    // Step 2d: Delete student enrollments for this class
-    const { error: enrollmentError, count: enrollmentCount } = await supabase
-      .from('student_enrollments')
-      .delete({ count: 'exact' })
-      .eq('class_id', classId)
-
-    if (enrollmentError) {
-      throw new Error(`Failed to delete student enrollments: ${enrollmentError.message}`)
-    }
-    deletedCounts.enrollments = enrollmentCount || 0
-
-    // Step 2e: Delete the class itself
-    const { error: classError } = await supabase
-      .from('classes')
-      .delete()
-      .eq('id', classId)
-
-    console.log('Class deletion result:', { error: classError })
-
-    if (classError) {
-      console.log('=== ERROR DELETING CLASS ===')
-      throw new Error(`Failed to delete class: ${classError.message}`)
+    if (!rpcResult || !rpcResult.success) {
+      console.error('RPC function returned failure:', rpcResult)
+      throw new Error(rpcResult?.error || 'Class deletion failed')
     }
 
     console.log('=== DELETION COMPLETED SUCCESSFULLY ===')
-    console.log('Final deletion counts:', deletedCounts)
+    
+    // Extract counts from the RPC result
+    const deletedCounts = {
+      students: rpcResult.deleted_counts?.students || 0,
+      enrollments: rpcResult.deleted_counts?.students || 0, // Use students count for enrollments
+      opportunities: rpcResult.deleted_counts?.opportunities || 0,
+      bids: rpcResult.deleted_counts?.bids || 0,
+      tokenHistory: rpcResult.deleted_counts?.token_history || 0,
+      dinnerTables: rpcResult.deleted_counts?.dinner_tables || 0
+    }
 
-    // Step 3: Return success result
     return {
       success: true,
-      classId,
-      className,
+      classId: rpcResult.class_id,
+      className: rpcResult.class_name,
       deletedRecords: deletedCounts,
       timestamp
     }
@@ -317,7 +210,7 @@ export const deleteClassAtomic = async (classId: string): Promise<ClassDeletionR
     return {
       success: false,
       classId,
-      className: validation.className || 'Unknown',
+      className: 'Unknown',
       deletedRecords: { students: 0, enrollments: 0, opportunities: 0, bids: 0, tokenHistory: 0, dinnerTables: 0 },
       error: error instanceof Error ? error.message : 'Unexpected error during deletion',
       timestamp
