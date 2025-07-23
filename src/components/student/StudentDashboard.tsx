@@ -192,8 +192,8 @@ const StudentDashboard = () => {
     navigate("/");
   };
 
-  // Get student's status in current class
-  const studentInCurrentClass = currentClass?.students.find(s => s.id === student.id);
+  // The 'student' state is kept up-to-date by the real-time subscription
+  // and should reflect the latest enrollment status.
   const studentBidOpportunity = currentClass?.bidOpportunities?.find(
     opportunity => opportunity.bidders && opportunity.bidders.some(bidder => bidder.id === student.id)
   );
@@ -273,7 +273,7 @@ const StudentDashboard = () => {
                         </div>
                         <div className="text-center">
                           <div className="text-2xl font-bold">
-                            {studentInCurrentClass?.hasUsedToken === true ? (
+                            {student?.hasUsedToken === true ? (
                               <span className="text-red-600">0</span>
                             ) : (
                               <span className="text-green-600">1</span>
@@ -302,14 +302,14 @@ const StudentDashboard = () => {
                     <CardContent>
                       <div className="flex items-center justify-between">
                         <span>Your bidding token:</span>
-                        {studentInCurrentClass?.hasUsedToken === true ? (
+                        {student?.hasUsedToken === true ? (
                           <Badge variant="secondary">Used</Badge>
                         ) : (
                           <Badge className="bg-academy-blue">Available</Badge>
                         )}
                       </div>
                       
-                      {studentBidOpportunity && (
+                      {studentBidOpportunity && student?.biddingResult && ( // Ensure student.biddingResult exists
                         <div className="mt-4 p-3 bg-gray-50 rounded-md">
                           <h4 className="font-medium mb-2 text-green-600">Your Bid Status</h4>
                           <div className="grid grid-cols-3 gap-2 text-sm">
@@ -321,9 +321,9 @@ const StudentDashboard = () => {
                               <Badge variant="outline" className="text-xs">Bid Placed</Badge>
                             </div>
                             <div>
-                              {studentInCurrentClass?.biddingResult === 'won' ? (
+                              {student.biddingResult === 'won' ? (
                                 <Badge variant="default" className="bg-green-500 text-xs">Selected</Badge>
-                              ) : studentInCurrentClass?.biddingResult === 'lost' ? (
+                              ) : student.biddingResult === 'lost' ? (
                                 <Badge variant="secondary" className="text-xs">Not Selected</Badge>
                               ) : (
                                 <Badge variant="outline" className="text-xs">Pending</Badge>
@@ -376,8 +376,8 @@ const StudentDashboard = () => {
               
               <TabsContent value="opportunities">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <EnhancedBidCard 
-                    student={studentInCurrentClass || student}
+                  <EnhancedBidCard
+                    student={student} // Always pass the main student state
                     classConfig={currentClass}
                     onBidSubmitted={handleBidSubmitted}
                   />
