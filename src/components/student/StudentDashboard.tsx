@@ -46,52 +46,77 @@ const StudentDashboard = () => {
         console.log('Received user enrollment update:', updatedStudent);
         console.log('Updated bidding result:', updatedStudent.biddingResult);
         
-        try {
-          // Re-fetch all classes to get the latest enrollment data
-          const updatedClasses = await fetchClasses();
-          const updatedCurrentClass = updatedClasses.find(c => c.id === currentClass.id);
+        // Store previous student state for comparison
+        const previousStudent = student;
+        
+        // Directly update the student state with the latest enrollment data
+        console.log('Setting student state to:', updatedStudent);
+        setStudent(updatedStudent);
+        
+        // Update currentClass with the updated student data
+        setCurrentClass(prevCurrentClass => {
+          if (!prevCurrentClass) return prevCurrentClass;
           
-          if (updatedCurrentClass) {
-            setCurrentClass(updatedCurrentClass);
-            setClasses(updatedClasses);
-            
-            // Ensure we update the student state with the latest enrollment data
-            const latestStudentData = {
-              ...updatedStudent,
-              // Make sure bidding result is properly set
-              biddingResult: updatedStudent.biddingResult
-            };
-            console.log('Setting student state to:', latestStudentData);
-            setStudent(latestStudentData);
-          }
-          
-          // Show toast notification for token status change
-          const previousStudent = currentClass.students.find(s => s.id === student.id);
-          if (updatedStudent.hasUsedToken && !previousStudent?.hasUsedToken) {
-            toast({
-              title: "Token Status Updated",
-              description: "Your token has been used for bidding",
-            });
-          }
-          
-          // Show toast notification for bidding result change
-          if (updatedStudent.biddingResult && updatedStudent.biddingResult !== 'pending') {
-            const resultMessage = updatedStudent.biddingResult === 'won' 
-              ? "Congratulations! You have been selected!" 
-              : "You were not selected this time.";
-            toast({
-              title: "Bidding Result Updated",
-              description: resultMessage,
-            });
-          }
-        } catch (error) {
-          console.error('Error refreshing class data after enrollment update:', error);
+          return {
+            ...prevCurrentClass,
+            students: prevCurrentClass.students.map(s => 
+              s.id === updatedStudent.id ? updatedStudent : s
+            ),
+            bidders: prevCurrentClass.bidders.map(s => 
+              s.id === updatedStudent.id ? updatedStudent : s
+            ),
+            selectedStudents: prevCurrentClass.selectedStudents.map(s => 
+              s.id === updatedStudent.id ? updatedStudent : s
+            )
+          };
+        });
+        
+        // Update classes array with the updated student data
+        setClasses(prevClasses => 
+          prevClasses.map(classItem => {
+            if (classItem.id === currentClass.id) {
+              return {
+                ...classItem,
+                students: classItem.students.map(s => 
+                  s.id === updatedStudent.id ? updatedStudent : s
+                ),
+                bidders: classItem.bidders.map(s => 
+                  s.id === updatedStudent.id ? updatedStudent : s
+                ),
+                selectedStudents: classItem.selectedStudents.map(s => 
+                  s.id === updatedStudent.id ? updatedStudent : s
+                )
+              };
+            }
+            return classItem;
+          })
+        );
+        
+        // Show toast notification for token status change
+        if (updatedStudent.hasUsedToken && !previousStudent?.hasUsedToken) {
+          toast({
+            title: "Token Status Updated",
+            description: "Your token has been used for bidding",
+          });
+        }
+        
+        // Show toast notification for bidding result change
+        if (updatedStudent.biddingResult && 
+            updatedStudent.biddingResult !== previousStudent?.biddingResult &&
+            updatedStudent.biddingResult !== 'pending') {
+          const resultMessage = updatedStudent.biddingResult === 'won' 
+            ? "Congratulations! You have been selected!" 
+            : "You were not selected this time.";
+          toast({
+            title: "Bidding Result Updated",
+            description: resultMessage,
+          });
         }
       }
     );
 
     return unsubscribe;
-  }, [student, currentClass, toast]);
+  }, [student?.id, currentClass?.id, toast]);
 
   // Load the latest class configuration from localStorage on component mount
   useEffect(() => {
