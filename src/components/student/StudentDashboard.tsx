@@ -32,7 +32,12 @@ const StudentDashboard = () => {
   
   // Subscribe to real-time user enrollment updates
   useEffect(() => {
-    if (!student || !currentClass) return;
+    if (!student?.id || !currentClass?.id) {
+      console.log('Skipping real-time subscription setup: student or currentClass not ready.');
+      return;
+    }
+
+    console.log('Setting up real-time subscription for user:', student.id, 'class:', currentClass.id);
 
     const unsubscribe = subscribeToUserEnrollmentUpdates(
       student.id,
