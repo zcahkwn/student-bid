@@ -233,6 +233,8 @@ export function subscribeToUserEnrollmentUpdates(
   classId: string,
   onUpdate: (student: Student) => void
 ) {
+  console.log('Setting up real-time subscription for user:', userId, 'class:', classId);
+  
   const channel = supabase
     .channel(`user-enrollment-${userId}-${classId}`)
     .on(
@@ -245,6 +247,7 @@ export function subscribeToUserEnrollmentUpdates(
       },
       async (payload) => {
         console.log('User enrollment update received:', payload);
+        console.log('Updated enrollment data:', payload.new);
         const updatedData = payload.new;
         
         // Fetch user data to get name, email, etc.
@@ -267,6 +270,7 @@ export function subscribeToUserEnrollmentUpdates(
             biddingResult: updatedData.bidding_result
           };
           
+          console.log('Calling onUpdate with student:', student);
           onUpdate(student);
         }
       }
@@ -310,7 +314,10 @@ export function subscribeToUserEnrollmentUpdates(
     )
     .subscribe();
 
+  console.log('Real-time subscription established');
+  
   return () => {
+    console.log('Unsubscribing from real-time updates');
     supabase.removeChannel(channel);
   };
 }

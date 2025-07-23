@@ -39,6 +39,7 @@ const StudentDashboard = () => {
       currentClass.id,
       async (updatedStudent) => {
         console.log('Received user enrollment update:', updatedStudent);
+        console.log('Updated bidding result:', updatedStudent.biddingResult);
         
         try {
           // Re-fetch all classes to get the latest enrollment data
@@ -48,7 +49,15 @@ const StudentDashboard = () => {
           if (updatedCurrentClass) {
             setCurrentClass(updatedCurrentClass);
             setClasses(updatedClasses);
-            setStudent(updatedStudent);
+            
+            // Ensure we update the student state with the latest enrollment data
+            const latestStudentData = {
+              ...updatedStudent,
+              // Make sure bidding result is properly set
+              biddingResult: updatedStudent.biddingResult
+            };
+            console.log('Setting student state to:', latestStudentData);
+            setStudent(latestStudentData);
           }
           
           // Show toast notification for token status change
@@ -57,6 +66,17 @@ const StudentDashboard = () => {
             toast({
               title: "Token Status Updated",
               description: "Your token has been used for bidding",
+            });
+          }
+          
+          // Show toast notification for bidding result change
+          if (updatedStudent.biddingResult && updatedStudent.biddingResult !== 'pending') {
+            const resultMessage = updatedStudent.biddingResult === 'won' 
+              ? "Congratulations! You have been selected!" 
+              : "You were not selected this time.";
+            toast({
+              title: "Bidding Result Updated",
+              description: resultMessage,
             });
           }
         } catch (error) {
