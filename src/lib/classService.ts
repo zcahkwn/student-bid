@@ -37,7 +37,6 @@ export interface ClassDeletionResult {
     opportunities: number
     bids: number
     tokenHistory: number
-    dinnerTables: number // Keep for compatibility but will be 0
   }
   auditLogId?: string
   error?: string
@@ -190,7 +189,6 @@ export const deleteClassAtomic = async (classId: string): Promise<ClassDeletionR
       opportunities: rpcResult.deleted_counts?.opportunities || 0,
       bids: rpcResult.deleted_counts?.bids || 0,
       tokenHistory: rpcResult.deleted_counts?.token_history || 0,
-      dinnerTables: rpcResult.deleted_counts?.dinner_tables || 0
     }
 
     return {
@@ -211,7 +209,7 @@ export const deleteClassAtomic = async (classId: string): Promise<ClassDeletionR
       success: false,
       classId,
       className: 'Unknown',
-      deletedRecords: { students: 0, enrollments: 0, opportunities: 0, bids: 0, tokenHistory: 0, dinnerTables: 0 },
+      deletedRecords: { students: 0, enrollments: 0, opportunities: 0, bids: 0, tokenHistory: 0 },
       error: error instanceof Error ? error.message : 'Unexpected error during deletion',
       timestamp
     }
