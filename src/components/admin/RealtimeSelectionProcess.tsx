@@ -9,7 +9,7 @@ import { ClassConfig, Student } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/utils/dates";
 import { supabase } from "@/lib/supabase";
-import { updateSelectionResults } from "@/lib/classService";
+import { updateSelectionResults, resetOpportunitySelection } from "@/lib/classService";
 
 interface RealtimeSelectionProcessProps {
   currentClass: ClassConfig;
@@ -384,15 +384,29 @@ const RealtimeSelectionProcess = ({
     }
   };
 
-  const resetSelection = () => {
-    setSelectedStudents([]);
+  const resetSelection = async () => {
     if (selectedOpportunityId) {
-      onSelectionComplete([], selectedOpportunityId);
+      setIsSelecting(true); // Indicate loading/processing
+      try {
+        await resetOpportunitySelection(selectedOpportunityId); // Call the new function
+        setSelectedStudents([]); // Clear local state
+        toast({
+          title: "Selection Reset",
+          description: "The selection has been cleared and students' bid results reset to pending.",
+        });
+      } catch (error) {
+        console.error('Error resetting selection:', error);
+        toast({
+          title: "Reset Failed",
+          description: error instanceof Error ? error.message : "An unexpected error occurred during reset.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsSelecting(false); // End loading/processing
+        // Trigger a refresh of the data in the parent component (Index.tsx)
+        onSelectionComplete([], selectedOpportunityId);
+      }
     }
-    toast({
-      title: "Selection Reset",
-      description: "The selection has been cleared",
-    });
   };
 
   const selectedOpportunity = bidOpportunities.find(opp => opp.id === selectedOpportunityId);

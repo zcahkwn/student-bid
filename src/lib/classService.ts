@@ -563,6 +563,21 @@ export const updateBidOpportunity = async (
   }
 }
 
+// Reset selection for a specific opportunity
+export const resetOpportunitySelection = async (opportunityId: string): Promise<void> => {
+  try {
+    const { error } = await supabase.rpc('reset_opportunity_selection', {
+      p_opportunity_id: opportunityId
+    });
+    if (error) {
+      throw new Error(`Failed to reset selection: ${error.message}`);
+    }
+  } catch (error) {
+    console.error('Error resetting opportunity selection:', error);
+    throw error;
+  }
+};
+
 // Delete a bidding opportunity
 export const deleteBidOpportunity = async (opportunityId: string): Promise<void> => {
   try {
