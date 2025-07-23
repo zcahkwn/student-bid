@@ -12,6 +12,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Menu, X, Users, Calendar, Trophy, Clock, Coins } from "lucide-react";
 import { subscribeToUserEnrollmentUpdates } from "@/lib/studentBidService";
 import { fetchClasses } from "@/lib/classService";
+import { supabase } from "@/lib/supabase";
 
 const StudentDashboard = () => {
   const { toast } = useToast();
