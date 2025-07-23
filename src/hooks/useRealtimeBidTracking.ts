@@ -4,6 +4,7 @@ import {
   subscribeToClassBidUpdates, 
   ClassBidStatistics 
 } from '@/lib/bidTrackingService'
+import { supabase } from '@/lib/supabase'
 
 export const useRealtimeBidTracking = (classId: string | null) => {
   const [statistics, setStatistics] = useState<ClassBidStatistics>({
