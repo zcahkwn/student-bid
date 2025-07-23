@@ -185,9 +185,9 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
                   {hasStudentBid && (
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Your Result:</span>
-                      {isStudentSelected ? (
+                      {student.biddingResult === 'won' ? (
                         <Badge className="bg-green-500">Selected</Badge>
-                      ) : opportunity.selectedStudents?.length > 0 ? (
+                      ) : student.biddingResult === 'lost' ? (
                         <Badge variant="secondary">Not Selected</Badge>
                       ) : (
                         <Badge variant="outline">Pending</Badge>
@@ -196,7 +196,7 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
                   )}
                   
                   {/* Success Message */}
-                  {isStudentSelected && (
+                  {student.biddingResult === 'won' && hasStudentBid && (
                     <Alert>
                       <CheckCircle className="h-4 w-4" />
                       <AlertDescription>

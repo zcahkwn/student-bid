@@ -57,6 +57,37 @@ const StudentDashboard = () => {
         setCurrentClass(prevCurrentClass => {
           if (!prevCurrentClass) return prevCurrentClass;
           
+          // Update bidOpportunities to reflect the student's bidding result
+          const updatedBidOpportunities = prevCurrentClass.bidOpportunities.map(opportunity => {
+            // Check if this student has bid on this opportunity
+            const studentHasBid = opportunity.bidders.some(bidder => bidder.id === updatedStudent.id);
+            
+            if (studentHasBid) {
+              let updatedSelectedStudents = [...opportunity.selectedStudents];
+              
+              // Update selectedStudents based on bidding result
+              if (updatedStudent.biddingResult === 'won') {
+                // Add to selectedStudents if not already there
+                if (!updatedSelectedStudents.some(s => s.id === updatedStudent.id)) {
+                  updatedSelectedStudents.push({ ...updatedStudent, isSelected: true });
+                }
+              } else {
+                // Remove from selectedStudents if they're there (for 'lost' or 'pending')
+                updatedSelectedStudents = updatedSelectedStudents.filter(s => s.id !== updatedStudent.id);
+              }
+              
+              return {
+                ...opportunity,
+                bidders: opportunity.bidders.map(s => 
+                  s.id === updatedStudent.id ? updatedStudent : s
+                ),
+                selectedStudents: updatedSelectedStudents
+              };
+            }
+            
+            return opportunity;
+          });
+          
           return {
             ...prevCurrentClass,
             students: prevCurrentClass.students.map(s => 
@@ -67,7 +98,8 @@ const StudentDashboard = () => {
             ),
             selectedStudents: prevCurrentClass.selectedStudents.map(s => 
               s.id === updatedStudent.id ? updatedStudent : s
-            )
+            ),
+            bidOpportunities: updatedBidOpportunities
           };
         });
         
@@ -75,6 +107,37 @@ const StudentDashboard = () => {
         setClasses(prevClasses => 
           prevClasses.map(classItem => {
             if (classItem.id === currentClass.id) {
+              // Update bidOpportunities to reflect the student's bidding result
+              const updatedBidOpportunities = classItem.bidOpportunities.map(opportunity => {
+                // Check if this student has bid on this opportunity
+                const studentHasBid = opportunity.bidders.some(bidder => bidder.id === updatedStudent.id);
+                
+                if (studentHasBid) {
+                  let updatedSelectedStudents = [...opportunity.selectedStudents];
+                  
+                  // Update selectedStudents based on bidding result
+                  if (updatedStudent.biddingResult === 'won') {
+                    // Add to selectedStudents if not already there
+                    if (!updatedSelectedStudents.some(s => s.id === updatedStudent.id)) {
+                      updatedSelectedStudents.push({ ...updatedStudent, isSelected: true });
+                    }
+                  } else {
+                    // Remove from selectedStudents if they're there (for 'lost' or 'pending')
+                    updatedSelectedStudents = updatedSelectedStudents.filter(s => s.id !== updatedStudent.id);
+                  }
+                  
+                  return {
+                    ...opportunity,
+                    bidders: opportunity.bidders.map(s => 
+                      s.id === updatedStudent.id ? updatedStudent : s
+                    ),
+                    selectedStudents: updatedSelectedStudents
+                  };
+                }
+                
+                return opportunity;
+              });
+              
               return {
                 ...classItem,
                 students: classItem.students.map(s => 
@@ -85,7 +148,8 @@ const StudentDashboard = () => {
                 ),
                 selectedStudents: classItem.selectedStudents.map(s => 
                   s.id === updatedStudent.id ? updatedStudent : s
-                )
+                ),
+                bidOpportunities: updatedBidOpportunities
               };
             }
             return classItem;
