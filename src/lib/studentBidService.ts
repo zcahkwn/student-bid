@@ -25,6 +25,20 @@ export async function submitStudentBid(request: StudentBidRequest): Promise<Stud
     console.log('Opportunity ID:', opportunityId);
     console.log('Supabase client status:', !!supabase);
 
+    // Step 0: Fetch current student status before submission
+    console.log('=== STEP 0: FETCH CURRENT STUDENT STATUS ===');
+    const { data: currentEnrollment, error: currentError } = await supabase
+      .from('student_enrollments')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (currentError) {
+      console.error('Error fetching current enrollment:', currentError);
+    } else {
+      console.log('Current enrollment before bid:', currentEnrollment);
+    }
+
     // First, let's verify the opportunity exists and get its class_id
     console.log('=== STEP 1: VERIFY OPPORTUNITY EXISTS ===');
     const { data: opportunity, error: oppError } = await supabase
@@ -169,6 +183,8 @@ export async function submitStudentBid(request: StudentBidRequest): Promise<Stud
 
     console.log('=== BID SUBMISSION SUCCESSFUL ===');
     console.log('Updated student:', updatedStudent);
+    console.log('Token status changed from', currentEnrollment?.token_status, 'to', updatedEnrollment.token_status);
+    console.log('Tokens remaining changed from', currentEnrollment?.tokens_remaining, 'to', updatedEnrollment.tokens_remaining);
 
     return {
       success: true,

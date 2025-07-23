@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +10,7 @@ import { toast } from "sonner";
 import { Student, ClassConfig, BidOpportunity } from "@/types";
 import { useStudentBidding } from "@/hooks/useStudentBidding";
 import { formatDate, getBidOpportunityStatus, isBidOpportunityOpen } from "@/utils/dates";
+import { supabase } from "@/lib/supabase";
 
 interface EnhancedBidCardProps {
   student: Student;
@@ -18,17 +20,98 @@ interface EnhancedBidCardProps {
 
 const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCardProps) => {
   const [activeTab, setActiveTab] = useState("opportunity-0");
+  const [currentStudent, setCurrentStudent] = useState<Student>(student);
+  const [isLoadingStatus, setIsLoadingStatus] = useState(false);
   const { isSubmitting, lastBidResponse, error, submitBid } = useStudentBidding();
   
   const bidOpportunities = classConfig.bidOpportunities || [];
 
+  // Fetch real-time student status from database
+  useEffect(() => {
+    const fetchStudentStatus = async () => {
+      if (!student?.id || !classConfig?.id) return;
+      
+      setIsLoadingStatus(true);
+      try {
+        const { data: enrollment, error } = await supabase
+          .from('student_enrollments')
+          .select('*')
+          .eq('user_id', student.id)
+          .eq('class_id', classConfig.id)
+          .single();
+
+        if (enrollment && !error) {
+          const updatedStudent: Student = {
+            ...student,
+            hasUsedToken: enrollment.tokens_remaining <= 0,
+            hasBid: enrollment.token_status === 'used',
+            tokensRemaining: enrollment.tokens_remaining,
+            tokenStatus: enrollment.token_status,
+            biddingResult: enrollment.bidding_result
+          };
+          
+          console.log('=== ENHANCED BID CARD STATUS UPDATE ===');
+          console.log('Database enrollment:', enrollment);
+          console.log('Updated student for bid card:', updatedStudent);
+          
+          setCurrentStudent(updatedStudent);
+        }
+      } catch (error) {
+        console.error('Error fetching student status in bid card:', error);
+      } finally {
+        setIsLoadingStatus(false);
+      }
+    };
+
+    fetchStudentStatus();
+
+    // Set up real-time subscription for this component
+    const channel = supabase
+      .channel(`student-enrollment-${student.id}-${classConfig.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'student_enrollments',
+          filter: `user_id=eq.${student.id}.and.class_id=eq.${classConfig.id}`,
+        },
+        (payload) => {
+          console.log('=== BID CARD REAL-TIME UPDATE ===');
+          console.log('Payload:', payload);
+          
+          const updatedData = payload.new;
+          const updatedStudent: Student = {
+            ...student,
+            hasUsedToken: updatedData.tokens_remaining <= 0,
+            hasBid: updatedData.token_status === 'used',
+            tokensRemaining: updatedData.tokens_remaining,
+            tokenStatus: updatedData.token_status,
+            biddingResult: updatedData.bidding_result
+          };
+          
+          setCurrentStudent(updatedStudent);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [student.id, classConfig.id]);
+
+  // Update currentStudent when prop changes
+  useEffect(() => {
+    setCurrentStudent(student);
+  }, [student]);
+
   const handleSubmitBid = async (opportunityId: string) => {
     console.log('=== FRONTEND BID SUBMISSION STARTED ===');
-    console.log('Current student:', student);
+    console.log('Current student:', currentStudent);
     console.log('Opportunity ID:', opportunityId);
-    console.log('Student has used token:', student?.hasUsedToken === true);
+    console.log('Student has used token:', currentStudent?.hasUsedToken === true);
     
-    if (!student || student.hasUsedToken === true) return;
+    if (!currentStudent || currentStudent.hasUsedToken === true) return;
 
     // Find the specific opportunity
     const opportunity = bidOpportunities.find(opp => opp.id === opportunityId);
@@ -44,14 +127,14 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
     }
 
     // Check if student has already bid on this opportunity
-    const hasStudentBid = opportunity.bidders?.some(bidder => bidder.id === student.id);
+    const hasStudentBid = opportunity.bidders?.some(bidder => bidder.id === currentStudent.id);
     if (hasStudentBid) {
       toast.error("You have already placed a bid on this opportunity");
       return;
     }
 
     const response = await submitBid({
-      userId: student.id,
+      userId: currentStudent.id,
       opportunityId
     });
 
@@ -62,16 +145,21 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
       console.log('=== BID SUBMISSION SUCCESSFUL ===');
       console.log('Calling onBidSubmitted callback');
       
+      // Update local state immediately
+      if (response.updatedStudent) {
+        setCurrentStudent(response.updatedStudent);
+      }
+      
       // Add a small delay to ensure database changes are propagated
       setTimeout(() => {
         console.log('=== TRIGGERING ADMIN DASHBOARD REFRESH ===');
         // This will trigger real-time updates in the admin dashboard
         window.dispatchEvent(new CustomEvent('bidSubmitted', {
-          detail: { opportunityId, studentId: student.id }
+          detail: { opportunityId, studentId: currentStudent.id }
         }));
       }, 500);
       
-      onBidSubmitted?.(response.bidId, response.updatedStudent, opportunityId);
+      onBidSubmitted?.(response.bidId, response.updatedStudent || currentStudent, opportunityId);
     } else {
       console.log('=== BID SUBMISSION FAILED ===');
       console.log('Error:', response.errorMessage);
@@ -107,7 +195,11 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
         <div className="mb-4">
           <div className="flex justify-between items-center mb-4">
             <span className="text-sm font-medium">Your Token Status:</span>
-            {student?.hasUsedToken === true ? (
+            {isLoadingStatus ? (
+              <Badge variant="outline" className="animate-pulse">
+                Loading...
+              </Badge>
+            ) : currentStudent?.hasUsedToken === true || currentStudent?.tokenStatus === 'used' ? (
               <Badge variant="secondary" className="bg-red-100 text-red-800">
                 Token Unavailable
               </Badge>
@@ -122,7 +214,7 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
           <div className="p-3 bg-gray-50 rounded-md">
             <div className="flex items-center gap-2 mb-2">
               {/* Enhanced Token Status Display */}
-              {student?.tokenStatus === 'used' || student?.hasUsedToken === true ? (
+              {currentStudent?.tokenStatus === 'used' || currentStudent?.hasUsedToken === true ? (
                 <Badge variant="secondary" className="bg-red-100 text-red-800 animate-pulse">
                   Token Used
                 </Badge>
@@ -133,14 +225,14 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
               )}
             </div>
             <div className="text-xs text-muted-foreground">
-              User: {student?.name} | 
-              Status: {student?.tokenStatus === 'used' || student?.hasUsedToken === true ? 'Token Used' : 'Ready to Bid'}
-              {student?.tokensRemaining !== undefined && (
-                <span> | Tokens: {student.tokensRemaining}</span>
+              User: {currentStudent?.name} | 
+              Status: {currentStudent?.tokenStatus === 'used' || currentStudent?.hasUsedToken === true ? 'Token Used' : 'Ready to Bid'}
+              {currentStudent?.tokensRemaining !== undefined && (
+                <span> | Tokens: {currentStudent.tokensRemaining}</span>
               )}
               {/* Display bidding result if available */}
-              {student?.biddingResult && student.biddingResult !== 'pending' && (
-                <span> | Result: {student.biddingResult === 'won' ? 'Selected' : 'Not Selected'}</span>
+              {currentStudent?.biddingResult && currentStudent.biddingResult !== 'pending' && (
+                <span> | Result: {currentStudent.biddingResult === 'won' ? 'Selected' : 'Not Selected'}</span>
               )}
             </div>
           </div>
@@ -157,9 +249,9 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
           </TabsList>
           
           {bidOpportunities.map((opportunity, index) => {
-            const hasStudentBid = opportunity.bidders?.some(bidder => bidder.id === student?.id);
-            const isStudentSelected = opportunity.selectedStudents?.some(s => s.id === student?.id);
-            const canSubmitBid = student?.hasUsedToken !== true && 
+            const hasStudentBid = opportunity.bidders?.some(bidder => bidder.id === currentStudent?.id);
+            const isStudentSelected = opportunity.selectedStudents?.some(s => s.id === currentStudent?.id);
+            const canSubmitBid = currentStudent?.hasUsedToken !== true && 
                                getBidOpportunityStatus(opportunity) === "Open for Bidding" &&
                                !hasStudentBid;
 
@@ -181,17 +273,17 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
                     {/* Your Result Column - Display bidding outcome */}
                     {hasStudentBid ? (
                       <div className="flex items-center gap-2">
-                        {student.biddingResult === 'won' ? (
+                        {currentStudent.biddingResult === 'won' ? (
                           <Badge className="bg-green-500 text-white">
-                            Won
+                            🎉 Selected
                           </Badge>
-                        ) : student.biddingResult === 'lost' ? (
+                        ) : currentStudent.biddingResult === 'lost' ? (
                           <Badge variant="secondary" className="bg-red-100 text-red-800">
-                            Lost
+                            Not Selected
                           </Badge>
                         ) : (
                           <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
-                            Pending
+                            Pending Selection
                           </Badge>
                         )}
                       </div>
@@ -222,11 +314,11 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Your Result:</span>
                       {/* Enhanced Result Display with Real-time Updates */}
-                      {student?.biddingResult === 'won' ? (
+                      {currentStudent?.biddingResult === 'won' ? (
                         <Badge className="bg-green-500 text-white animate-bounce">
                           🎉 Selected
                         </Badge>
-                      ) : student?.biddingResult === 'lost' ? (
+                      ) : currentStudent?.biddingResult === 'lost' ? (
                         <Badge variant="secondary" className="bg-red-100 text-red-800">
                           Not Selected
                         </Badge>
@@ -239,7 +331,7 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
                   )}
                   
                   {/* Success Message */}
-                  {student?.biddingResult === 'won' && hasStudentBid && (
+                  {currentStudent?.biddingResult === 'won' && hasStudentBid && (
                     <Alert>
                       <CheckCircle className="h-4 w-4" />
                       <AlertDescription>
@@ -268,7 +360,7 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
                           <div key={bidder.id} className="text-xs flex justify-between">
                             <span>{bidder.name}</span>
                             <span className="text-muted-foreground">
-                              {bidder.id === student?.id ? 'You' : 'Recently'}
+                              {bidder.id === currentStudent?.id ? 'You' : 'Recently'}
                             </span>
                           </div>
                         ))}
@@ -289,7 +381,7 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
                       </>
                     ) : hasStudentBid ? (
                       "Bid Already Submitted"
-                    ) : student?.tokenStatus === 'used' || student?.hasUsedToken === true ? (
+                    ) : currentStudent?.tokenStatus === 'used' || currentStudent?.hasUsedToken === true ? (
                       "Token Unavailable"
                     ) : getBidOpportunityStatus(opportunity) !== "Open for Bidding" ? (
                       "Bidding Not Open"

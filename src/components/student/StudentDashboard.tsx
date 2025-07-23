@@ -30,6 +30,9 @@ const StudentDashboard = () => {
   );
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
+  // Add state for tracking real-time updates
+  const [isLoadingStatus, setIsLoadingStatus] = useState(false);
+  
   // Subscribe to real-time user enrollment updates
   useEffect(() => {
     if (!student?.id || !currentClass?.id) {
@@ -39,6 +42,42 @@ const StudentDashboard = () => {
 
     console.log('=== SETTING UP REAL-TIME SUBSCRIPTION ===');
     console.log('Student ID:', student.id, 'Class ID:', currentClass.id);
+
+    // Initial fetch of current status from database
+    const fetchCurrentStatus = async () => {
+      setIsLoadingStatus(true);
+      try {
+        const { data: enrollment, error } = await supabase
+          .from('student_enrollments')
+          .select('*')
+          .eq('user_id', student.id)
+          .eq('class_id', currentClass.id)
+          .single();
+
+        if (enrollment && !error) {
+          const updatedStudent: Student = {
+            ...student,
+            hasUsedToken: enrollment.tokens_remaining <= 0,
+            hasBid: enrollment.token_status === 'used',
+            tokensRemaining: enrollment.tokens_remaining,
+            tokenStatus: enrollment.token_status,
+            biddingResult: enrollment.bidding_result
+          };
+          
+          console.log('=== INITIAL STATUS FETCH ===');
+          console.log('Database enrollment:', enrollment);
+          console.log('Updated student:', updatedStudent);
+          
+          setStudent(updatedStudent);
+        }
+      } catch (error) {
+        console.error('Error fetching initial status:', error);
+      } finally {
+        setIsLoadingStatus(false);
+      }
+    };
+
+    fetchCurrentStatus();
 
     const unsubscribe = subscribeToUserEnrollmentUpdates(
       student.id,
