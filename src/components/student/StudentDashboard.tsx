@@ -52,40 +52,38 @@ const StudentDashboard = () => {
         // Directly update the student state with the latest enrollment data
         console.log('Setting student state to:', updatedStudent);
         setStudent(updatedStudent);
-        
+
         // Update currentClass with the updated student data
         setCurrentClass(prevCurrentClass => {
           if (!prevCurrentClass) return prevCurrentClass;
-          
-          // Update bidOpportunities to reflect the student's bidding result
-          const updatedBidOpportunities = prevCurrentClass.bidOpportunities.map(opportunity => {
-            // Check if this student has bid on this opportunity
-            const studentHasBid = opportunity.bidders.some(bidder => bidder.id === updatedStudent.id);
-            
-            if (studentHasBid) {
-              let updatedSelectedStudents = [...opportunity.selectedStudents];
-              
-              // Update selectedStudents based on bidding result
+
+          // Update bidOpportunities: specifically the selectedStudents within each opportunity
+          const updatedBidOpportunities = prevCurrentClass.bidOpportunities.map(opp => {
+            let newSelectedStudents = [...opp.selectedStudents]; // Start with current selected students
+
+            // Check if this is the opportunity the student bid on (or was selected for)
+            // This is a heuristic; ideally, the real-time payload would indicate the specific opportunity.
+            // For now, we'll assume the change applies to the opportunity the student has a bid on.
+            const isRelevantOpportunity = opp.bidders.some(b => b.id === updatedStudent.id);
+
+            if (isRelevantOpportunity) {
               if (updatedStudent.biddingResult === 'won') {
-                // Add to selectedStudents if not already there
-                if (!updatedSelectedStudents.some(s => s.id === updatedStudent.id)) {
-                  updatedSelectedStudents.push({ ...updatedStudent, isSelected: true });
+                // If student won and is not already in selectedStudents, add them
+                if (!newSelectedStudents.some(s => s.id === updatedStudent.id)) {
+                  newSelectedStudents.push(updatedStudent);
                 }
-              } else {
-                // Remove from selectedStudents if they're there (for 'lost' or 'pending')
-                updatedSelectedStudents = updatedSelectedStudents.filter(s => s.id !== updatedStudent.id);
+              } else if (updatedStudent.biddingResult === 'lost' || updatedStudent.biddingResult === 'pending') {
+                // If student lost/pending and is currently in selectedStudents, remove them
+                newSelectedStudents = newSelectedStudents.filter(s => s.id !== updatedStudent.id);
               }
-              
-              return {
-                ...opportunity,
-                bidders: opportunity.bidders.map(s => 
-                  s.id === updatedStudent.id ? updatedStudent : s
-                ),
-                selectedStudents: updatedSelectedStudents
-              };
             }
-            
-            return opportunity;
+
+            // Also ensure the student's bid status is updated within the bidders array
+            const updatedBiddersForOpp = opp.bidders.map(b =>
+              b.id === updatedStudent.id ? updatedStudent : b
+            );
+
+            return { ...opp, selectedStudents: newSelectedStudents, bidders: updatedBiddersForOpp };
           });
           
           return {
@@ -99,7 +97,7 @@ const StudentDashboard = () => {
             selectedStudents: prevCurrentClass.selectedStudents.map(s => 
               s.id === updatedStudent.id ? updatedStudent : s
             ),
-            bidOpportunities: updatedBidOpportunities
+            bidOpportunities: updatedBidOpportunities // Crucial update
           };
         });
         
@@ -107,37 +105,6 @@ const StudentDashboard = () => {
         setClasses(prevClasses => 
           prevClasses.map(classItem => {
             if (classItem.id === currentClass.id) {
-              // Update bidOpportunities to reflect the student's bidding result
-              const updatedBidOpportunities = classItem.bidOpportunities.map(opportunity => {
-                // Check if this student has bid on this opportunity
-                const studentHasBid = opportunity.bidders.some(bidder => bidder.id === updatedStudent.id);
-                
-                if (studentHasBid) {
-                  let updatedSelectedStudents = [...opportunity.selectedStudents];
-                  
-                  // Update selectedStudents based on bidding result
-                  if (updatedStudent.biddingResult === 'won') {
-                    // Add to selectedStudents if not already there
-                    if (!updatedSelectedStudents.some(s => s.id === updatedStudent.id)) {
-                      updatedSelectedStudents.push({ ...updatedStudent, isSelected: true });
-                    }
-                  } else {
-                    // Remove from selectedStudents if they're there (for 'lost' or 'pending')
-                    updatedSelectedStudents = updatedSelectedStudents.filter(s => s.id !== updatedStudent.id);
-                  }
-                  
-                  return {
-                    ...opportunity,
-                    bidders: opportunity.bidders.map(s => 
-                      s.id === updatedStudent.id ? updatedStudent : s
-                    ),
-                    selectedStudents: updatedSelectedStudents
-                  };
-                }
-                
-                return opportunity;
-              });
-              
               return {
                 ...classItem,
                 students: classItem.students.map(s => 
@@ -149,7 +116,32 @@ const StudentDashboard = () => {
                 selectedStudents: classItem.selectedStudents.map(s => 
                   s.id === updatedStudent.id ? updatedStudent : s
                 ),
-                bidOpportunities: updatedBidOpportunities
+                // Update bidOpportunities within this classItem as well
+                bidOpportunities: classItem.bidOpportunities.map(opp => {
+                  let newSelectedStudents = [...opp.selectedStudents];
+                  const isRelevantOpportunity = opp.bidders.some(b => b.id === updatedStudent.id);
+
+                  if (isRelevantOpportunity) {
+                    if (updatedStudent.biddingResult === 'won') {
+                      if (!newSelectedStudents.some(s => s.id === updatedStudent.id)) {
+                        newSelectedStudents.push(updatedStudent);
+                      }
+                    } else if (updatedStudent.biddingResult === 'lost' || updatedStudent.biddingResult === 'pending') {
+                      newSelectedStudents = newSelectedStudents.filter(s => s.id !== updatedStudent.id);
+                    }
+                  }
+
+                  // Also ensure the student's bid status is updated within the bidders array
+                  const updatedBiddersForOpp = opp.bidders.map(b =>
+                    b.id === updatedStudent.id ? updatedStudent : b
+                  );
+
+                  return {
+                    ...opp,
+                    selectedStudents: newSelectedStudents,
+                    bidders: updatedBiddersForOpp
+                  };
+                })
               };
             }
             return classItem;
