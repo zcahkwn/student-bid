@@ -389,16 +389,25 @@ const RealtimeSelectionProcess = ({
       setIsSelecting(true); // Indicate loading/processing
       try {
         await resetOpportunitySelection(selectedOpportunityId); // Call the new function
-        await fetchBidCounts(); // Re-fetch all bid counts and bidders
         
-        // Re-fetch bidders for the specific opportunity and update state
-        const updatedBidders = await fetchBiddersForOpportunity(selectedOpportunityId);
+        // Immediately clear local state to show reset visually
+        setSelectedStudents([]); // Clear selected students display
+        
+        // Clear bidders and bid counts for the selected opportunity
         setBidders(prev => ({
           ...prev,
-          [selectedOpportunityId]: updatedBidders
+          [selectedOpportunityId]: []
         }));
         
-        setSelectedStudents([]); // Clear local state
+        setBidCounts(prev => ({
+          ...prev,
+          [selectedOpportunityId]: {
+            opportunityId: selectedOpportunityId,
+            bidCount: 0,
+            lastUpdated: new Date().toISOString()
+          }
+        }));
+        
         toast({
           title: "Selection Reset",
           description: "The selection has been cleared and students' bid results reset to pending.",
