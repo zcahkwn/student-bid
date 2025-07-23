@@ -125,6 +125,13 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
               {student?.tokenStatus === 'used' || student?.hasUsedToken === true ? (
                 <Badge variant="secondary" className="bg-red-100 text-red-800 animate-pulse">
                   Token Used
+                </Badge>
+              ) : (
+                <Badge className="bg-green-100 text-green-800">
+                  Token Available
+                </Badge>
+              )}
+            </div>
             <div className="text-xs text-muted-foreground">
               User: {student?.name} | 
               Status: {student?.tokenStatus === 'used' || student?.hasUsedToken === true ? 'Token Used' : 'Ready to Bid'}
@@ -193,8 +200,8 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
                         No Bid
                       </Badge>
                     )}
-                  </TableCell>
-                  <TableCell>
+                  </div>
+                  <div>
                     <Badge variant={getBidOpportunityStatus(opportunity) === "Open for Bidding" ? "default" : "secondary"}>
                       {getBidOpportunityStatus(opportunity)}
                     </Badge>
