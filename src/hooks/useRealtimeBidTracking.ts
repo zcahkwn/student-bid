@@ -54,9 +54,38 @@ export const useRealtimeBidTracking = (classId: string | null) => {
       setStatistics(updatedStats)
     })
 
+    // Also subscribe to student_enrollments changes for selection updates
+    const enrollmentChannel = supabase
+      .channel(`class-enrollments-${classId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'student_enrollments',
+          filter: `class_id=eq.${classId}`
+        },
+        async (payload) => {
+          console.log('=== STUDENT ENROLLMENT UPDATE RECEIVED ===')
+          console.log('Payload:', payload)
+          
+          // Refresh statistics when enrollment bidding_result changes
+          if (payload.new && payload.old && 
+              payload.new.bidding_result !== payload.old.bidding_result) {
+            console.log('Bidding result changed, refreshing statistics')
+            const refreshedStats = await getClassBidStatistics(classId)
+            setStatistics(refreshedStats)
+          }
+        }
+      )
+      .subscribe()
+
     console.log('Real-time subscription established for class:', classId)
 
-    return unsubscribe
+    return () => {
+      unsubscribe()
+      supabase.removeChannel(enrollmentChannel)
+    }
   }, [classId, fetchStatistics])
 
   // Manual refresh function

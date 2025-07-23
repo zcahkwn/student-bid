@@ -248,30 +248,39 @@ const Index = () => {
   const handleSelectionComplete = async (selectedStudents: Student[], opportunityId?: string) => {
     if (!currentClass) return;
 
-    // Instead of directly manipulating local state, trigger a re-fetch from the database
-    // This ensures the UI reflects the latest state from Supabase after the RPC call
+    console.log('=== HANDLING SELECTION COMPLETE ===');
+    console.log('Selected students:', selectedStudents);
+    console.log('Opportunity ID:', opportunityId);
+
     try {
+      // Re-fetch from database to ensure UI reflects latest state
       const updatedClasses = await fetchClasses();
       setClasses(updatedClasses);
 
-      // Find the updated current class from the re-fetched data
       const updatedCurrentClass = updatedClasses.find(c => c.id === currentClass.id);
       if (updatedCurrentClass) {
         setCurrentClass(updatedCurrentClass);
       }
 
-      // Also update localStorage for backward compatibility
       localStorage.setItem("classData", JSON.stringify(updatedClasses));
 
-      toast({
-        title: "Selection saved",
-        description: `The selection results have been saved and are now visible to students.`,
-      });
+      if (selectedStudents.length > 0) {
+        toast({
+          title: "Selection saved",
+          description: `${selectedStudents.length} student${selectedStudents.length !== 1 ? 's have' : ' has'} been selected and results are now visible to students.`,
+        });
+      } else {
+        toast({
+          title: "Selection reset",
+          description: "All selections have been cleared and student results reset.",
+        });
+      }
+      
     } catch (error) {
       console.error("Error refreshing classes after selection:", error);
       toast({
-        title: "Error saving selection",
-        description: "Failed to refresh class data after selection. Please refresh manually.",
+        title: "Error updating display",
+        description: "Selection was processed but failed to refresh display. Please refresh the page.",
         variant: "destructive",
       });
     }

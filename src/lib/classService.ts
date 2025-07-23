@@ -566,12 +566,31 @@ export const updateBidOpportunity = async (
 // Reset selection for a specific opportunity
 export const resetOpportunitySelection = async (opportunityId: string): Promise<void> => {
   try {
-    const { error } = await supabase.rpc('reset_opportunity_selection', {
+    console.log('=== RESETTING OPPORTUNITY SELECTION ===');
+    console.log('Opportunity ID:', opportunityId);
+
+    if (!opportunityId) {
+      throw new Error('Opportunity ID is required');
+    }
+
+    const { data: rpcResult, error } = await supabase.rpc('reset_opportunity_selection', {
       p_opportunity_id: opportunityId
     });
+    
     if (error) {
+      console.error('RPC error resetting selection:', error);
       throw new Error(`Failed to reset selection: ${error.message}`);
     }
+
+    console.log('RPC function result:', rpcResult);
+
+    if (!rpcResult || !rpcResult.success) {
+      throw new Error(rpcResult?.error || 'Selection reset failed');
+    }
+
+    console.log('=== SELECTION RESET COMPLETED ===');
+    console.log(`Successfully reset ${rpcResult.reset_count} student enrollments`);
+    
   } catch (error) {
     console.error('Error resetting opportunity selection:', error);
     throw error;

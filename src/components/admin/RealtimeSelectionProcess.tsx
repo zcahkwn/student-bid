@@ -386,43 +386,38 @@ const RealtimeSelectionProcess = ({
 
   const resetSelection = async () => {
     if (selectedOpportunityId) {
-      setIsSelecting(true); // Indicate loading/processing
+      setIsSelecting(true);
       try {
-        await resetOpportunitySelection(selectedOpportunityId); // Call the new function
+        console.log('=== STARTING SELECTION RESET ===');
+        console.log('Opportunity ID:', selectedOpportunityId);
         
-        // Immediately clear local state to show reset visually
-        setSelectedStudents([]); // Clear selected students display
+        await resetOpportunitySelection(selectedOpportunityId);
         
-        // Clear bidders and bid counts for the selected opportunity
-        setBidders(prev => ({
-          ...prev,
-          [selectedOpportunityId]: []
-        }));
+        console.log('=== DATABASE RESET COMPLETED ===');
         
-        setBidCounts(prev => ({
-          ...prev,
-          [selectedOpportunityId]: {
-            opportunityId: selectedOpportunityId,
-            bidCount: 0,
-            lastUpdated: new Date().toISOString()
-          }
-        }));
+        // Clear local state after successful database reset
+        setSelectedStudents([]);
+        
+        // Refresh data from database to ensure consistency
+        await fetchBidCounts();
+        
+        // Notify parent component of the reset
+        onSelectionComplete([], selectedOpportunityId);
         
         toast({
           title: "Selection Reset",
-          description: "The selection has been cleared and students' bid results reset to pending.",
+          description: "Selection has been cleared and all student results reset to pending.",
         });
+        
       } catch (error) {
         console.error('Error resetting selection:', error);
         toast({
           title: "Reset Failed",
-          description: error instanceof Error ? error.message : "An unexpected error occurred during reset.",
+          description: error instanceof Error ? error.message : "An unexpected error occurred during reset",
           variant: "destructive",
         });
       } finally {
-        setIsSelecting(false); // End loading/processing
-        // Trigger a refresh of the data in the parent component (Index.tsx)
-        onSelectionComplete([], selectedOpportunityId);
+        setIsSelecting(false);
       }
     }
   };
