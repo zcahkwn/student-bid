@@ -389,6 +389,8 @@ const RealtimeSelectionProcess = ({
       setIsSelecting(true); // Indicate loading/processing
       try {
         await resetOpportunitySelection(selectedOpportunityId); // Call the new function
+        await fetchBidCounts(); // Re-fetch all bid counts and bidders
+        await fetchBiddersForOpportunity(selectedOpportunityId); // Re-fetch bidders for the specific opportunity
         setSelectedStudents([]); // Clear local state
         toast({
           title: "Selection Reset",
