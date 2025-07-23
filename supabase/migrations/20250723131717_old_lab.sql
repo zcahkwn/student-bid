@@ -1,4 +1,4 @@
-```sql
+
 CREATE OR REPLACE FUNCTION public.reset_opportunity_selection(p_opportunity_id UUID)
 RETURNS VOID AS $$
 DECLARE
@@ -29,4 +29,3 @@ BEGIN
 
 END;
 $$ LANGUAGE plpgsql;
-```
