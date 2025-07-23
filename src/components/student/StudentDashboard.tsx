@@ -48,6 +48,7 @@ const StudentDashboard = () => {
           if (updatedCurrentClass) {
             setCurrentClass(updatedCurrentClass);
             setClasses(updatedClasses);
+ setStudent(updatedStudent);
           }
           
           // Show toast notification for token status change
