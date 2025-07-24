@@ -234,14 +234,6 @@ const StudentDashboard = () => {
       if (storedClassesStr) {
         try {
           const storedClasses = JSON.parse(storedClassesStr);
-          
-          // Clean up old rewardDescription from localStorage data
-          storedClasses.forEach((classConfig: any) => {
-            if ('rewardDescription' in classConfig) {
-              delete classConfig.rewardDescription;
-            }
-          });
-          
           // Update classes with stored data
           const updatedClasses = classes.map(classConfig => {
             const storedClass = storedClasses.find((c: ClassConfig) => c.id === classConfig.id);

@@ -82,14 +82,6 @@ const Index = () => {
           const storedClasses = localStorage.getItem("classData");
           if (storedClasses) {
             const parsedClasses = JSON.parse(storedClasses) as ClassConfig[];
-            
-            // Clean up old rewardDescription from localStorage data
-            parsedClasses.forEach(classConfig => {
-              if ('rewardDescription' in classConfig) {
-                delete (classConfig as any).rewardDescription;
-              }
-            });
-            
             setClasses(parsedClasses);
             
             // Set current class if available
