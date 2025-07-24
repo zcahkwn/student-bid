@@ -367,8 +367,6 @@ export const fetchClasses = async (): Promise<ClassConfig[]> => {
 
       if (opportunitiesError) {
         console.error(`Failed to fetch opportunities for class ${classRecord.id}:`, opportunitiesError.message)
-        // Continue with empty opportunities array if fetch fails
-        opportunitiesData = []
       }
 
       // Create bid opportunities with real-time bid counts and selected students
