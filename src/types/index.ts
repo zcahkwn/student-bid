@@ -54,7 +54,6 @@ export interface ClassConfig {
   id: string;
   className: string;
   rewardTitle: string;
-  rewardDescription: string;
   capacity: number;
   students: Student[];
   bidders: Student[];

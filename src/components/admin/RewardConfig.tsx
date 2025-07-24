@@ -12,17 +12,12 @@ interface RewardConfigProps {
 }
 
 const RewardConfig = ({ currentClass, onUpdate }: RewardConfigProps) => {
-  const [rewardTitle, setRewardTitle] = useState(currentClass?.rewardTitle || "Dinner with Professor");
-  const [rewardDescription, setRewardDescription] = useState(
-    currentClass?.rewardDescription || 
-    "Join the professor for dinner and discussion at a local restaurant."
-  );
+  const [rewardTitle, setRewardTitle] = useState(currentClass?.rewardTitle || "Bidding Opportunities");
   const [capacity, setCapacity] = useState(currentClass?.capacity || 7);
 
   useEffect(() => {
     if (currentClass) {
       setRewardTitle(currentClass.rewardTitle);
-      setRewardDescription(currentClass.rewardDescription);
       setCapacity(currentClass.capacity);
     }
   }, [currentClass]);
@@ -31,7 +26,6 @@ const RewardConfig = ({ currentClass, onUpdate }: RewardConfigProps) => {
     e.preventDefault();
     onUpdate({
       rewardTitle,
-      rewardDescription,
       capacity
     });
   };
@@ -50,18 +44,6 @@ const RewardConfig = ({ currentClass, onUpdate }: RewardConfigProps) => {
               value={rewardTitle}
               onChange={(e) => setRewardTitle(e.target.value)}
               placeholder="e.g., Dinner with Professor"
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="rewardDescription">Reward Description</Label>
-            <Textarea
-              id="rewardDescription"
-              value={rewardDescription}
-              onChange={(e) => setRewardDescription(e.target.value)}
-              placeholder="Describe the reward in detail"
-              rows={3}
               required
             />
           </div>

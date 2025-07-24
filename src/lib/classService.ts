@@ -63,8 +63,7 @@ export const createClass = async (classData: CreateClassData): Promise<ClassConf
     const classConfig: ClassConfig = {
       id: classRecord.id,
       className: classRecord.name,
-      rewardTitle: "Dinner with Professor",
-      rewardDescription: "Join the professor for dinner and discussion at a local restaurant.",
+      rewardTitle: "Bidding Opportunities",
       capacity: classData.capacity || 7,
       students: [],
       bidders: [],
@@ -448,8 +447,7 @@ export const fetchClasses = async (): Promise<ClassConfig[]> => {
       const classConfig: ClassConfig = {
         id: classRecord.id,
         className: classRecord.name,
-        rewardTitle: "Dinner with Professor",
-        rewardDescription: "Join the professor for dinner and discussion at a local restaurant.",
+        rewardTitle: "Bidding Opportunities",
         capacity: 7,
         students,
         bidders: studentsWhoBid,

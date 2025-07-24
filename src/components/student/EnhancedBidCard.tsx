@@ -187,7 +187,6 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
           <Coins className="w-5 h-5" />
           {classConfig.rewardTitle}
         </CardTitle>
-        <CardDescription>{classConfig.rewardDescription}</CardDescription>
       </CardHeader>
       
       <CardContent>

@@ -180,8 +180,7 @@ const Index = () => {
     try {
       const newClass = await createClass({
         name: newClassName,
-        rewardTitle: "Dinner with Professor",
-        rewardDescription: "Join the professor for dinner and discussion at a local restaurant.",
+        rewardTitle: "Bidding Opportunities",
         capacity: 7
       });
       
