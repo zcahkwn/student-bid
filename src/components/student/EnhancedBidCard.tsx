@@ -186,6 +186,7 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
         <CardTitle className="text-xl font-heading flex items-center gap-2">
           <Coins className="w-5 h-5" />
           {classConfig.rewardTitle}
+        </CardTitle>
       </CardHeader>
       
       <CardContent>
@@ -390,6 +391,9 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
                 </div>
               </TabsContent>
             );
+          })}
+        </Tabs>
+      </CardContent>
     </Card>
   );
 };
