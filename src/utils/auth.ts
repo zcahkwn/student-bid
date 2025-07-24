@@ -122,63 +122,6 @@ export const authenticateStudent = async (
   }
 };
 
-// Legacy synchronous version for backward compatibility
-const authenticateStudentSync = (
-  email: string,
-  studentNumber: string,
-  classes: ClassConfig[]
-): { 
-  success: boolean; 
-  student?: Student; 
-  enrolledClasses: ClassConfig[];
-  errorMessage?: string;
-} => {
-  const enrolledClasses: ClassConfig[] = [];
-  let foundStudent: Student | undefined;
-
-  // Search through all classes to find the student (legacy behavior)
-  for (const classConfig of classes) {
-    const student = classConfig.students.find(s => 
-      s.email.toLowerCase() === email.toLowerCase() &&
-      s.studentNumber && 
-      s.studentNumber.toLowerCase() === studentNumber.toLowerCase()
-    );
-    
-    if (student) {
-      enrolledClasses.push(classConfig);
-      if (!foundStudent) {
-        foundStudent = student; // Use the first found student record
-      }
-    }
-  }
-
-  if (!foundStudent || enrolledClasses.length === 0) {
-    return {
-      success: false,
-      enrolledClasses: [],
-      errorMessage: "No student found with these credentials across any class"
-    };
-  }
-
-  return {
-    success: true,
-    student: foundStudent,
-    enrolledClasses
-  };
-};
-
-// Create auth state for student with specific class
-const createStudentAuthState = (
-  student: Student,
-  selectedClass: ClassConfig
-): AuthState => {
-  return {
-    ...initialAuthState,
-    isStudent: true,
-    currentStudent: student,
-    currentClass: selectedClass
-  };
-};
 
 
 // Log out function

@@ -27,7 +27,6 @@ interface DashboardProps {
   onSelectClass: (classId: string) => void;
   onCreateClass: () => void;
   onUpdateOpportunity: (opportunityId: string, updatedOpportunity: BidOpportunity) => void;
-  onUpdateReward: (config: Partial<ClassConfig>) => void;
   onRemoveClass?: (classId: string) => void;
   onChangePassword?: (classId: string, newPassword: string) => void;
   onOpportunityCreated?: (opportunity: BidOpportunity) => void;
@@ -40,7 +39,6 @@ const Dashboard = ({
   onSelectClass, 
   onCreateClass,
   onUpdateOpportunity,
-  onUpdateReward,
   onRemoveClass,
   onChangePassword,
   onOpportunityCreated,
@@ -320,21 +318,18 @@ const Dashboard = ({
     setEditingOpportunity(opportunity);
   };
   
-  const handleSaveOpportunity = (updatedOpportunity: BidOpportunity, updatedClass: Partial<ClassConfig>) => {
+  const handleSaveOpportunity = (updatedOpportunity: BidOpportunity) => {
     if (!currentClass) return;
     
     // Update the opportunity
     onUpdateOpportunity(updatedOpportunity.id, updatedOpportunity);
-    
-    // Update the class reward configuration
-    onUpdateReward(updatedClass);
     
     // Refresh statistics to show updated data
     refreshStats();
     
     toast({
       title: "Changes saved",
-      description: `The bidding opportunity and reward details have been updated`,
+      description: `The bidding opportunity has been updated`,
     });
   };
 

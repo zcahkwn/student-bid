@@ -149,11 +149,8 @@ const EditBidOpportunityDialog = ({
         capacity
       };
 
-      const updatedClass: Partial<ClassConfig> = {};
-      
       console.log('=== CALLING onSave CALLBACK ===');
       // Update local state
-      onSave(updatedOpportunity, updatedClass);
       
       toast({
         title: "Changes saved successfully",

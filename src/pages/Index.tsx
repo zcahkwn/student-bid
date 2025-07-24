@@ -13,7 +13,6 @@ import StudentLogin from "@/components/student/StudentLogin";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import Dashboard from "@/pages/admin/Dashboard";
 import Students from "@/pages/admin/Students";
-import Rewards from "@/pages/admin/Rewards";
 import Selection from "@/pages/admin/Selection";
 import StudentDashboard from "@/components/student/StudentDashboard";
 import { Student, ClassConfig, AuthState, BidOpportunity } from "@/types";
@@ -212,25 +211,6 @@ const Index = () => {
     const updatedClass: ClassConfig = {
       ...currentClass,
       students: updatedStudents
-    };
-    
-    const updatedClasses = classes.map(c => 
-      c.id === currentClass.id ? updatedClass : c
-    );
-    
-    setClasses(updatedClasses);
-    setCurrentClass(updatedClass);
-    
-    // Also update localStorage for backward compatibility
-    localStorage.setItem("classData", JSON.stringify(updatedClasses));
-  };
-  
-  const handleUpdateReward = (config: Partial<ClassConfig>) => {
-    if (!currentClass) return;
-    
-    const updatedClass: ClassConfig = {
-      ...currentClass,
-      ...config
     };
     
     const updatedClasses = classes.map(c => 
@@ -659,7 +639,6 @@ const Index = () => {
                   onSelectClass={handleSelectClass}
                   onCreateClass={handleCreateClass}
                   onUpdateOpportunity={handleUpdateBidOpportunity}
-                  onUpdateReward={handleUpdateReward}
                   onRemoveClass={handleRemoveClass}
                   onChangePassword={handleChangePassword}
                   onOpportunityCreated={handleOpportunityCreated}
