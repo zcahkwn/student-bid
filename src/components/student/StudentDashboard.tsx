@@ -387,6 +387,7 @@ const StudentDashboard = () => {
         currentClass={currentClass}
         onSelectClass={handleSelectClass}
         isCollapsed={sidebarCollapsed}
+        currentStudent={student}
       />
       
       <main className={`min-h-[calc(100vh-64px)] transition-all duration-300 ${
