@@ -21,13 +21,15 @@ interface StudentSidebarProps {
   currentClass: ClassConfig | null;
   onSelectClass: (classId: string) => void;
   isCollapsed?: boolean;
+  currentStudent: Student | null;
 }
 
 const StudentSidebar = ({ 
   classes, 
   currentClass, 
   onSelectClass,
-  isCollapsed = false 
+  isCollapsed = false,
+  currentStudent
 }: StudentSidebarProps) => {
   const [hoveredClass, setHoveredClass] = useState<string | null>(null);
 
@@ -79,6 +81,10 @@ const StudentSidebar = ({
                   return now >= biddingOpensDate && now < eventDate;
                 }).length || 0;
 
+                // Find the current student's enrollment in this specific class
+                const studentInThisClass = classItem.students.find(s => s.id === currentStudent?.id);
+                const hasUsedTokenInClass = studentInThisClass?.hasUsedToken === true || 
+                                          studentInThisClass?.tokenStatus === 'used';
                 return (
                   <Card
                     key={classItem.id}
@@ -145,13 +151,17 @@ const StudentSidebar = ({
                               </div>
                               <Badge 
                                 variant={
-                                  classItem.students.find(s => s.id === currentClass?.students[0]?.id)?.hasUsedToken === true
+                                  hasUsedTokenInClass
                                     ? "secondary" 
                                     : "default"
                                 }
-                                className="text-xs px-1 py-0"
+                                className={`text-xs px-1 py-0 ${
+                                  hasUsedTokenInClass
+                                    ? "bg-red-100 text-red-800"
+                                    : "bg-green-100 text-green-800"
+                                }`}
                               >
-                                {classItem.students.find(s => s.id === currentClass?.students[0]?.id)?.hasUsedToken === true
+                                {hasUsedTokenInClass
                                   ? "Used" 
                                   : "Available"
                                 }
