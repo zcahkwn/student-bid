@@ -631,17 +631,6 @@ const Dashboard = ({
                                             {opportunity.capacity || currentClass.capacity} students
                                           </span>
                                         </div>
-                                        <div className="flex justify-between items-center p-2 bg-white rounded border">
-                                          <span className="text-sm text-gray-600">Status:</span>
-                                          <Badge variant={realTimeBidCount > (opportunity.capacity || currentClass.capacity) ? "destructive" : "default"}>
-                                            {realTimeBidCount > (opportunity.capacity || currentClass.capacity) 
-                                              ? "Over Capacity" 
-                                              : realTimeBidCount === (opportunity.capacity || currentClass.capacity)
-                                              ? "At Capacity"
-                                              : "Available Spots"
-                                            }
-                                          </Badge>
-                                        </div>
                                       </div>
                                     </div>
                                   </div>
