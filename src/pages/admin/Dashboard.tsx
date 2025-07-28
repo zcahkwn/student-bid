@@ -478,7 +478,6 @@ const Dashboard = ({
                       <TableHead>Title</TableHead>
                       <TableHead>Capacity</TableHead>
                       <TableHead>Event Date</TableHead>
-                      <TableHead>Bidding Opens</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Current Bids</TableHead>
                       <TableHead>Selected</TableHead>
@@ -502,7 +501,6 @@ const Dashboard = ({
                               </Badge>
                             </TableCell>
                             <TableCell>{formatDate(opportunity.date)}</TableCell>
-                            <TableCell>{opportunity.bidOpenDate ? formatDate(opportunity.bidOpenDate) : "1 week before"}</TableCell>
                             <TableCell>
                               <Badge variant={getBidOpportunityStatus(opportunity) === "Open for Bidding" ? "default" : "secondary"}>
                                 {getBidOpportunityStatus(opportunity)}
@@ -634,10 +632,8 @@ const Dashboard = ({
                                       </div>
                                     </div>
                                   </div>
-                                  {/* Capacity Status Indicator */}
+                                  {/* Student Bidders Section */}
                                   <div className="mt-4">
-
-
                                     {/* Student Bidders Section */}
                                     {currentOpportunityBidders.length > 0 && (
                                       <div className="mt-6">
