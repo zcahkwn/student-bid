@@ -44,10 +44,18 @@ const StudentDashboard = () => {
     console.log('=== SETTING UP REAL-TIME SUBSCRIPTION ===');
     console.log('Student ID:', student.id, 'Class ID:', currentClass.id);
 
-    // Initial fetch of current status from database
+    // Enhanced initial fetch of current status from database
     const fetchCurrentStatus = async () => {
       setIsLoadingStatus(true);
       try {
+        // Fetch user data
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', student.id)
+          .single();
+
+        // Fetch enrollment data
         const { data: enrollment, error } = await supabase
           .from('student_enrollments')
           .select('*')
@@ -55,21 +63,70 @@ const StudentDashboard = () => {
           .eq('class_id', currentClass.id)
           .single();
 
-        if (enrollment && !error) {
+        // Fetch bid data to check if student has placed any bids
+        const { data: bids, error: bidsError } = await supabase
+          .from('bids')
+          .select(`
+            id,
+            opportunity_id,
+            is_winner,
+            bid_status,
+            submission_timestamp,
+            opportunities!inner(class_id)
+          `)
+          .eq('user_id', student.id)
+          .eq('opportunities.class_id', currentClass.id);
+
+        if (enrollment && userData && !error && !userError) {
+          // Determine if student has any bids in this class
+          const hasAnyBids = bids && bids.length > 0;
+          
+          // Determine overall bidding result for this class
+          let overallBiddingResult = enrollment.bidding_result;
+          if (bids && bids.length > 0) {
+            // Check if student won any opportunity in this class
+            const hasWonAny = bids.some(bid => bid.is_winner === true);
+            const hasLostAny = bids.some(bid => bid.is_winner === false);
+            
+            if (hasWonAny) {
+              overallBiddingResult = 'won';
+            } else if (hasLostAny && !hasWonAny) {
+              overallBiddingResult = 'lost';
+            } else {
+              overallBiddingResult = 'pending';
+            }
+          }
+
           const updatedStudent: Student = {
-            ...student,
+            id: userData.id,
+            name: userData.name,
+            email: userData.email,
+            studentNumber: userData.student_number,
             hasUsedToken: enrollment.tokens_remaining <= 0,
-            hasBid: enrollment.token_status === 'used',
+            hasBid: hasAnyBids || enrollment.token_status === 'used',
             tokensRemaining: enrollment.tokens_remaining,
             tokenStatus: enrollment.token_status,
-            biddingResult: enrollment.bidding_result
+            biddingResult: overallBiddingResult
           };
           
           console.log('=== INITIAL STATUS FETCH ===');
           console.log('Database enrollment:', enrollment);
+          console.log('Database bids:', bids);
           console.log('Updated student:', updatedStudent);
           
           setStudent(updatedStudent);
+          
+          // Also update the current class with the updated student data
+          setCurrentClass(prevClass => {
+            if (!prevClass) return prevClass;
+            
+            return {
+              ...prevClass,
+              students: prevClass.students.map(s => 
+                s.id === updatedStudent.id ? updatedStudent : s
+              )
+            };
+          });
         }
       } catch (error) {
         console.error('Error fetching initial status:', error);
@@ -89,6 +146,39 @@ const StudentDashboard = () => {
         console.log('Token status:', updatedStudent.tokenStatus);
         console.log('Bidding result:', updatedStudent.biddingResult);
         console.log('Tokens remaining:', updatedStudent.tokensRemaining);
+        
+        // Fetch latest bid data when enrollment updates
+        try {
+          const { data: latestBids, error: bidsError } = await supabase
+            .from('bids')
+            .select(`
+              id,
+              opportunity_id,
+              is_winner,
+              bid_status,
+              submission_timestamp,
+              opportunities!inner(class_id)
+            `)
+            .eq('user_id', updatedStudent.id)
+            .eq('opportunities.class_id', currentClass.id);
+
+          if (!bidsError && latestBids) {
+            // Update bidding result based on latest bid data
+            const hasWonAny = latestBids.some(bid => bid.is_winner === true);
+            const hasLostAny = latestBids.some(bid => bid.is_winner === false);
+            
+            if (hasWonAny) {
+              updatedStudent.biddingResult = 'won';
+            } else if (hasLostAny && !hasWonAny) {
+              updatedStudent.biddingResult = 'lost';
+            }
+            
+            // Update hasBid status
+            updatedStudent.hasBid = latestBids.length > 0 || updatedStudent.tokenStatus === 'used';
+          }
+        } catch (error) {
+          console.error('Error fetching latest bids during real-time update:', error);
+        }
         
         // Store previous student state for comparison
         const previousStudent = student;

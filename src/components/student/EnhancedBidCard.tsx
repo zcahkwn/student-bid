@@ -33,6 +33,14 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
       
       setIsLoadingStatus(true);
       try {
+        // Fetch user data
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', student.id)
+          .single();
+
+        // Fetch enrollment data
         const { data: enrollment, error } = await supabase
           .from('student_enrollments')
           .select('*')
@@ -40,18 +48,54 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
           .eq('class_id', classConfig.id)
           .single();
 
-        if (enrollment && !error) {
+        // Fetch bid data for this class
+        const { data: bids, error: bidsError } = await supabase
+          .from('bids')
+          .select(`
+            id,
+            opportunity_id,
+            is_winner,
+            bid_status,
+            submission_timestamp,
+            opportunities!inner(class_id)
+          `)
+          .eq('user_id', student.id)
+          .eq('opportunities.class_id', classConfig.id);
+
+        if (enrollment && userData && !error && !userError) {
+          // Determine if student has any bids in this class
+          const hasAnyBids = bids && bids.length > 0;
+          
+          // Determine overall bidding result for this class
+          let overallBiddingResult = enrollment.bidding_result;
+          if (bids && bids.length > 0) {
+            const hasWonAny = bids.some(bid => bid.is_winner === true);
+            const hasLostAny = bids.some(bid => bid.is_winner === false);
+            
+            if (hasWonAny) {
+              overallBiddingResult = 'won';
+            } else if (hasLostAny && !hasWonAny) {
+              overallBiddingResult = 'lost';
+            } else {
+              overallBiddingResult = 'pending';
+            }
+          }
+
           const updatedStudent: Student = {
-            ...student,
+            id: userData.id,
+            name: userData.name,
+            email: userData.email,
+            studentNumber: userData.student_number,
             hasUsedToken: enrollment.tokens_remaining <= 0,
-            hasBid: enrollment.token_status === 'used',
+            hasBid: hasAnyBids || enrollment.token_status === 'used',
             tokensRemaining: enrollment.tokens_remaining,
             tokenStatus: enrollment.token_status,
-            biddingResult: enrollment.bidding_result
+            biddingResult: overallBiddingResult
           };
           
           console.log('=== ENHANCED BID CARD STATUS UPDATE ===');
           console.log('Database enrollment:', enrollment);
+          console.log('Database bids:', bids);
           console.log('Updated student for bid card:', updatedStudent);
           
           setCurrentStudent(updatedStudent);

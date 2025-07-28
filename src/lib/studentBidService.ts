@@ -224,14 +224,47 @@ export async function getUserStatus(userId: string, classId: string): Promise<St
       .eq('class_id', classId)
       .single();
 
+    // Fetch bid data for this class to get accurate bidding status
+    const { data: bids, error: bidsError } = await supabase
+      .from('bids')
+      .select(`
+        id,
+        opportunity_id,
+        is_winner,
+        bid_status,
+        submission_timestamp,
+        opportunities!inner(class_id)
+      `)
+      .eq('user_id', userId)
+      .eq('opportunities.class_id', classId);
+
     if (userError || enrollmentError || !user || !enrollment) {
       console.error('Error fetching user status:', userError || enrollmentError);
       return null;
     }
 
+    // Determine if student has any bids in this class
+    const hasAnyBids = bids && bids.length > 0;
+    
+    // Determine overall bidding result for this class
+    let overallBiddingResult = enrollment.bidding_result;
+    if (bids && bids.length > 0) {
+      const hasWonAny = bids.some(bid => bid.is_winner === true);
+      const hasLostAny = bids.some(bid => bid.is_winner === false);
+      
+      if (hasWonAny) {
+        overallBiddingResult = 'won';
+      } else if (hasLostAny && !hasWonAny) {
+        overallBiddingResult = 'lost';
+      } else {
+        overallBiddingResult = 'pending';
+      }
+    }
+
     console.log('=== USER STATUS FETCHED ===');
     console.log('User data:', user);
     console.log('Enrollment data:', enrollment);
+    console.log('Bid data:', bids);
 
     return {
       id: user.id,
@@ -239,10 +272,10 @@ export async function getUserStatus(userId: string, classId: string): Promise<St
       email: user.email,
       studentNumber: user.student_number || '',
       hasUsedToken: enrollment.tokens_remaining <= 0,
-      hasBid: enrollment.token_status === 'used',
+      hasBid: hasAnyBids || enrollment.token_status === 'used',
       tokensRemaining: enrollment.tokens_remaining,
       tokenStatus: enrollment.token_status,
-      biddingResult: enrollment.bidding_result
+      biddingResult: overallBiddingResult
     };
   } catch (error) {
     console.error('Error getting user status:', error);
@@ -284,23 +317,51 @@ export function subscribeToUserEnrollmentUpdates(
           .eq('id', userId)
           .single();
 
+        // Fetch latest bid data for this class
+        const { data: latestBids } = await supabase
+          .from('bids')
+          .select(`
+            id,
+            opportunity_id,
+            is_winner,
+            bid_status,
+            opportunities!inner(class_id)
+          `)
+          .eq('user_id', userId)
+          .eq('opportunities.class_id', classId);
+
         if (user) {
+          // Determine overall bidding result based on latest bids
+          let overallBiddingResult = updatedData.bidding_result;
+          if (latestBids && latestBids.length > 0) {
+            const hasWonAny = latestBids.some(bid => bid.is_winner === true);
+            const hasLostAny = latestBids.some(bid => bid.is_winner === false);
+            
+            if (hasWonAny) {
+              overallBiddingResult = 'won';
+            } else if (hasLostAny && !hasWonAny) {
+              overallBiddingResult = 'lost';
+            } else {
+              overallBiddingResult = 'pending';
+            }
+          }
+
           const student: Student = {
             id: user.id,
             name: user.name,
             email: user.email,
             studentNumber: user.student_number || '',
             hasUsedToken: updatedData.tokens_remaining <= 0,
-            hasBid: updatedData.token_status === 'used',
+            hasBid: (latestBids && latestBids.length > 0) || updatedData.token_status === 'used',
             tokensRemaining: updatedData.tokens_remaining,
             tokenStatus: updatedData.token_status,
-            biddingResult: updatedData.bidding_result
+            biddingResult: overallBiddingResult
           };
           
           console.log('=== CALLING onUpdate CALLBACK ===');
           console.log('Updated student object:', student);
           console.log('Token status changed:', payload.old?.token_status, '->', updatedData.token_status);
-          console.log('Bidding result changed:', payload.old?.bidding_result, '->', updatedData.bidding_result);
+          console.log('Bidding result changed:', payload.old?.bidding_result, '->', overallBiddingResult);
           
           onUpdate(student);
         }
@@ -327,17 +388,45 @@ export function subscribeToUserEnrollmentUpdates(
           .eq('class_id', classId)
           .single();
 
+        // Fetch latest bid data for this class
+        const { data: latestBids } = await supabase
+          .from('bids')
+          .select(`
+            id,
+            opportunity_id,
+            is_winner,
+            bid_status,
+            opportunities!inner(class_id)
+          `)
+          .eq('user_id', userId)
+          .eq('opportunities.class_id', classId);
+
         if (enrollment) {
+          // Determine overall bidding result based on latest bids
+          let overallBiddingResult = enrollment.bidding_result;
+          if (latestBids && latestBids.length > 0) {
+            const hasWonAny = latestBids.some(bid => bid.is_winner === true);
+            const hasLostAny = latestBids.some(bid => bid.is_winner === false);
+            
+            if (hasWonAny) {
+              overallBiddingResult = 'won';
+            } else if (hasLostAny && !hasWonAny) {
+              overallBiddingResult = 'lost';
+            } else {
+              overallBiddingResult = 'pending';
+            }
+          }
+
           const student: Student = {
             id: updatedUserData.id,
             name: updatedUserData.name,
             email: updatedUserData.email,
             studentNumber: updatedUserData.student_number || '',
             hasUsedToken: enrollment.tokens_remaining <= 0,
-            hasBid: enrollment.token_status === 'used',
+            hasBid: (latestBids && latestBids.length > 0) || enrollment.token_status === 'used',
             tokensRemaining: enrollment.tokens_remaining,
             tokenStatus: enrollment.token_status,
-            biddingResult: enrollment.bidding_result
+            biddingResult: overallBiddingResult
           };
           
           console.log('=== USER UPDATE - CALLING onUpdate ===');
