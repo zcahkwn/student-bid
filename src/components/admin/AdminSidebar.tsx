@@ -1,16 +1,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { ClassConfig } from "@/types";
 import { cn } from "@/lib/utils";
 import { 
-  Users, 
-  Coins, 
-  Calendar, 
-  Settings, 
   Plus,
   ChevronRight,
   BookOpen

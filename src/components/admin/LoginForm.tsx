@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { authenticateAdmin } from "@/utils/auth";
 import { useToast } from "@/hooks/use-toast";
 
 interface AdminLoginProps {
@@ -23,9 +22,8 @@ const AdminLoginForm = ({ onLogin }: AdminLoginProps) => {
 
     // Simulate API call
     setTimeout(() => {
-      const authState = authenticateAdmin(username, password);
-      
-      if (authState.isAdmin) {
+      // Simple hardcoded admin check
+      if (username === "admin" && password === "admin123") {
         toast({
           title: "Login successful",
           description: "Welcome to the admin dashboard",

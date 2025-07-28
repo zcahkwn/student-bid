@@ -23,7 +23,6 @@ export interface Student {
   email: string;
   studentNumber?: string; // Added student number field
   hasUsedToken?: boolean; // Now optional - specific to class enrollment
-  isSelected?: boolean;
   hasBid?: boolean; // Now optional - specific to class enrollment
   // Additional fields for normalized schema compatibility
   tokensRemaining?: number;
@@ -32,10 +31,6 @@ export interface Student {
   enrollments?: StudentEnrollment[];
 }
 
-export interface Admin {
-  username: string;
-  password: string;
-}
 
 export interface BidOpportunity {
   id: string;
@@ -59,19 +54,4 @@ export interface ClassConfig {
   bidders: Student[];
   selectedStudents: Student[];
   bidOpportunities: BidOpportunity[];
-}
-
-export interface AuthState {
-  isAdmin: boolean;
-  isStudent: boolean;
-  currentStudent: Student | null;
-  currentAdmin: Admin | null;
-  currentClass: ClassConfig | null;
-}
-
-interface AppState {
-  classes: ClassConfig[];
-  currentClass: ClassConfig | null;
-  isSelectionInProgress: boolean;
-  isSelectionComplete: boolean;
 }

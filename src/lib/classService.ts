@@ -1,6 +1,5 @@
 import { supabase } from '@/lib/supabase'
 import { ClassConfig, Student, BidOpportunity } from '@/types'
-import { getClassBidStatistics, updateBidOpportunitiesWithCounts } from '@/lib/bidTrackingService'
 import { getClassStudents } from '@/lib/userService'
 
 interface CreateClassData {

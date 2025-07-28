@@ -9,9 +9,8 @@ import { Student, ClassConfig, BidOpportunity } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate, getBidOpportunityStatus } from "@/utils/dates";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, Users, Calendar, Trophy, Clock, Coins } from "lucide-react";
+import { Menu, X, Calendar, Trophy, Coins } from "lucide-react";
 import { subscribeToUserEnrollmentUpdates } from "@/lib/studentBidService";
-import { fetchClasses } from "@/lib/classService";
 import { supabase } from "@/lib/supabase";
 
 const StudentDashboard = () => {

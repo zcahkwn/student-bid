@@ -1,27 +1,6 @@
-import { Student, Admin, ClassConfig, AuthState, User } from "@/types";
+import { Student, ClassConfig, User } from "@/types";
 import { getUserByCredentials, getUserEnrollments, getClassStudents } from "@/lib/userService";
 
-// Initial auth state
-export const initialAuthState: AuthState = {
-  isAdmin: false,
-  isStudent: false,
-  currentStudent: null,
-  currentAdmin: null,
-  currentClass: null
-};
-
-// Admin authentication
-export const authenticateAdmin = (username: string, password: string): AuthState => {
-  // Simple hardcoded admin check - in production, this would use proper authentication
-  if (username === "admin" && password === "admin123") {
-    return {
-      ...initialAuthState,
-      isAdmin: true,
-      currentAdmin: { username: "admin", password: "admin123" }
-    };
-  }
-  return initialAuthState;
-};
 
 // Student authentication using email and student number with normalized schema
 export const authenticateStudent = async (
@@ -120,11 +99,4 @@ export const authenticateStudent = async (
       errorMessage: "Authentication failed due to system error"
     };
   }
-};
-
-
-
-// Log out function
-export const logout = (): AuthState => {
-  return initialAuthState;
 };

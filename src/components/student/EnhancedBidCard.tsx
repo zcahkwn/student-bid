@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Shield, Clock, CheckCircle, AlertTriangle, Coins } from "lucide-react";
+import { Loader2, Clock, CheckCircle, AlertTriangle, Coins } from "lucide-react";
 import { toast } from "sonner";
 import { Student, ClassConfig, BidOpportunity } from "@/types";
 import { useStudentBidding } from "@/hooks/useStudentBidding";

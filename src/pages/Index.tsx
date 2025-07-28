@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
-import { v4 as uuidv4 } from "uuid";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import AdminLoginForm from "@/components/admin/LoginForm";
 import StudentLogin from "@/components/student/StudentLogin";
@@ -15,18 +13,19 @@ import Dashboard from "@/pages/admin/Dashboard";
 import Students from "@/pages/admin/Students";
 import Selection from "@/pages/admin/Selection";
 import StudentDashboard from "@/components/student/StudentDashboard";
-import { Student, ClassConfig, AuthState, BidOpportunity } from "@/types";
-import { initialAuthState, logout } from "@/utils/auth";
+import { Student, ClassConfig, BidOpportunity } from "@/types";
 import { createClass, fetchClasses, updateClass, deleteClassAtomic, updateBidOpportunity, ClassDeletionResult } from "@/lib/classService";
-import { Loader2, AlertTriangle, CheckCircle, Trash2, Menu, X, Info } from "lucide-react";
+import { Loader2, Menu, X } from "lucide-react";
 
 const Index = () => {
-  // Auth state
-  const [auth, setAuth] = useState<AuthState>(initialAuthState);
+  // Auth state - simplified
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isStudent, setIsStudent] = useState(false);
+  const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
+  const [currentClass, setCurrentClass] = useState<ClassConfig | null>(null);
   
   // App state
   const [classes, setClasses] = useState<ClassConfig[]>([]);
-  const [currentClass, setCurrentClass] = useState<ClassConfig | null>(null);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isLoading, setIsLoading] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -35,11 +34,6 @@ const Index = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newClassName, setNewClassName] = useState("");
   const [isCreatingClass, setIsCreatingClass] = useState(false);
-  
-  // Class deletion state
-  const [deletionInProgress, setDeletionInProgress] = useState<string | null>(null);
-  const [deletionResult, setDeletionResult] = useState<ClassDeletionResult | null>(null);
-  const [showDeletionDialog, setShowDeletionDialog] = useState(false);
   
   const { toast } = useToast();
   
@@ -134,23 +128,15 @@ const Index = () => {
   
   const handleAdminLogin = (isSuccess: boolean) => {
     if (isSuccess) {
-      setAuth({
-        ...initialAuthState,
-        isAdmin: true,
-        currentAdmin: { username: "admin", password: "admin123" }
-      });
-    }
-  };
-  
-  const handleStudentLogin = (isSuccess: boolean) => {
-    if (isSuccess) {
-      // Auth state is set within the StudentLogin component
-      // This is just a callback for the UI flow
+      setIsAdmin(true);
     }
   };
   
   const handleLogout = () => {
-    setAuth(logout());
+    setIsAdmin(false);
+    setIsStudent(false);
+    setCurrentStudent(null);
+    setCurrentClass(null);
   };
   
   const handleSelectClass = (classId: string) => {
@@ -354,7 +340,7 @@ const Index = () => {
   };
   
   const handleBidSubmitted = async (bidId: string, updatedStudent: Student, opportunityId: string) => {
-    if (!currentClass || !auth.currentStudent) return;
+    if (!currentClass || !currentStudent) return;
     
     try {
       // Refresh the class data from the database to get the latest bid counts
@@ -406,10 +392,7 @@ const Index = () => {
         // Update state
         setClasses(updatedClasses);
         setCurrentClass(updatedClass);
-        setAuth({
-          ...auth,
-          currentStudent: updatedStudent,
-        });
+        setCurrentStudent(updatedStudent);
         
         // Explicitly save to localStorage to ensure changes are persisted immediately
         localStorage.setItem("classData", JSON.stringify(updatedClasses));
@@ -455,10 +438,6 @@ const Index = () => {
       
       setClasses(updatedClasses);
       setCurrentClass(updatedClass);
-      setAuth({
-        ...auth,
-        currentClass: updatedClass
-      });
       
       localStorage.setItem("classData", JSON.stringify(updatedClasses));
     }
@@ -492,7 +471,6 @@ const Index = () => {
     
     console.log('=== USER CONFIRMED DELETION ===');
     console.log('Starting deletion process for class:', classId);
-    setDeletionInProgress(classId);
     
     try {
       console.log('=== CALLING deleteClassAtomic FUNCTION ===');
@@ -539,7 +517,6 @@ const Index = () => {
         variant: "destructive",
       });
     } finally {
-      setDeletionInProgress(null);
       console.log('=== CLASS DELETION PROCESS COMPLETED ===');
     }
   };
@@ -590,7 +567,7 @@ const Index = () => {
   }
   
   // Render based on authentication state
-  if (auth.isAdmin) {
+  if (isAdmin) {
     return (
       <div className="min-h-screen bg-gray-50">
         <header className="bg-white border-b relative z-50">
@@ -711,16 +688,14 @@ const Index = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        
-        {/* Class Deletion Confirmation Dialog */}
       </div>
     );
-  } else if (auth.isStudent && auth.currentStudent && auth.currentClass) {
+  } else if (isStudent && currentStudent && currentClass) {
     return (
       <div className="min-h-screen bg-gray-50">
         <StudentDashboard 
-          student={auth.currentStudent}
-          classConfig={auth.currentClass}
+          student={currentStudent}
+          classConfig={currentClass}
           onBidSubmitted={handleBidSubmitted}
           onLogout={handleLogout}
         />
@@ -748,12 +723,7 @@ const Index = () => {
             <TabsContent value="student" className="flex justify-center">
               <StudentLogin 
                 classes={classes}
-                onLogin={(success) => {
-                  if (success) {
-                    // State is updated in the component through auth utilities
-                    handleStudentLogin(success);
-                  }
-                }}
+                onLogin={() => {}}
               />
             </TabsContent>
             
