@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Activity, RefreshCw, Coins } from "lucide-react";
+import { Loader2, Activity, RefreshCw, Coins, Users } from "lucide-react";
 import { ClassConfig, Student } from "@/types";
 import { supabase } from "@/lib/supabase";
 import { getClassStudents } from "@/lib/userService";
