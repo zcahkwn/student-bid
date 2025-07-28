@@ -867,6 +867,21 @@ const Dashboard = ({
                 />
                 <span className="text-sm text-muted-foreground">students</span>
               </div>
+              <Badge 
+                variant="outline" 
+                className={`text-xs mt-1 ${
+                  selectedStudents.length === 0 || !selectedStudents.some(s => s.id === bidder.id)
+                    ? selectedStudents.length === 0 
+                      ? 'bg-yellow-100 text-yellow-800'
+                      : 'bg-red-100 text-red-800'
+                    : 'bg-green-100 text-green-800'
+                }`}
+              >
+                {selectedStudents.length === 0 || !selectedStudents.some(s => s.id === bidder.id)
+                  ? selectedStudents.length === 0 ? 'pending' : 'rejected'
+                  : 'selected'
+                }
+              </Badge>
               <p className="text-xs text-muted-foreground">
                 Any positive number of students for this opportunity
               </p>
