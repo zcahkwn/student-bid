@@ -586,7 +586,7 @@ const Dashboard = ({
                               <TableCell colSpan={8} className="p-0">
                                 <div className="bg-blue-50/50 border-l-4 border-l-academy-blue p-6">
                                   <h3 className="text-lg font-semibold mb-4 text-academy-blue">
-                                    Details: {opportunity.title}
+                                    Details of {opportunity.title}
                                   </h3>
                                   
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
