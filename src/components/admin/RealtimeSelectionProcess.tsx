@@ -570,6 +570,9 @@ const RealtimeSelectionProcess = ({
                           </div>
                         </div>
                         <div className="text-right">
+                          <Badge variant="outline" className="text-xs mt-1">
+                            {bidder.bidStatus}
+                          </Badge>
                         </div>
                       </div>
                     ))}
