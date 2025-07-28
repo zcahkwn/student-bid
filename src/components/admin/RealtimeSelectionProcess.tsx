@@ -358,6 +358,12 @@ const RealtimeSelectionProcess = ({
         );
         
         console.log('Selection results successfully updated in database');
+        
+        // Refresh bidder data to reflect updated bid_status from database
+        console.log('=== REFRESHING BIDDER DATA AFTER SELECTION ===');
+        await fetchBidCounts();
+        
+        console.log('Bidder data refreshed successfully');
       } catch (updateError) {
         console.error('Error updating selection results in database:', updateError);
         toast({
