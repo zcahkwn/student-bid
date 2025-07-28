@@ -574,9 +574,6 @@ const RealtimeSelectionProcess = ({
                             <Clock className="w-3 h-3" />
                             {new Date(bidder.bidTimestamp).toLocaleTimeString()}
                           </div>
-                          <Badge variant="outline" className="text-xs mt-1">
-                            {bidder.bidStatus}
-                          </Badge>
                         </div>
                       </div>
                     ))}
