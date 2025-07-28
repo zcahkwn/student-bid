@@ -634,8 +634,36 @@ const Dashboard = ({
                                       </div>
                                     </div>
                                   </div>
-
-
+                                  {/* Capacity Status Indicator */}
+                                  <div className="mt-4">
+                                    <div className="flex items-center justify-between mb-2">
+                                      <Label className="text-sm font-medium text-gray-600">Live Capacity Status</Label>
+                                      <span className="text-sm text-gray-500">
+                                        {realTimeBidCount} / {opportunity.capacity || currentClass.capacity} students
+                                      </span>
+                                    </div>
+                                    <div className="w-full bg-gray-200 rounded-full h-2">
+                                      <div 
+                                        className={`h-2 rounded-full transition-all duration-300 ${
+                                          realTimeBidCount > (opportunity.capacity || currentClass.capacity)
+                                            ? 'bg-red-500' 
+                                            : realTimeBidCount === (opportunity.capacity || currentClass.capacity)
+                                            ? 'bg-yellow-500'
+                                            : 'bg-green-500'
+                                        }`}
+                                        style={{ 
+                                          width: `${Math.min((realTimeBidCount / (opportunity.capacity || currentClass.capacity)) * 100, 100)}%` 
+                                        }}
+                                      />
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      {realTimeBidCount > (opportunity.capacity || currentClass.capacity)
+                                        ? `${realTimeBidCount - (opportunity.capacity || currentClass.capacity)} students over capacity - random selection will be required`
+                                        : realTimeBidCount === (opportunity.capacity || currentClass.capacity)
+                                        ? "At full capacity - all bidders can be selected"
+                                        : `${(opportunity.capacity || currentClass.capacity) - realTimeBidCount} spots remaining`
+                                      }
+                                    </p>
 
                                     {/* Student Bidders Section */}
                                     {currentOpportunityBidders.length > 0 && (
