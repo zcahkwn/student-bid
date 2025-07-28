@@ -63,39 +63,10 @@ const StudentDashboard = () => {
           .eq('class_id', currentClass.id)
           .single();
 
-        // Fetch bid data to check if student has placed any bids
-        const { data: bids, error: bidsError } = await supabase
-          .from('bids')
-          .select(`
-            id,
-            opportunity_id,
-            is_winner,
-            bid_status,
-            submission_timestamp,
-            opportunities!inner(class_id)
-          `)
-          .eq('user_id', student.id)
-          .eq('opportunities.class_id', currentClass.id);
 
         if (enrollment && userData && !error && !userError) {
-          // Determine if student has any bids in this class
-          const hasAnyBids = bids && bids.length > 0;
-          
-          // Determine overall bidding result for this class
-          let overallBiddingResult = enrollment.bidding_result;
-          if (bids && bids.length > 0) {
-            // Check if student won any opportunity in this class
-            const hasWonAny = bids.some(bid => bid.is_winner === true);
-            const hasLostAny = bids.some(bid => bid.is_winner === false);
-            
-            if (hasWonAny) {
-              overallBiddingResult = 'won';
-            } else if (hasLostAny && !hasWonAny) {
-              overallBiddingResult = 'lost';
-            } else {
-              overallBiddingResult = 'pending';
-            }
-          }
+          // Check if student has placed any bids by checking token status
+          const hasPlacedBids = enrollment.token_status === 'used';
 
           const updatedStudent: Student = {
             id: userData.id,
@@ -103,15 +74,15 @@ const StudentDashboard = () => {
             email: userData.email,
             studentNumber: userData.student_number,
             hasUsedToken: enrollment.tokens_remaining <= 0,
-            hasBid: hasAnyBids || enrollment.token_status === 'used',
+            hasBid: hasPlacedBids,
             tokensRemaining: enrollment.tokens_remaining,
             tokenStatus: enrollment.token_status,
-            biddingResult: overallBiddingResult
+            biddingResult: enrollment.bidding_result
           };
           
           console.log('=== INITIAL STATUS FETCH ===');
           console.log('Database enrollment:', enrollment);
-          console.log('Database bids:', bids);
+          console.log('Bidding result from enrollment table:', enrollment.bidding_result);
           console.log('Updated student:', updatedStudent);
           
           setStudent(updatedStudent);
@@ -176,6 +147,11 @@ const StudentDashboard = () => {
         // Check for significant changes to show notifications
         const tokenStatusChanged = previousStudent?.tokenStatus !== updatedStudent.tokenStatus;
         const biddingResultChanged = previousStudent?.biddingResult !== updatedStudent.biddingResult;
+        
+        console.log('=== BIDDING RESULT COMPARISON ===');
+        console.log('Previous bidding result:', previousStudent?.biddingResult);
+        console.log('New bidding result:', updatedStudent.biddingResult);
+        console.log('Bidding result changed:', biddingResultChanged);
         
         // Directly update the student state with the latest enrollment data
         console.log('=== UPDATING STUDENT STATE ===');
