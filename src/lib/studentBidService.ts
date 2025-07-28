@@ -246,20 +246,8 @@ export async function getUserStatus(userId: string, classId: string): Promise<St
     // Determine if student has any bids in this class
     const hasAnyBids = bids && bids.length > 0;
     
-    // Determine overall bidding result for this class
-    let overallBiddingResult = enrollment.bidding_result;
-    if (bids && bids.length > 0) {
-      const hasWonAny = bids.some(bid => bid.is_winner === true);
-      const hasLostAny = bids.some(bid => bid.is_winner === false);
-      
-      if (hasWonAny) {
-        overallBiddingResult = 'won';
-      } else if (hasLostAny && !hasWonAny) {
-        overallBiddingResult = 'lost';
-      } else {
-        overallBiddingResult = 'pending';
-      }
-    }
+    // Use the bidding_result directly from student_enrollments table
+    const biddingResult = enrollment.bidding_result;
 
     console.log('=== USER STATUS FETCHED ===');
     console.log('User data:', user);
@@ -275,7 +263,7 @@ export async function getUserStatus(userId: string, classId: string): Promise<St
       hasBid: hasAnyBids || enrollment.token_status === 'used',
       tokensRemaining: enrollment.tokens_remaining,
       tokenStatus: enrollment.token_status,
-      biddingResult: overallBiddingResult
+      biddingResult: biddingResult
     };
   } catch (error) {
     console.error('Error getting user status:', error);
