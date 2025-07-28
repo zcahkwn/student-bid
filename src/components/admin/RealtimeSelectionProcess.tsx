@@ -570,8 +570,19 @@ const RealtimeSelectionProcess = ({
                           </div>
                         </div>
                         <div className="text-right">
-                          <Badge variant="outline" className="text-xs mt-1">
-                            {bidder.bidStatus}
+                          <Badge 
+                            variant="outline" 
+                            className={`text-xs mt-1 ${
+                              selectedStudents.length === 0 
+                                ? 'bg-yellow-100 text-yellow-800' 
+                                : bidder.bidStatus === 'selected' 
+                                  ? 'bg-green-100 text-green-800'
+                                  : bidder.bidStatus === 'rejected'
+                                    ? 'bg-red-100 text-red-800'
+                                    : 'bg-yellow-100 text-yellow-800'
+                            }`}
+                          >
+                            {selectedStudents.length === 0 ? 'pending' : bidder.bidStatus}
                           </Badge>
                         </div>
                       </div>
