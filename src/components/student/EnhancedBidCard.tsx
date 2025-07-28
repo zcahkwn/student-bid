@@ -66,20 +66,8 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
           // Determine if student has any bids in this class
           const hasAnyBids = bids && bids.length > 0;
           
-          // Determine overall bidding result for this class
-          let overallBiddingResult = enrollment.bidding_result;
-          if (bids && bids.length > 0) {
-            const hasWonAny = bids.some(bid => bid.is_winner === true);
-            const hasLostAny = bids.some(bid => bid.is_winner === false);
-            
-            if (hasWonAny) {
-              overallBiddingResult = 'won';
-            } else if (hasLostAny && !hasWonAny) {
-              overallBiddingResult = 'lost';
-            } else {
-              overallBiddingResult = 'pending';
-            }
-          }
+          // Use the bidding_result directly from student_enrollments table
+          const biddingResult = enrollment.bidding_result;
 
           const updatedStudent: Student = {
             id: userData.id,
@@ -90,7 +78,7 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
             hasBid: hasAnyBids || enrollment.token_status === 'used',
             tokensRemaining: enrollment.tokens_remaining,
             tokenStatus: enrollment.token_status,
-            biddingResult: overallBiddingResult
+            biddingResult: biddingResult
           };
           
           console.log('=== ENHANCED BID CARD STATUS UPDATE ===');

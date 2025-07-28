@@ -246,8 +246,20 @@ export async function getUserStatus(userId: string, classId: string): Promise<St
     // Determine if student has any bids in this class
     const hasAnyBids = bids && bids.length > 0;
     
-    // Use the bidding_result directly from student_enrollments table
-    const biddingResult = enrollment.bidding_result;
+    // Determine overall bidding result for this class
+    let overallBiddingResult = enrollment.bidding_result;
+    if (bids && bids.length > 0) {
+      const hasWonAny = bids.some(bid => bid.is_winner === true);
+      const hasLostAny = bids.some(bid => bid.is_winner === false);
+      
+      if (hasWonAny) {
+        overallBiddingResult = 'won';
+      } else if (hasLostAny && !hasWonAny) {
+        overallBiddingResult = 'lost';
+      } else {
+        overallBiddingResult = 'pending';
+      }
+    }
 
     console.log('=== USER STATUS FETCHED ===');
     console.log('User data:', user);
@@ -263,7 +275,7 @@ export async function getUserStatus(userId: string, classId: string): Promise<St
       hasBid: hasAnyBids || enrollment.token_status === 'used',
       tokensRemaining: enrollment.tokens_remaining,
       tokenStatus: enrollment.token_status,
-      biddingResult: biddingResult
+      biddingResult: overallBiddingResult
     };
   } catch (error) {
     console.error('Error getting user status:', error);
@@ -319,20 +331,8 @@ export function subscribeToUserEnrollmentUpdates(
           .eq('opportunities.class_id', classId);
 
         if (user) {
-          // Determine overall bidding result based on latest bids
-          let overallBiddingResult = updatedData.bidding_result;
-          if (latestBids && latestBids.length > 0) {
-            const hasWonAny = latestBids.some(bid => bid.is_winner === true);
-            const hasLostAny = latestBids.some(bid => bid.is_winner === false);
-            
-            if (hasWonAny) {
-              overallBiddingResult = 'won';
-            } else if (hasLostAny && !hasWonAny) {
-              overallBiddingResult = 'lost';
-            } else {
-              overallBiddingResult = 'pending';
-            }
-          }
+          // Use the bidding_result directly from student_enrollments table
+          const biddingResult = updatedData.bidding_result;
 
           const student: Student = {
             id: user.id,
@@ -343,7 +343,7 @@ export function subscribeToUserEnrollmentUpdates(
             hasBid: (latestBids && latestBids.length > 0) || updatedData.token_status === 'used',
             tokensRemaining: updatedData.tokens_remaining,
             tokenStatus: updatedData.token_status,
-            biddingResult: overallBiddingResult
+            biddingResult: biddingResult
           };
           
           console.log('=== CALLING onUpdate CALLBACK ===');

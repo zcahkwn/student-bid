@@ -163,16 +163,6 @@ const StudentDashboard = () => {
             .eq('opportunities.class_id', currentClass.id);
 
           if (!bidsError && latestBids) {
-            // Update bidding result based on latest bid data
-            const hasWonAny = latestBids.some(bid => bid.is_winner === true);
-            const hasLostAny = latestBids.some(bid => bid.is_winner === false);
-            
-            if (hasWonAny) {
-              updatedStudent.biddingResult = 'won';
-            } else if (hasLostAny && !hasWonAny) {
-              updatedStudent.biddingResult = 'lost';
-            }
-            
             // Update hasBid status
             updatedStudent.hasBid = latestBids.length > 0 || updatedStudent.tokenStatus === 'used';
           }
