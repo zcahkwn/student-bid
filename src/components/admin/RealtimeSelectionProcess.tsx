@@ -583,6 +583,11 @@ const RealtimeSelectionProcess = ({
                   </div>
                 </div>
               )}
+              {bidCounts[selectedOpportunity.id]?.lastUpdated && (
+                <div className="text-xs text-muted-foreground">
+                  Last updated: {new Date(bidCounts[selectedOpportunity.id].lastUpdated).toLocaleTimeString()}
+                </div>
+              )}
             </div>
           )}
         </CardContent>
