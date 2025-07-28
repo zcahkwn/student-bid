@@ -114,32 +114,12 @@ const StudentDashboard = () => {
       async (updatedStudent) => {
         console.log('=== REAL-TIME UPDATE RECEIVED ===');
         console.log('Updated student data:', updatedStudent);
+        console.log('Bidding result from real-time update:', updatedStudent.biddingResult);
         console.log('Token status:', updatedStudent.tokenStatus);
-        console.log('Bidding result:', updatedStudent.biddingResult);
         console.log('Tokens remaining:', updatedStudent.tokensRemaining);
         
-        // Fetch latest bid data when enrollment updates
-        try {
-          const { data: latestBids, error: bidsError } = await supabase
-            .from('bids')
-            .select(`
-              id,
-              opportunity_id,
-              is_winner,
-              bid_status,
-              submission_timestamp,
-              opportunities!inner(class_id)
-            `)
-            .eq('user_id', updatedStudent.id)
-            .eq('opportunities.class_id', currentClass.id);
-
-          if (!bidsError && latestBids) {
-            // Update hasBid status
-            updatedStudent.hasBid = latestBids.length > 0 || updatedStudent.tokenStatus === 'used';
-          }
-        } catch (error) {
-          console.error('Error fetching latest bids during real-time update:', error);
-        }
+        // Use token status to determine if student has bid
+        updatedStudent.hasBid = updatedStudent.tokenStatus === 'used';
         
         // Store previous student state for comparison
         const previousStudent = student;

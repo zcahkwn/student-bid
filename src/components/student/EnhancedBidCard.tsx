@@ -48,26 +48,10 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
           .eq('class_id', classConfig.id)
           .single();
 
-        // Fetch bid data for this class
-        const { data: bids, error: bidsError } = await supabase
-          .from('bids')
-          .select(`
-            id,
-            opportunity_id,
-            is_winner,
-            bid_status,
-            submission_timestamp,
-            opportunities!inner(class_id)
-          `)
-          .eq('user_id', student.id)
-          .eq('opportunities.class_id', classConfig.id);
 
         if (enrollment && userData && !error && !userError) {
-          // Determine if student has any bids in this class
-          const hasAnyBids = bids && bids.length > 0;
-          
-          // Use the bidding_result directly from student_enrollments table
-          const biddingResult = enrollment.bidding_result;
+          // Check if student has placed bids by checking token status
+          const hasPlacedBids = enrollment.token_status === 'used';
 
           const updatedStudent: Student = {
             id: userData.id,
@@ -75,15 +59,15 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
             email: userData.email,
             studentNumber: userData.student_number,
             hasUsedToken: enrollment.tokens_remaining <= 0,
-            hasBid: hasAnyBids || enrollment.token_status === 'used',
+            hasBid: hasPlacedBids,
             tokensRemaining: enrollment.tokens_remaining,
             tokenStatus: enrollment.token_status,
-            biddingResult: biddingResult
+            biddingResult: enrollment.bidding_result
           };
           
           console.log('=== ENHANCED BID CARD STATUS UPDATE ===');
           console.log('Database enrollment:', enrollment);
-          console.log('Database bids:', bids);
+          console.log('Bidding result from enrollment:', enrollment.bidding_result);
           console.log('Updated student for bid card:', updatedStudent);
           
           setCurrentStudent(updatedStudent);

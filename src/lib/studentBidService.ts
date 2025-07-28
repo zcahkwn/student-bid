@@ -390,20 +390,8 @@ export function subscribeToUserEnrollmentUpdates(
           .eq('opportunities.class_id', classId);
 
         if (enrollment) {
-          // Determine overall bidding result based on latest bids
-          let overallBiddingResult = enrollment.bidding_result;
-          if (latestBids && latestBids.length > 0) {
-            const hasWonAny = latestBids.some(bid => bid.is_winner === true);
-            const hasLostAny = latestBids.some(bid => bid.is_winner === false);
-            
-            if (hasWonAny) {
-              overallBiddingResult = 'won';
-            } else if (hasLostAny && !hasWonAny) {
-              overallBiddingResult = 'lost';
-            } else {
-              overallBiddingResult = 'pending';
-            }
-          }
+          // Check if student has placed bids by checking token status
+          const hasPlacedBids = enrollment.token_status === 'used';
 
           const student: Student = {
             id: updatedUserData.id,
@@ -411,10 +399,10 @@ export function subscribeToUserEnrollmentUpdates(
             email: updatedUserData.email,
             studentNumber: updatedUserData.student_number || '',
             hasUsedToken: enrollment.tokens_remaining <= 0,
-            hasBid: (latestBids && latestBids.length > 0) || enrollment.token_status === 'used',
+            hasBid: hasPlacedBids,
             tokensRemaining: enrollment.tokens_remaining,
             tokenStatus: enrollment.token_status,
-            biddingResult: overallBiddingResult
+            biddingResult: enrollment.bidding_result
           };
           
           console.log('=== USER UPDATE - CALLING onUpdate ===');
