@@ -582,7 +582,7 @@ const Index = () => {
                 {sidebarCollapsed ? <Menu className="w-5 h-5" /> : <X className="w-5 h-5" />}
               </Button>
               <h1 className="text-2xl font-heading font-bold text-academy-blue mb-4 md:mb-0">
-                Student Bidding System - Admin
+                Token Bidding Platform - Admin
               </h1>
             </div>
             <Button variant="outline" onClick={handleLogout}>Logout</Button>
@@ -710,7 +710,7 @@ const Index = () => {
         <div className="w-full max-w-4xl">
           <div className="text-center mb-8">
             <h1 className="text-3xl md:text-4xl font-heading font-bold text-academy-blue mb-3">
-              Student Bidding System
+              Token Bidding Platform
             </h1>
           </div>
           
@@ -738,7 +738,7 @@ const Index = () => {
       
       <footer className="border-t bg-white py-4 text-center text-sm text-muted-foreground">
         <div className="container mx-auto">
-          Student Bidding System
+          Token Bidding Platform
         </div>
       </footer>
     </div>
