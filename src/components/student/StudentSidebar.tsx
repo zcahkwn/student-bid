@@ -10,7 +10,7 @@ import {
   Calendar, 
   ChevronRight,
   BookOpen,
-  Trophy,
+  Users,
 } from "lucide-react";
 
 interface StudentSidebarProps {
@@ -168,11 +168,11 @@ const StudentSidebar = ({
                             {/* Bid Status */}
                             <div className="flex items-center justify-between text-xs">
                               <div className="flex items-center gap-1">
-                                <Trophy className="w-3 h-3 text-gray-400" />
-                                <span className="text-gray-600">Bids</span>
+                                <Users className="w-3 h-3 text-gray-400" />
+                                <span className="text-gray-600">Students</span>
                               </div>
                               <Badge variant="outline" className="text-xs px-1 py-0">
-                                {classItem.bidders?.length || 0}
+                                {classItem.students?.length || 0}
                               </Badge>
                             </div>
                           </div>
