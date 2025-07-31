@@ -445,7 +445,7 @@ const StudentDashboard = () => {
                       <CardTitle className="text-xl font-heading">{currentClass.className}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
                         <div className="text-center">
                           <div className="text-2xl font-bold text-gray-700">
                             {currentClass.students?.length || 0}
