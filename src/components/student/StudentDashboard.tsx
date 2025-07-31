@@ -485,7 +485,7 @@ const StudentDashboard = () => {
                           <div className="text-2xl font-bold text-purple-600">
                             {currentClass.bidders?.filter(b => b.id === student.id).length || 0}
                           </div>
-                          {/* <div className="text-sm text-gray-600">Your Bids</div> */} 
+                          <div className="text-sm text-gray-600">Your Bids</div> 
                         </div>
                       </div>
                     </CardContent>
