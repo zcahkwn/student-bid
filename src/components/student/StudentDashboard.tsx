@@ -445,7 +445,7 @@ const StudentDashboard = () => {
                       <CardTitle className="text-xl font-heading">{currentClass.className}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div className="text-center">
                           <div className="text-2xl font-bold text-gray-700">
                             {currentClass.students?.length || 0}
@@ -485,7 +485,7 @@ const StudentDashboard = () => {
                           <div className="text-2xl font-bold text-purple-600">
                             {currentClass.bidders?.filter(b => b.id === student.id).length || 0}
                           </div>
-                          <div className="text-sm text-gray-600">Your Bids</div>
+                          {/* <div className="text-sm text-gray-600">Your Bids</div> */} 
                         </div>
                       </div>
                     </CardContent>
