@@ -37,6 +37,14 @@ const Index = () => {
   
   const { toast } = useToast();
   
+  // Check for existing admin session on component mount
+  useEffect(() => {
+    const adminSession = localStorage.getItem('adminSession');
+    if (adminSession === 'true') {
+      setIsAdmin(true);
+    }
+  }, []);
+  
   // Load classes from Supabase on first render
   useEffect(() => {
     const loadClasses = async () => {
@@ -129,6 +137,8 @@ const Index = () => {
   const handleAdminLogin = (isSuccess: boolean) => {
     if (isSuccess) {
       setIsAdmin(true);
+      // Persist admin session in localStorage
+      localStorage.setItem('adminSession', 'true');
     }
   };
   
@@ -137,6 +147,8 @@ const Index = () => {
     setIsStudent(false);
     setCurrentStudent(null);
     setCurrentClass(null);
+    // Clear admin session from localStorage
+    localStorage.removeItem('adminSession');
   };
   
   const handleSelectClass = (classId: string) => {
