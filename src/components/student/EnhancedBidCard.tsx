@@ -288,19 +288,27 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
                     {/* Your Result Column - Display bidding outcome */}
                     {hasStudentBid ? (
                       <div className="flex items-center gap-2">
-                        {currentStudent.biddingResult === 'won' ? (
-                          <Badge className="bg-green-500 text-white">
-                            🎉 Selected
-                          </Badge>
-                        ) : currentStudent.biddingResult === 'lost' ? (
-                          <Badge variant="secondary" className="bg-red-100 text-red-800">
-                            Not Selected
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
-                            Pending Selection
-                          </Badge>
-                        )}
+                        {(() => {
+                          if (currentStudent.biddingResult === 'won') {
+                            return (
+                              <Badge className="bg-green-500 text-white">
+                                🎉 Selected
+                              </Badge>
+                            );
+                          } else if (currentStudent.biddingResult === 'lost') {
+                            return (
+                              <Badge variant="secondary" className="bg-red-100 text-red-800">
+                                Not Selected
+                              </Badge>
+                            );
+                          } else {
+                            return (
+                              <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
+                                Pending Selection
+                              </Badge>
+                            );
+                          }
+                        })()}
                       </div>
                     ) : (
                       <Badge variant="outline" className="text-gray-400">
@@ -309,9 +317,11 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
                     )}
                   </div>
                   <div>
-                    <Badge variant={getBidOpportunityStatus(opportunity) === "Open for Bidding" ? "default" : "secondary"}>
-                      {getBidOpportunityStatus(opportunity)}
-                    </Badge>
+                    {(() => {
+                      const status = getBidOpportunityStatus(opportunity);
+                      const badgeVariant = status === "Open for Bidding" ? "default" : "secondary";
+                      return <Badge variant={badgeVariant}>{status}</Badge>;
+                    })()}
                   </div>
                   
                   <div className="flex justify-between items-center">
@@ -327,35 +337,29 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
                   {/* Bid Status */}
                   {hasStudentBid && (
                     <div className="flex justify-between items-center">
-                      <span className="text-sm">Bidding Opens:</span>
-                      <span className="font-medium text-green-600">
-                        {opportunity.bidOpenDate ? formatDate(opportunity.bidOpenDate) : "Not specified"}
-                      </span>
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Bidding Closes:</span>
-                      <span className="font-medium text-red-600">
-                        {opportunity.bidCloseDate ? formatDate(opportunity.bidCloseDate) : "Not specified"}
-                      </span>
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
                       <span className="text-sm">Your Result:</span>
                       {/* Enhanced Result Display with Real-time Updates */}
-                      {currentStudent?.biddingResult === 'won' ? (
-                        <Badge className="bg-green-500 text-white animate-bounce">
-                          🎉 Selected
-                        </Badge>
-                      ) : currentStudent?.biddingResult === 'lost' ? (
-                        <Badge variant="secondary" className="bg-red-100 text-red-800">
-                          Not Selected
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="bg-yellow-100 text-yellow-800 animate-pulse">
-                          Pending Selection
-                        </Badge>
-                      )}
+                      {(() => {
+                        if (currentStudent?.biddingResult === 'won') {
+                          return (
+                            <Badge className="bg-green-500 text-white animate-bounce">
+                              🎉 Selected
+                            </Badge>
+                          );
+                        } else if (currentStudent?.biddingResult === 'lost') {
+                          return (
+                            <Badge variant="secondary" className="bg-red-100 text-red-800">
+                              Not Selected
+                            </Badge>
+                          );
+                        } else {
+                          return (
+                            <Badge variant="outline" className="bg-yellow-100 text-yellow-800 animate-pulse">
+                              Pending Selection
+                            </Badge>
+                          );
+                        }
+                      })()}
                     </div>
                   )}
                   
