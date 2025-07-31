@@ -29,6 +29,11 @@ const RealtimeStudentManager = ({ currentClass, onStudentUpdate }: RealtimeStude
   
   const { toast } = useToast();
 
+  // Update students when currentClass changes
+  useEffect(() => {
+    setStudents(currentClass.students);
+  }, [currentClass]);
+
   // Subscribe to real-time student enrollment updates
   useEffect(() => {
     const channel = supabase
