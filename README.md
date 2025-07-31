@@ -5,3 +5,8 @@ Install dependencies and start local server:
 npm install
 npm run dev
 ```
+
+Build the site and zip the build folder
+```
+npm run build-and-zip
+```
