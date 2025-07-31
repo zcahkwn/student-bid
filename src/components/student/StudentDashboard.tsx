@@ -476,17 +476,17 @@ const StudentDashboard = () => {
                             {student?.tokenStatus === 'used' || student?.hasUsedToken === true ? (
                               <span className="text-red-600">0</span>
                             ) : (
-                              <span className="text-green-600">1</span>
+                              <span className="text-green-600">1</span> 
                             )}
                           </div>
                           <div className="text-sm text-gray-600">Tokens Available</div>
                         </div>
-                        <div className="text-center">
+                        {/* <div className="text-center">
                           <div className="text-2xl font-bold text-purple-600">
                             {currentClass.bidders?.filter(b => b.id === student.id).length || 0}
                           </div>
                           <div className="text-sm text-gray-600">Your Bids</div> 
-                        </div>
+                        </div> */}
                       </div>
                     </CardContent>
                   </Card>
