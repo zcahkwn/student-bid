@@ -327,6 +327,20 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
                   {/* Bid Status */}
                   {hasStudentBid && (
                     <div className="flex justify-between items-center">
+                      <span className="text-sm">Bidding Opens:</span>
+                      <span className="font-medium text-green-600">
+                        {opportunity.bidOpenDate ? formatDate(opportunity.bidOpenDate) : "Not specified"}
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Bidding Closes:</span>
+                      <span className="font-medium text-red-600">
+                        {opportunity.bidCloseDate ? formatDate(opportunity.bidCloseDate) : "Not specified"}
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
                       <span className="text-sm">Your Result:</span>
                       {/* Enhanced Result Display with Real-time Updates */}
                       {currentStudent?.biddingResult === 'won' ? (
