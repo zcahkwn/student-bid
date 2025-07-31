@@ -188,3 +188,98 @@ export const getClassStudents = async (classId: string): Promise<Student[]> => {
     return []
   }
 }
+
+// Clean up orphaned users who are no longer enrolled in any classes
+export const cleanupOrphanedUsers = async (): Promise<{
+  success: boolean
+  deletedCount: number
+  errors: string[]
+  message: string
+}> => {
+  try {
+    console.log('=== STARTING ORPHANED USER CLEANUP ===')
+    
+    // Get all user IDs that are currently enrolled in at least one class
+    const { data: enrolledUserIds, error: enrollmentError } = await supabase
+      .from('student_enrollments')
+      .select('user_id')
+    
+    if (enrollmentError) {
+      console.error('Error fetching enrolled user IDs:', enrollmentError)
+      return {
+        success: false,
+        deletedCount: 0,
+        errors: [`Failed to fetch enrolled users: ${enrollmentError.message}`],
+        message: 'Cleanup failed due to database error'
+      }
+    }
+    
+    // Extract unique user IDs from enrollments
+    const enrolledIds = new Set((enrolledUserIds || []).map(enrollment => enrollment.user_id))
+    console.log('Currently enrolled user IDs:', Array.from(enrolledIds))
+    
+    // Get all users from the users table
+    const { data: allUsers, error: usersError } = await supabase
+      .from('users')
+      .select('id, name, email')
+    
+    if (usersError) {
+      console.error('Error fetching all users:', usersError)
+      return {
+        success: false,
+        deletedCount: 0,
+        errors: [`Failed to fetch users: ${usersError.message}`],
+        message: 'Cleanup failed due to database error'
+      }
+    }
+    
+    // Identify orphaned users (users not enrolled in any class)
+    const orphanedUsers = (allUsers || []).filter(user => !enrolledIds.has(user.id))
+    console.log('Orphaned users found:', orphanedUsers.length)
+    console.log('Orphaned user details:', orphanedUsers.map(u => ({ id: u.id, name: u.name, email: u.email })))
+    
+    if (orphanedUsers.length === 0) {
+      return {
+        success: true,
+        deletedCount: 0,
+        errors: [],
+        message: 'No orphaned users found - database is clean'
+      }
+    }
+    
+    // Delete orphaned users
+    const orphanedUserIds = orphanedUsers.map(user => user.id)
+    const { error: deleteError } = await supabase
+      .from('users')
+      .delete()
+      .in('id', orphanedUserIds)
+    
+    if (deleteError) {
+      console.error('Error deleting orphaned users:', deleteError)
+      return {
+        success: false,
+        deletedCount: 0,
+        errors: [`Failed to delete orphaned users: ${deleteError.message}`],
+        message: 'Cleanup failed during user deletion'
+      }
+    }
+    
+    console.log(`Successfully deleted ${orphanedUsers.length} orphaned users`)
+    
+    return {
+      success: true,
+      deletedCount: orphanedUsers.length,
+      errors: [],
+      message: `Successfully removed ${orphanedUsers.length} orphaned user${orphanedUsers.length !== 1 ? 's' : ''}`
+    }
+    
+  } catch (error) {
+    console.error('Unexpected error during orphaned user cleanup:', error)
+    return {
+      success: false,
+      deletedCount: 0,
+      errors: [error instanceof Error ? error.message : 'Unknown error'],
+      message: 'Cleanup failed due to unexpected error'
+    }
+  }
+}

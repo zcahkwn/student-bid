@@ -15,6 +15,7 @@ import Selection from "@/pages/admin/Selection";
 import StudentDashboard from "@/components/student/StudentDashboard";
 import { Student, ClassConfig, BidOpportunity } from "@/types";
 import { createClass, fetchClasses, updateClass, deleteClassAtomic, updateBidOpportunity, ClassDeletionResult } from "@/lib/classService";
+import { cleanupOrphanedUsers } from "@/lib/userService";
 import { Loader2, Menu, X } from "lucide-react";
 
 const Index = () => {
@@ -481,10 +482,39 @@ const Index = () => {
         // Update localStorage
         localStorage.setItem("classData", JSON.stringify(updatedClasses));
         
-        toast({
-          title: "Class deleted successfully",
-          description: `${result.className} and ${Object.values(result.deletedRecords).reduce((a, b) => a + b, 0)} related records have been removed`,
-        });
+        // Clean up orphaned users after successful class deletion
+        console.log('=== STARTING ORPHANED USER CLEANUP ===');
+        try {
+          const cleanupResult = await cleanupOrphanedUsers();
+          
+          if (cleanupResult.success) {
+            if (cleanupResult.deletedCount > 0) {
+              toast({
+                title: "Class and users cleaned up",
+                description: `${result.className} deleted and ${cleanupResult.deletedCount} orphaned user${cleanupResult.deletedCount !== 1 ? 's' : ''} removed`,
+              });
+            } else {
+              toast({
+                title: "Class deleted successfully",
+                description: `${result.className} and ${Object.values(result.deletedRecords).reduce((a, b) => a + b, 0)} related records have been removed`,
+              });
+            }
+          } else {
+            // Class deletion succeeded but cleanup failed
+            toast({
+              title: "Class deleted, cleanup warning",
+              description: `${result.className} deleted but orphaned user cleanup failed: ${cleanupResult.message}`,
+              variant: "destructive",
+            });
+          }
+        } catch (cleanupError) {
+          console.error('Error during orphaned user cleanup:', cleanupError);
+          toast({
+            title: "Class deleted, cleanup error",
+            description: `${result.className} deleted but orphaned user cleanup encountered an error`,
+            variant: "destructive",
+          });
+        }
       } else {
         console.log('=== DELETION FAILED ===');
         console.log('Error:', result.error);
