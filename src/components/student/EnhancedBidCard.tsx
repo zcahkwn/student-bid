@@ -348,35 +348,6 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
                     <Badge variant="outline">{opportunity.bidders?.length || 0} students</Badge>
                   </div>
                   
-                  {/* Bid Status */}
-                  {hasStudentBid && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Your Result:</span>
-                      {/* Enhanced Result Display with Real-time Updates */}
-                      {(() => {
-                        if (currentStudent?.biddingResult === 'won') {
-                          return (
-                            <Badge className="bg-green-500 text-white animate-bounce">
-                              🎉 Selected
-                            </Badge>
-                          );
-                        } else if (currentStudent?.biddingResult === 'lost') {
-                          return (
-                            <Badge variant="secondary" className="bg-red-100 text-red-800">
-                              Not Selected
-                            </Badge>
-                          );
-                        } else {
-                          return (
-                            <Badge variant="outline" className="bg-yellow-100 text-yellow-800 animate-pulse">
-                              Pending Selection
-                            </Badge>
-                          );
-                        }
-                      })()}
-                    </div>
-                  )}
-                  
                   {/* Success Message */}
                   {currentStudent?.biddingResult === 'won' && hasStudentBid && (
                     <Alert>
