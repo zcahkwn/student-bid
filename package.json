@@ -12,7 +12,8 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "build-and-zip": "npm run build && cd dist && zip -r ../build.zip ."
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.2",
