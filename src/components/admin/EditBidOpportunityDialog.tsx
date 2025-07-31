@@ -18,7 +18,7 @@ interface EditBidOpportunityDialogProps {
   onClose: () => void;
   opportunity: BidOpportunity | null;
   currentClass: ClassConfig | null;
-  onSave: (updatedOpportunity: BidOpportunity, updatedClass: Partial<ClassConfig>) => void;
+  onSave: (updatedOpportunity: BidOpportunity) => void;
 }
 
 const EditBidOpportunityDialog = ({
@@ -151,6 +151,7 @@ const EditBidOpportunityDialog = ({
 
       console.log('=== CALLING onSave CALLBACK ===');
       // Update local state
+      onSave(updatedOpportunity);
       
       toast({
         title: "Changes saved successfully",

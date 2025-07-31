@@ -266,49 +266,25 @@ const Index = () => {
   const handleUpdateBidOpportunity = async (opportunityId: string, updatedOpportunity: BidOpportunity) => {
     if (!currentClass) return;
     
-    try {
-      // Update the opportunity in the database
-      await updateBidOpportunity(opportunityId, {
-        title: updatedOpportunity.title,
-        description: updatedOpportunity.description,
-        event_date: updatedOpportunity.date,
-        opens_at: updatedOpportunity.bidOpenDate,
-        closes_at: updatedOpportunity.date,
-        capacity: updatedOpportunity.capacity
-      });
-
-      // Update local state
-      const updatedOpportunities = currentClass.bidOpportunities.map(opp => 
-        opp.id === opportunityId ? updatedOpportunity : opp
-      );
-      
-      const updatedClass: ClassConfig = {
-        ...currentClass,
-        bidOpportunities: updatedOpportunities
-      };
-      
-      const updatedClasses = classes.map(c => 
-        c.id === currentClass.id ? updatedClass : c
-      );
-      
-      setClasses(updatedClasses);
-      setCurrentClass(updatedClass);
-      
-      // Also update localStorage for backward compatibility
-      localStorage.setItem("classData", JSON.stringify(updatedClasses));
-
-      toast({
-        title: "Opportunity updated successfully",
-        description: "The bidding opportunity has been saved to the database.",
-      });
-    } catch (error) {
-      console.error("Error updating opportunity:", error);
-      toast({
-        title: "Failed to update opportunity",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
-        variant: "destructive",
-      });
-    }
+    // Update local state only (database update is handled by EditBidOpportunityDialog)
+    const updatedOpportunities = currentClass.bidOpportunities.map(opp => 
+      opp.id === opportunityId ? updatedOpportunity : opp
+    );
+    
+    const updatedClass: ClassConfig = {
+      ...currentClass,
+      bidOpportunities: updatedOpportunities
+    };
+    
+    const updatedClasses = classes.map(c => 
+      c.id === currentClass.id ? updatedClass : c
+    );
+    
+    setClasses(updatedClasses);
+    setCurrentClass(updatedClass);
+    
+    // Also update localStorage for backward compatibility
+    localStorage.setItem("classData", JSON.stringify(updatedClasses));
   };
   
   const handleOpportunityCreated = (opportunity: BidOpportunity) => {
