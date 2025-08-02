@@ -7,7 +7,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { createAdminProfile } from "@/lib/adminService";
-import { createOrGetUser } from "@/lib/userService";
 import { Loader2, ArrowLeft } from "lucide-react";
 
 const AdminRegister = () => {
@@ -57,15 +56,7 @@ const AdminRegister = () => {
         throw new Error("User data not returned after sign up.");
       }
 
-      // Step 2: Create user entry in public.users table
-      await createOrGetUser({
-        id: data.user.id,
-        name: name,
-        email: email,
-        studentNumber: "" // Empty string for admin users
-      });
-
-      // Step 3: Create admin profile in public.admins table
+      // Step 2: Create admin profile in public.admins table
       await createAdminProfile(data.user.id, name, email);
 
       toast({
