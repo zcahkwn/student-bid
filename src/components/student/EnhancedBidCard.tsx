@@ -364,10 +364,10 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
                       <AlertTriangle className="h-4 w-4" />
                       <AlertDescription>{error}</AlertDescription>
                     </Alert>
-                  )}
+                  )} 
                   
                   {/* Recent Activity */}
-                  {opportunity.bidders && opportunity.bidders.length > 0 && (
+                  {/* {opportunity.bidders && opportunity.bidders.length > 0 && (
                     <div className="space-y-2">
                       <h4 className="text-sm font-medium flex items-center gap-2">
                         <Clock className="w-4 h-4" />
@@ -384,7 +384,7 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
                         ))}
                       </div>
                     </div>
-                  )}
+                  )} */}
                   
                   {/* Submit Button */}
                   <Button 
