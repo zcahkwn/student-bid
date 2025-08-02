@@ -715,6 +715,7 @@ const Index = () => {
           student={currentStudent}
           classConfig={currentClass}
           onBidSubmitted={handleBidSubmitted}
+          onBidWithdrawal={handleBidWithdrawal}
           onLogout={handleLogout}
         />
       </div>

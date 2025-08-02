@@ -573,6 +573,7 @@ const StudentDashboard = () => {
                     student={student} // Always pass the main student state
                     classConfig={currentClass}
                     onBidSubmitted={handleBidSubmitted}
+                    onBidWithdrawal={handleBidWithdrawalInternal}
                   />
                   
                   <Card>
