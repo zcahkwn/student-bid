@@ -31,6 +31,7 @@ interface Database {
           name: string
           email: string
           student_number: string | null
+          role: string
           created_at: string
           updated_at: string
         }
@@ -39,6 +40,7 @@ interface Database {
           name: string
           email: string
           student_number: string | null
+          role?: string
           created_at?: string
           updated_at?: string
         }
@@ -47,6 +49,7 @@ interface Database {
           name?: string
           email?: string
           student_number?: string | null
+          role?: string
           created_at?: string
           updated_at?: string
         }
@@ -55,23 +58,20 @@ interface Database {
         Row: {
           id: string
           name: string
-          capacity_default: number
+          created_by_user_id: string | null
           created_at: string
-          updated_at: string
         }
         Insert: {
           id?: string
           name: string
-          capacity_default?: number
+          created_by_user_id?: string | null
           created_at?: string
-          updated_at?: string
         }
         Update: {
           id?: string
           name?: string
-          capacity_default?: number
+          created_by_user_id?: string | null
           created_at?: string
-          updated_at?: string
         }
       }
       student_enrollments: {

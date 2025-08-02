@@ -20,7 +20,7 @@ import { Loader2, Menu, X } from "lucide-react";
 
 const Index = () => {
   // Auth state - simplified
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminUserId, setAdminUserId] = useState<string | null>(null);
   const [isStudent, setIsStudent] = useState(false);
   const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
   const [currentClass, setCurrentClass] = useState<ClassConfig | null>(null);
@@ -38,13 +38,48 @@ const Index = () => {
   
   const { toast } = useToast();
   
-  // Check for existing admin session on component mount
+  // Check for existing Supabase session on component mount
   useEffect(() => {
-    const adminSession = localStorage.getItem('adminSession');
-    if (adminSession === 'true') {
-      setIsAdmin(true);
-    }
+    const checkSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          return;
+        }
+        
+        if (session?.user) {
+          // Get user profile to check role
+          const { data: userProfile, error: profileError } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (!profileError && userProfile && 
+              (userProfile.role === 'admin' || userProfile.role === 'super_admin')) {
+            setAdminUserId(session.user.id);
+          } else {
+            // Sign out non-admin users
+            await supabase.auth.signOut();
+          }
+        }
+      } catch (error) {
+        console.error('Error checking session:', error);
+      }
+    };
+    
+    checkSession();
   }, []);
+  
+  // Check for legacy admin session
+  useEffect(() => {
+    const legacySession = localStorage.getItem('adminSession');
+    if (legacySession === 'true' && !adminUserId) {
+      setAdminUserId('legacy-admin');
+    }
+  }, [adminUserId]);
   
   // Load classes from Supabase on first render
   useEffect(() => {
@@ -135,20 +170,27 @@ const Index = () => {
     }
   }, [currentClass]);
   
-  const handleAdminLogin = (isSuccess: boolean) => {
-    if (isSuccess) {
-      setIsAdmin(true);
-      // Persist admin session in localStorage
-      localStorage.setItem('adminSession', 'true');
+  const handleAdminLogin = (isSuccess: boolean, userId?: string) => {
+    if (isSuccess && userId) {
+      setAdminUserId(userId);
+      // Persist legacy admin session in localStorage only for legacy admin
+      if (userId === 'legacy-admin') {
+        localStorage.setItem('adminSession', 'true');
+      }
     }
   };
   
-  const handleLogout = () => {
-    setIsAdmin(false);
+  const handleLogout = async () => {
+    // Sign out from Supabase if not legacy admin
+    if (adminUserId && adminUserId !== 'legacy-admin') {
+      await supabase.auth.signOut();
+    }
+    
+    setAdminUserId(null);
     setIsStudent(false);
     setCurrentStudent(null);
     setCurrentClass(null);
-    // Clear admin session from localStorage
+    // Clear legacy admin session from localStorage
     localStorage.removeItem('adminSession');
   };
   
@@ -585,7 +627,7 @@ const Index = () => {
   }
   
   // Render based on authentication state
-  if (isAdmin) {
+  if (adminUserId) {
     return (
       <div className="min-h-screen bg-gray-50">
         <header className="bg-white border-b relative z-50">

@@ -45,11 +45,19 @@ export interface ClassDeletionResult {
 // Create a new class in Supabase
 export const createClass = async (classData: CreateClassData): Promise<ClassConfig> => {
   try {
+    // Get current authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      throw new Error('User must be authenticated to create a class')
+    }
+
     // Insert class into Supabase
     const { data: classRecord, error: classError } = await supabase
       .from('classes')
       .insert({
-        name: classData.name
+        name: classData.name,
+        created_by_user_id: user.id
       })
       .select()
       .single()
@@ -337,9 +345,47 @@ export const createBidOpportunity = async (
 // Fetch all classes from Supabase with real-time bid data
 export const fetchClasses = async (): Promise<ClassConfig[]> => {
   try {
+    // Get current authenticated user and their profile
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      console.log('No authenticated user, returning empty classes array')
+      return []
+    }
+
+    // Get user profile to check role
+    const { data: userProfile, error: profileError } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (profileError || !userProfile) {
+      console.error('Failed to get user profile:', profileError)
+      return []
+    }
+
+    // Fetch classes based on user role
+    let classesQuery = supabase
+      .from('classes')
+      .select('id, name, created_at, created_by_user_id')
+      .order('created_at', { ascending: false })
+
+    // Apply role-based filtering
+    if (userProfile.role === 'admin') {
+      // Admin can see classes they created or classes with no creator (legacy)
+      classesQuery = classesQuery.or(`created_by_user_id.eq.${user.id},created_by_user_id.is.null`)
+    } else if (userProfile.role === 'super_admin') {
+      // Super admin can see all classes (no additional filter needed)
+    } else {
+      // Students should not access this function for admin view
+      console.log('Student user attempting to fetch admin classes view')
+      return []
+    }
+
     const { data: classesData, error: classesError } = await supabase
       .from('classes')
-      .select('id, name, created_at')
+      .select('id, name, created_at, created_by_user_id')
       .order('created_at', { ascending: false })
 
     if (classesError) {

@@ -14,18 +14,27 @@ import { subscribeToUserEnrollmentUpdates } from "@/lib/studentBidService";
 import { supabase } from "@/lib/supabase";
 
 interface StudentDashboardProps {
+  student?: Student;
+  classConfig?: ClassConfig;
   onBidSubmitted?: (bidId: string, updatedStudent: Student, opportunityId: string) => void;
   onBidWithdrawal?: (updatedStudent: Student, opportunityId: string) => void;
+  onLogout?: () => void;
 }
 
-const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardProps = {}) => {
+const StudentDashboard = ({ 
+  student: propStudent, 
+  classConfig: propClassConfig, 
+  onBidSubmitted, 
+  onBidWithdrawal,
+  onLogout 
+}: StudentDashboardProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   
   // Get student and classes data from location state
-  const initialStudent = location.state?.student || null;
-  const allClasses = location.state?.classes || [];
+  const initialStudent = propStudent || location.state?.student || null;
+  const allClasses = propClassConfig ? [propClassConfig] : (location.state?.classes || []);
   
   // Use local state to track current student and selected class
   const [student, setStudent] = useState<Student | null>(initialStudent);
@@ -384,7 +393,11 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
   };
   
   const handleLogout = () => {
-    navigate("/");
+    if (onLogout) {
+      onLogout();
+    } else {
+      navigate("/");
+    }
   };
 
   // The 'student' state is kept up-to-date by the real-time subscription
