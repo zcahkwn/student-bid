@@ -125,7 +125,6 @@ export const getUserByCredentials = async (email: string, studentNumber: string)
       name: user.name,
       email: user.email,
       studentNumber: user.student_number,
-      role: user.role,
       createdAt: user.created_at,
       updatedAt: user.updated_at
     }
