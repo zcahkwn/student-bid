@@ -42,18 +42,16 @@ export const getAdminProfile = async (userId: string): Promise<AdminProfile | nu
  */
 export const createAdminProfile = async (userId: string, name: string, email: string): Promise<void> => {
   try {
-    const { error } = await supabase
-      .from('admins')
-      .insert({
-        user_id: userId,
-        name: name,
-        email: email,
-        admin_type: 'admin' // Always 'admin' for self-registration
-      });
+    const { data, error } = await supabase.rpc('create_admin_profile_secure', {
+      p_user_id: userId,
+      p_name: name,
+      p_email: email,
+      p_admin_type: 'admin' // Always 'admin' for self-registration
+    });
 
-    if (error) {
-      console.error('Error creating admin profile:', error);
-      throw error;
+    if (error || !data?.success) {
+      console.error('Error creating admin profile via RPC:', error || data?.error);
+      throw new Error(error?.message || data?.error || 'Failed to create admin profile');
     }
   } catch (error) {
     console.error('Unexpected error in createAdminProfile:', error);
