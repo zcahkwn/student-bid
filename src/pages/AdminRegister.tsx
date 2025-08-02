@@ -59,6 +59,7 @@ const AdminRegister = () => {
 
       // Step 2: Create user entry in public.users table
       await createOrGetUser({
+        id: data.user.id,
         name: name,
         email: email,
         studentNumber: "" // Empty string for admin users

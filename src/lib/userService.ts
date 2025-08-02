@@ -5,6 +5,7 @@ interface CreateUserData {
   name: string
   email: string
   studentNumber: string
+  id?: string
 }
 
 interface EnrollUserData {
@@ -53,6 +54,7 @@ export const createOrGetUser = async (userData: CreateUserData): Promise<User> =
     const { data: newUser, error: createError } = await supabase
       .from('users')
       .insert({
+        ...(userData.id && { id: userData.id }),
         name: userData.name,
         email: userData.email,
         student_number: userData.studentNumber
