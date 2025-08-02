@@ -142,27 +142,27 @@ const Dashboard = ({
   // Debug: Log statistics changes
   useEffect(() => {
     if (currentClass?.id) {
-      console.log('=== DASHBOARD STATISTICS UPDATE ===')
-      console.log('Class ID:', currentClass.id)
-      console.log('Statistics:', statistics)
-      console.log('Is Loading:', statsLoading)
-      setLastUpdateTime(Date.now())
+      console.log('=== DASHBOARD STATISTICS UPDATE ===');
+      console.log('Class ID:', currentClass.id);
+      console.log('Statistics:', statistics);
+      console.log('Is Loading:', statsLoading);
+      setLastUpdateTime(Date.now());
     }
-  }, [statistics, statsLoading, currentClass?.id])
+  }, [statistics, statsLoading, currentClass?.id]);
   
   // Listen for bid submission events to trigger refresh
   useEffect(() => {
     const handleBidSubmitted = () => {
-      console.log('=== BID SUBMITTED EVENT RECEIVED IN DASHBOARD ===')
-      refreshStats()
-    }
+      console.log('=== BID SUBMITTED EVENT RECEIVED IN DASHBOARD ===');
+      refreshStats();
+    };
 
-    window.addEventListener('bidSubmitted', handleBidSubmitted)
+    window.addEventListener('bidSubmitted', handleBidSubmitted);
     
     return () => {
-      window.removeEventListener('bidSubmitted', handleBidSubmitted)
-    }
-  }, [refreshStats])
+      window.removeEventListener('bidSubmitted', handleBidSubmitted);
+    };
+  }, [refreshStats]);
 
   // Get the selected opportunity if there is one
   const selectedOpportunity = currentClass?.bidOpportunities?.find(
@@ -333,19 +333,19 @@ const Dashboard = ({
 
   // Get real-time bid count for a specific opportunity
   const getOpportunityBidCount = (opportunityId: string): number => {
-    console.log('=== GETTING OPPORTUNITY BID COUNT ===')
-    console.log('Opportunity ID:', opportunityId)
-    console.log('Current statistics:', statistics)
+    console.log('=== GETTING OPPORTUNITY BID COUNT ===');
+    console.log('Opportunity ID:', opportunityId);
+    console.log('Current statistics:', statistics);
     
     // Add null check for statistics to prevent TypeError
     if (!statistics || !statistics.opportunities) {
-      console.log('No statistics or opportunities available')
+      console.log('No statistics or opportunities available');
       return 0;
     }
     
     const opportunityStats = statistics.opportunities.find(opp => opp.opportunityId === opportunityId);
-    console.log('Found opportunity stats for', opportunityId, ':', opportunityStats)
-    console.log('Bid count:', opportunityStats?.bidCount || 0)
+    console.log('Found opportunity stats for', opportunityId, ':', opportunityStats);
+    console.log('Bid count:', opportunityStats?.bidCount || 0);
     return opportunityStats?.bidCount || 0;
   };
 
@@ -639,7 +639,7 @@ const Dashboard = ({
                                         </Label>
                                         <div className="p-4 bg-white rounded-md border">
                                           <div className="space-y-3">
-                                                    {currentOpportunityBidders.length === 0 && getOpportunityBidCount(opportunity.id) === 0 && (
+                                            {currentOpportunityBidders.map((bidder, index) => (
                                               <div key={bidder.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                                                 <div className="flex items-center gap-3">
                                                   <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-sm font-medium text-blue-600">
