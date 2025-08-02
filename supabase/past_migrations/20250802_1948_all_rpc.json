@@ -1,0 +1,704 @@
+[
+  {
+    "schema": "auth",
+    "function_name": "email",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION auth.email()\n RETURNS text\n LANGUAGE sql\n STABLE\nAS $function$\n  select \n  coalesce(\n    nullif(current_setting('request.jwt.claim.email', true), ''),\n    (nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'email')\n  )::text\n$function$\n"
+  },
+  {
+    "schema": "auth",
+    "function_name": "jwt",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION auth.jwt()\n RETURNS jsonb\n LANGUAGE sql\n STABLE\nAS $function$\n  select \n    coalesce(\n        nullif(current_setting('request.jwt.claim', true), ''),\n        nullif(current_setting('request.jwt.claims', true), '')\n    )::jsonb\n$function$\n"
+  },
+  {
+    "schema": "auth",
+    "function_name": "role",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION auth.role()\n RETURNS text\n LANGUAGE sql\n STABLE\nAS $function$\n  select \n  coalesce(\n    nullif(current_setting('request.jwt.claim.role', true), ''),\n    (nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role')\n  )::text\n$function$\n"
+  },
+  {
+    "schema": "auth",
+    "function_name": "uid",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION auth.uid()\n RETURNS uuid\n LANGUAGE sql\n STABLE\nAS $function$\n  select \n  coalesce(\n    nullif(current_setting('request.jwt.claim.sub', true), ''),\n    (nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub')\n  )::uuid\n$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "armor",
+    "arguments": "bytea",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.armor(bytea)\n RETURNS text\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pg_armor$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "armor",
+    "arguments": "bytea, text[], text[]",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.armor(bytea, text[], text[])\n RETURNS text\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pg_armor$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "crypt",
+    "arguments": "text, text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.crypt(text, text)\n RETURNS text\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pg_crypt$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "dearmor",
+    "arguments": "text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.dearmor(text)\n RETURNS bytea\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pg_dearmor$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "decrypt",
+    "arguments": "bytea, bytea, text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.decrypt(bytea, bytea, text)\n RETURNS bytea\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pg_decrypt$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "decrypt_iv",
+    "arguments": "bytea, bytea, bytea, text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.decrypt_iv(bytea, bytea, bytea, text)\n RETURNS bytea\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pg_decrypt_iv$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "digest",
+    "arguments": "text, text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.digest(text, text)\n RETURNS bytea\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pg_digest$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "digest",
+    "arguments": "bytea, text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.digest(bytea, text)\n RETURNS bytea\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pg_digest$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "encrypt",
+    "arguments": "bytea, bytea, text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.encrypt(bytea, bytea, text)\n RETURNS bytea\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pg_encrypt$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "encrypt_iv",
+    "arguments": "bytea, bytea, bytea, text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.encrypt_iv(bytea, bytea, bytea, text)\n RETURNS bytea\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pg_encrypt_iv$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "gen_random_bytes",
+    "arguments": "integer",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.gen_random_bytes(integer)\n RETURNS bytea\n LANGUAGE c\n PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pg_random_bytes$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "gen_random_uuid",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.gen_random_uuid()\n RETURNS uuid\n LANGUAGE c\n PARALLEL SAFE\nAS '$libdir/pgcrypto', $function$pg_random_uuid$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "gen_salt",
+    "arguments": "text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.gen_salt(text)\n RETURNS text\n LANGUAGE c\n PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pg_gen_salt$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "gen_salt",
+    "arguments": "text, integer",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.gen_salt(text, integer)\n RETURNS text\n LANGUAGE c\n PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pg_gen_salt_rounds$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "grant_pg_cron_access",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.grant_pg_cron_access()\n RETURNS event_trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n  IF EXISTS (\n    SELECT\n    FROM pg_event_trigger_ddl_commands() AS ev\n    JOIN pg_extension AS ext\n    ON ev.objid = ext.oid\n    WHERE ext.extname = 'pg_cron'\n  )\n  THEN\n    grant usage on schema cron to postgres with grant option;\n\n    alter default privileges in schema cron grant all on tables to postgres with grant option;\n    alter default privileges in schema cron grant all on functions to postgres with grant option;\n    alter default privileges in schema cron grant all on sequences to postgres with grant option;\n\n    alter default privileges for user supabase_admin in schema cron grant all\n        on sequences to postgres with grant option;\n    alter default privileges for user supabase_admin in schema cron grant all\n        on tables to postgres with grant option;\n    alter default privileges for user supabase_admin in schema cron grant all\n        on functions to postgres with grant option;\n\n    grant all privileges on all tables in schema cron to postgres with grant option;\n    revoke all on table cron.job from postgres;\n    grant select on table cron.job to postgres with grant option;\n  END IF;\nEND;\n$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "grant_pg_graphql_access",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.grant_pg_graphql_access()\n RETURNS event_trigger\n LANGUAGE plpgsql\nAS $function$\nDECLARE\n    func_is_graphql_resolve bool;\nBEGIN\n    func_is_graphql_resolve = (\n        SELECT n.proname = 'resolve'\n        FROM pg_event_trigger_ddl_commands() AS ev\n        LEFT JOIN pg_catalog.pg_proc AS n\n        ON ev.objid = n.oid\n    );\n\n    IF func_is_graphql_resolve\n    THEN\n        -- Update public wrapper to pass all arguments through to the pg_graphql resolve func\n        DROP FUNCTION IF EXISTS graphql_public.graphql;\n        create or replace function graphql_public.graphql(\n            \"operationName\" text default null,\n            query text default null,\n            variables jsonb default null,\n            extensions jsonb default null\n        )\n            returns jsonb\n            language sql\n        as $$\n            select graphql.resolve(\n                query := query,\n                variables := coalesce(variables, '{}'),\n                \"operationName\" := \"operationName\",\n                extensions := extensions\n            );\n        $$;\n\n        -- This hook executes when `graphql.resolve` is created. That is not necessarily the last\n        -- function in the extension so we need to grant permissions on existing entities AND\n        -- update default permissions to any others that are created after `graphql.resolve`\n        grant usage on schema graphql to postgres, anon, authenticated, service_role;\n        grant select on all tables in schema graphql to postgres, anon, authenticated, service_role;\n        grant execute on all functions in schema graphql to postgres, anon, authenticated, service_role;\n        grant all on all sequences in schema graphql to postgres, anon, authenticated, service_role;\n        alter default privileges in schema graphql grant all on tables to postgres, anon, authenticated, service_role;\n        alter default privileges in schema graphql grant all on functions to postgres, anon, authenticated, service_role;\n        alter default privileges in schema graphql grant all on sequences to postgres, anon, authenticated, service_role;\n\n        -- Allow postgres role to allow granting usage on graphql and graphql_public schemas to custom roles\n        grant usage on schema graphql_public to postgres with grant option;\n        grant usage on schema graphql to postgres with grant option;\n    END IF;\n\nEND;\n$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "grant_pg_net_access",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.grant_pg_net_access()\n RETURNS event_trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n  IF EXISTS (\n    SELECT 1\n    FROM pg_event_trigger_ddl_commands() AS ev\n    JOIN pg_extension AS ext\n    ON ev.objid = ext.oid\n    WHERE ext.extname = 'pg_net'\n  )\n  THEN\n    IF NOT EXISTS (\n      SELECT 1\n      FROM pg_roles\n      WHERE rolname = 'supabase_functions_admin'\n    )\n    THEN\n      CREATE USER supabase_functions_admin NOINHERIT CREATEROLE LOGIN NOREPLICATION;\n    END IF;\n\n    GRANT USAGE ON SCHEMA net TO supabase_functions_admin, postgres, anon, authenticated, service_role;\n\n    IF EXISTS (\n      SELECT FROM pg_extension\n      WHERE extname = 'pg_net'\n      -- all versions in use on existing projects as of 2025-02-20\n      -- version 0.12.0 onwards don't need these applied\n      AND extversion IN ('0.2', '0.6', '0.7', '0.7.1', '0.8', '0.10.0', '0.11.0')\n    ) THEN\n      ALTER function net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) SECURITY DEFINER;\n      ALTER function net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) SECURITY DEFINER;\n\n      ALTER function net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) SET search_path = net;\n      ALTER function net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) SET search_path = net;\n\n      REVOKE ALL ON FUNCTION net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) FROM PUBLIC;\n      REVOKE ALL ON FUNCTION net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) FROM PUBLIC;\n\n      GRANT EXECUTE ON FUNCTION net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) TO supabase_functions_admin, postgres, anon, authenticated, service_role;\n      GRANT EXECUTE ON FUNCTION net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) TO supabase_functions_admin, postgres, anon, authenticated, service_role;\n    END IF;\n  END IF;\nEND;\n$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "hmac",
+    "arguments": "bytea, bytea, text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.hmac(bytea, bytea, text)\n RETURNS bytea\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pg_hmac$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "hmac",
+    "arguments": "text, text, text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.hmac(text, text, text)\n RETURNS bytea\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pg_hmac$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "pg_stat_statements",
+    "arguments": "showtext boolean, OUT userid oid, OUT dbid oid, OUT toplevel boolean, OUT queryid bigint, OUT query text, OUT plans bigint, OUT total_plan_time double precision, OUT min_plan_time double precision, OUT max_plan_time double precision, OUT mean_plan_time double precision, OUT stddev_plan_time double precision, OUT calls bigint, OUT total_exec_time double precision, OUT min_exec_time double precision, OUT max_exec_time double precision, OUT mean_exec_time double precision, OUT stddev_exec_time double precision, OUT rows bigint, OUT shared_blks_hit bigint, OUT shared_blks_read bigint, OUT shared_blks_dirtied bigint, OUT shared_blks_written bigint, OUT local_blks_hit bigint, OUT local_blks_read bigint, OUT local_blks_dirtied bigint, OUT local_blks_written bigint, OUT temp_blks_read bigint, OUT temp_blks_written bigint, OUT shared_blk_read_time double precision, OUT shared_blk_write_time double precision, OUT local_blk_read_time double precision, OUT local_blk_write_time double precision, OUT temp_blk_read_time double precision, OUT temp_blk_write_time double precision, OUT wal_records bigint, OUT wal_fpi bigint, OUT wal_bytes numeric, OUT jit_functions bigint, OUT jit_generation_time double precision, OUT jit_inlining_count bigint, OUT jit_inlining_time double precision, OUT jit_optimization_count bigint, OUT jit_optimization_time double precision, OUT jit_emission_count bigint, OUT jit_emission_time double precision, OUT jit_deform_count bigint, OUT jit_deform_time double precision, OUT stats_since timestamp with time zone, OUT minmax_stats_since timestamp with time zone",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.pg_stat_statements(showtext boolean, OUT userid oid, OUT dbid oid, OUT toplevel boolean, OUT queryid bigint, OUT query text, OUT plans bigint, OUT total_plan_time double precision, OUT min_plan_time double precision, OUT max_plan_time double precision, OUT mean_plan_time double precision, OUT stddev_plan_time double precision, OUT calls bigint, OUT total_exec_time double precision, OUT min_exec_time double precision, OUT max_exec_time double precision, OUT mean_exec_time double precision, OUT stddev_exec_time double precision, OUT rows bigint, OUT shared_blks_hit bigint, OUT shared_blks_read bigint, OUT shared_blks_dirtied bigint, OUT shared_blks_written bigint, OUT local_blks_hit bigint, OUT local_blks_read bigint, OUT local_blks_dirtied bigint, OUT local_blks_written bigint, OUT temp_blks_read bigint, OUT temp_blks_written bigint, OUT shared_blk_read_time double precision, OUT shared_blk_write_time double precision, OUT local_blk_read_time double precision, OUT local_blk_write_time double precision, OUT temp_blk_read_time double precision, OUT temp_blk_write_time double precision, OUT wal_records bigint, OUT wal_fpi bigint, OUT wal_bytes numeric, OUT jit_functions bigint, OUT jit_generation_time double precision, OUT jit_inlining_count bigint, OUT jit_inlining_time double precision, OUT jit_optimization_count bigint, OUT jit_optimization_time double precision, OUT jit_emission_count bigint, OUT jit_emission_time double precision, OUT jit_deform_count bigint, OUT jit_deform_time double precision, OUT stats_since timestamp with time zone, OUT minmax_stats_since timestamp with time zone)\n RETURNS SETOF record\n LANGUAGE c\n PARALLEL SAFE STRICT\nAS '$libdir/pg_stat_statements', $function$pg_stat_statements_1_11$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "pg_stat_statements_info",
+    "arguments": "OUT dealloc bigint, OUT stats_reset timestamp with time zone",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.pg_stat_statements_info(OUT dealloc bigint, OUT stats_reset timestamp with time zone)\n RETURNS record\n LANGUAGE c\n PARALLEL SAFE STRICT\nAS '$libdir/pg_stat_statements', $function$pg_stat_statements_info$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "pg_stat_statements_reset",
+    "arguments": "userid oid, dbid oid, queryid bigint, minmax_only boolean",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.pg_stat_statements_reset(userid oid DEFAULT 0, dbid oid DEFAULT 0, queryid bigint DEFAULT 0, minmax_only boolean DEFAULT false)\n RETURNS timestamp with time zone\n LANGUAGE c\n PARALLEL SAFE STRICT\nAS '$libdir/pg_stat_statements', $function$pg_stat_statements_reset_1_11$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "pgp_armor_headers",
+    "arguments": "text, OUT key text, OUT value text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.pgp_armor_headers(text, OUT key text, OUT value text)\n RETURNS SETOF record\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pgp_armor_headers$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "pgp_key_id",
+    "arguments": "bytea",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.pgp_key_id(bytea)\n RETURNS text\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pgp_key_id_w$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "pgp_pub_decrypt",
+    "arguments": "bytea, bytea, text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.pgp_pub_decrypt(bytea, bytea, text)\n RETURNS text\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pgp_pub_decrypt_text$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "pgp_pub_decrypt",
+    "arguments": "bytea, bytea",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.pgp_pub_decrypt(bytea, bytea)\n RETURNS text\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pgp_pub_decrypt_text$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "pgp_pub_decrypt",
+    "arguments": "bytea, bytea, text, text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.pgp_pub_decrypt(bytea, bytea, text, text)\n RETURNS text\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pgp_pub_decrypt_text$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "pgp_pub_decrypt_bytea",
+    "arguments": "bytea, bytea",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.pgp_pub_decrypt_bytea(bytea, bytea)\n RETURNS bytea\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pgp_pub_decrypt_bytea$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "pgp_pub_decrypt_bytea",
+    "arguments": "bytea, bytea, text, text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.pgp_pub_decrypt_bytea(bytea, bytea, text, text)\n RETURNS bytea\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pgp_pub_decrypt_bytea$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "pgp_pub_decrypt_bytea",
+    "arguments": "bytea, bytea, text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.pgp_pub_decrypt_bytea(bytea, bytea, text)\n RETURNS bytea\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pgp_pub_decrypt_bytea$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "pgp_pub_encrypt",
+    "arguments": "text, bytea",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.pgp_pub_encrypt(text, bytea)\n RETURNS bytea\n LANGUAGE c\n PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pgp_pub_encrypt_text$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "pgp_pub_encrypt",
+    "arguments": "text, bytea, text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.pgp_pub_encrypt(text, bytea, text)\n RETURNS bytea\n LANGUAGE c\n PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pgp_pub_encrypt_text$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "pgp_pub_encrypt_bytea",
+    "arguments": "bytea, bytea",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.pgp_pub_encrypt_bytea(bytea, bytea)\n RETURNS bytea\n LANGUAGE c\n PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pgp_pub_encrypt_bytea$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "pgp_pub_encrypt_bytea",
+    "arguments": "bytea, bytea, text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.pgp_pub_encrypt_bytea(bytea, bytea, text)\n RETURNS bytea\n LANGUAGE c\n PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pgp_pub_encrypt_bytea$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "pgp_sym_decrypt",
+    "arguments": "bytea, text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.pgp_sym_decrypt(bytea, text)\n RETURNS text\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pgp_sym_decrypt_text$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "pgp_sym_decrypt",
+    "arguments": "bytea, text, text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.pgp_sym_decrypt(bytea, text, text)\n RETURNS text\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pgp_sym_decrypt_text$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "pgp_sym_decrypt_bytea",
+    "arguments": "bytea, text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.pgp_sym_decrypt_bytea(bytea, text)\n RETURNS bytea\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pgp_sym_decrypt_bytea$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "pgp_sym_decrypt_bytea",
+    "arguments": "bytea, text, text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.pgp_sym_decrypt_bytea(bytea, text, text)\n RETURNS bytea\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pgp_sym_decrypt_bytea$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "pgp_sym_encrypt",
+    "arguments": "text, text, text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.pgp_sym_encrypt(text, text, text)\n RETURNS bytea\n LANGUAGE c\n PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pgp_sym_encrypt_text$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "pgp_sym_encrypt",
+    "arguments": "text, text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.pgp_sym_encrypt(text, text)\n RETURNS bytea\n LANGUAGE c\n PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pgp_sym_encrypt_text$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "pgp_sym_encrypt_bytea",
+    "arguments": "bytea, text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.pgp_sym_encrypt_bytea(bytea, text)\n RETURNS bytea\n LANGUAGE c\n PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pgp_sym_encrypt_bytea$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "pgp_sym_encrypt_bytea",
+    "arguments": "bytea, text, text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.pgp_sym_encrypt_bytea(bytea, text, text)\n RETURNS bytea\n LANGUAGE c\n PARALLEL SAFE STRICT\nAS '$libdir/pgcrypto', $function$pgp_sym_encrypt_bytea$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "pgrst_ddl_watch",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.pgrst_ddl_watch()\n RETURNS event_trigger\n LANGUAGE plpgsql\nAS $function$\nDECLARE\n  cmd record;\nBEGIN\n  FOR cmd IN SELECT * FROM pg_event_trigger_ddl_commands()\n  LOOP\n    IF cmd.command_tag IN (\n      'CREATE SCHEMA', 'ALTER SCHEMA'\n    , 'CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO', 'ALTER TABLE'\n    , 'CREATE FOREIGN TABLE', 'ALTER FOREIGN TABLE'\n    , 'CREATE VIEW', 'ALTER VIEW'\n    , 'CREATE MATERIALIZED VIEW', 'ALTER MATERIALIZED VIEW'\n    , 'CREATE FUNCTION', 'ALTER FUNCTION'\n    , 'CREATE TRIGGER'\n    , 'CREATE TYPE', 'ALTER TYPE'\n    , 'CREATE RULE'\n    , 'COMMENT'\n    )\n    -- don't notify in case of CREATE TEMP table or other objects created on pg_temp\n    AND cmd.schema_name is distinct from 'pg_temp'\n    THEN\n      NOTIFY pgrst, 'reload schema';\n    END IF;\n  END LOOP;\nEND; $function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "pgrst_drop_watch",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.pgrst_drop_watch()\n RETURNS event_trigger\n LANGUAGE plpgsql\nAS $function$\nDECLARE\n  obj record;\nBEGIN\n  FOR obj IN SELECT * FROM pg_event_trigger_dropped_objects()\n  LOOP\n    IF obj.object_type IN (\n      'schema'\n    , 'table'\n    , 'foreign table'\n    , 'view'\n    , 'materialized view'\n    , 'function'\n    , 'trigger'\n    , 'type'\n    , 'rule'\n    )\n    AND obj.is_temporary IS false -- no pg_temp objects\n    THEN\n      NOTIFY pgrst, 'reload schema';\n    END IF;\n  END LOOP;\nEND; $function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "set_graphql_placeholder",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.set_graphql_placeholder()\n RETURNS event_trigger\n LANGUAGE plpgsql\nAS $function$\n    DECLARE\n    graphql_is_dropped bool;\n    BEGIN\n    graphql_is_dropped = (\n        SELECT ev.schema_name = 'graphql_public'\n        FROM pg_event_trigger_dropped_objects() AS ev\n        WHERE ev.schema_name = 'graphql_public'\n    );\n\n    IF graphql_is_dropped\n    THEN\n        create or replace function graphql_public.graphql(\n            \"operationName\" text default null,\n            query text default null,\n            variables jsonb default null,\n            extensions jsonb default null\n        )\n            returns jsonb\n            language plpgsql\n        as $$\n            DECLARE\n                server_version float;\n            BEGIN\n                server_version = (SELECT (SPLIT_PART((select version()), ' ', 2))::float);\n\n                IF server_version >= 14 THEN\n                    RETURN jsonb_build_object(\n                        'errors', jsonb_build_array(\n                            jsonb_build_object(\n                                'message', 'pg_graphql extension is not enabled.'\n                            )\n                        )\n                    );\n                ELSE\n                    RETURN jsonb_build_object(\n                        'errors', jsonb_build_array(\n                            jsonb_build_object(\n                                'message', 'pg_graphql is only available on projects running Postgres 14 onwards.'\n                            )\n                        )\n                    );\n                END IF;\n            END;\n        $$;\n    END IF;\n\n    END;\n$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "uuid_generate_v1",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.uuid_generate_v1()\n RETURNS uuid\n LANGUAGE c\n PARALLEL SAFE STRICT\nAS '$libdir/uuid-ossp', $function$uuid_generate_v1$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "uuid_generate_v1mc",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.uuid_generate_v1mc()\n RETURNS uuid\n LANGUAGE c\n PARALLEL SAFE STRICT\nAS '$libdir/uuid-ossp', $function$uuid_generate_v1mc$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "uuid_generate_v3",
+    "arguments": "namespace uuid, name text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.uuid_generate_v3(namespace uuid, name text)\n RETURNS uuid\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/uuid-ossp', $function$uuid_generate_v3$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "uuid_generate_v4",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.uuid_generate_v4()\n RETURNS uuid\n LANGUAGE c\n PARALLEL SAFE STRICT\nAS '$libdir/uuid-ossp', $function$uuid_generate_v4$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "uuid_generate_v5",
+    "arguments": "namespace uuid, name text",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.uuid_generate_v5(namespace uuid, name text)\n RETURNS uuid\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/uuid-ossp', $function$uuid_generate_v5$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "uuid_nil",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.uuid_nil()\n RETURNS uuid\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/uuid-ossp', $function$uuid_nil$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "uuid_ns_dns",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.uuid_ns_dns()\n RETURNS uuid\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/uuid-ossp', $function$uuid_ns_dns$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "uuid_ns_oid",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.uuid_ns_oid()\n RETURNS uuid\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/uuid-ossp', $function$uuid_ns_oid$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "uuid_ns_url",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.uuid_ns_url()\n RETURNS uuid\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/uuid-ossp', $function$uuid_ns_url$function$\n"
+  },
+  {
+    "schema": "extensions",
+    "function_name": "uuid_ns_x500",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION extensions.uuid_ns_x500()\n RETURNS uuid\n LANGUAGE c\n IMMUTABLE PARALLEL SAFE STRICT\nAS '$libdir/uuid-ossp', $function$uuid_ns_x500$function$\n"
+  },
+  {
+    "schema": "graphql",
+    "function_name": "_internal_resolve",
+    "arguments": "query text, variables jsonb, \"operationName\" text, extensions jsonb",
+    "definition": "CREATE OR REPLACE FUNCTION graphql._internal_resolve(query text, variables jsonb DEFAULT '{}'::jsonb, \"operationName\" text DEFAULT NULL::text, extensions jsonb DEFAULT NULL::jsonb)\n RETURNS jsonb\n LANGUAGE c\nAS '$libdir/pg_graphql', $function$resolve_wrapper$function$\n"
+  },
+  {
+    "schema": "graphql",
+    "function_name": "comment_directive",
+    "arguments": "comment_ text",
+    "definition": "CREATE OR REPLACE FUNCTION graphql.comment_directive(comment_ text)\n RETURNS jsonb\n LANGUAGE sql\n IMMUTABLE\nAS $function$\n    /*\n    comment on column public.account.name is '@graphql.name: myField'\n    */\n    select\n        coalesce(\n            (\n                regexp_match(\n                    comment_,\n                    '@graphql\\((.+)\\)'\n                )\n            )[1]::jsonb,\n            jsonb_build_object()\n        )\n$function$\n"
+  },
+  {
+    "schema": "graphql",
+    "function_name": "exception",
+    "arguments": "message text",
+    "definition": "CREATE OR REPLACE FUNCTION graphql.exception(message text)\n RETURNS text\n LANGUAGE plpgsql\nAS $function$\nbegin\n    raise exception using errcode='22000', message=message;\nend;\n$function$\n"
+  },
+  {
+    "schema": "graphql",
+    "function_name": "get_schema_version",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION graphql.get_schema_version()\n RETURNS integer\n LANGUAGE sql\n SECURITY DEFINER\nAS $function$\n    select last_value from graphql.seq_schema_version;\n$function$\n"
+  },
+  {
+    "schema": "graphql",
+    "function_name": "increment_schema_version",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION graphql.increment_schema_version()\n RETURNS event_trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nbegin\n    perform pg_catalog.nextval('graphql.seq_schema_version');\nend;\n$function$\n"
+  },
+  {
+    "schema": "graphql",
+    "function_name": "resolve",
+    "arguments": "query text, variables jsonb, \"operationName\" text, extensions jsonb",
+    "definition": "CREATE OR REPLACE FUNCTION graphql.resolve(query text, variables jsonb DEFAULT '{}'::jsonb, \"operationName\" text DEFAULT NULL::text, extensions jsonb DEFAULT NULL::jsonb)\n RETURNS jsonb\n LANGUAGE plpgsql\nAS $function$\ndeclare\n    res jsonb;\n    message_text text;\nbegin\n  begin\n    select graphql._internal_resolve(\"query\" := \"query\",\n                                     \"variables\" := \"variables\",\n                                     \"operationName\" := \"operationName\",\n                                     \"extensions\" := \"extensions\") into res;\n    return res;\n  exception\n    when others then\n    get stacked diagnostics message_text = message_text;\n    return\n    jsonb_build_object('data', null,\n                       'errors', jsonb_build_array(jsonb_build_object('message', message_text)));\n  end;\nend;\n$function$\n"
+  },
+  {
+    "schema": "graphql_public",
+    "function_name": "graphql",
+    "arguments": "\"operationName\" text, query text, variables jsonb, extensions jsonb",
+    "definition": "CREATE OR REPLACE FUNCTION graphql_public.graphql(\"operationName\" text DEFAULT NULL::text, query text DEFAULT NULL::text, variables jsonb DEFAULT NULL::jsonb, extensions jsonb DEFAULT NULL::jsonb)\n RETURNS jsonb\n LANGUAGE sql\nAS $function$\n            select graphql.resolve(\n                query := query,\n                variables := coalesce(variables, '{}'),\n                \"operationName\" := \"operationName\",\n                extensions := extensions\n            );\n        $function$\n"
+  },
+  {
+    "schema": "pgbouncer",
+    "function_name": "get_auth",
+    "arguments": "p_usename text",
+    "definition": "CREATE OR REPLACE FUNCTION pgbouncer.get_auth(p_usename text)\n RETURNS TABLE(username text, password text)\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nbegin\n    raise debug 'PgBouncer auth request: %', p_usename;\n\n    return query\n    select \n        rolname::text, \n        case when rolvaliduntil < now() \n            then null \n            else rolpassword::text \n        end \n    from pg_authid \n    where rolname=$1 and rolcanlogin;\nend;\n$function$\n"
+  },
+  {
+    "schema": "public",
+    "function_name": "delete_class_atomic",
+    "arguments": "p_class_id uuid, p_class_name text",
+    "definition": "CREATE OR REPLACE FUNCTION public.delete_class_atomic(p_class_id uuid, p_class_name text DEFAULT NULL::text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nDECLARE\n  v_class_name text;\n  v_counts jsonb;\n  v_start_time timestamptz := NOW();\nBEGIN\n  -- Validate class exists and get its name\n  SELECT name INTO v_class_name\n  FROM classes\n  WHERE id = p_class_id;\n  \n  IF NOT FOUND THEN\n    RETURN jsonb_build_object(\n      'success', false,\n      'error', 'Class not found',\n      'class_id', p_class_id\n    );\n  END IF;\n  \n  -- Use provided name or fetched name\n  v_class_name := COALESCE(p_class_name, v_class_name);\n  \n  -- Get counts before deletion\n  v_counts := get_class_deletion_counts(p_class_id);\n  \n  -- Perform atomic deletion\n  -- Deleting the class will cascade to associated opportunities, bids, and student enrollments\n  -- due to ON DELETE CASCADE foreign key constraints.\n  DELETE FROM classes WHERE id = p_class_id;\n  \n  -- Return success response\n  RETURN jsonb_build_object(\n    'success', true,\n    'class_id', p_class_id,\n    'class_name', v_class_name,\n    'deleted_counts', v_counts,\n    'duration_ms', EXTRACT(MILLISECONDS FROM (NOW() - v_start_time)),\n    'timestamp', NOW()\n  );\n  \nEXCEPTION\n  WHEN OTHERS THEN\n    -- Return error response\n    RETURN jsonb_build_object(\n      'success', false,\n      'error', SQLERRM,\n      'class_id', p_class_id,\n      'class_name', v_class_name,\n      'timestamp', NOW()\n    );\nEND;\n$function$\n"
+  },
+  {
+    "schema": "public",
+    "function_name": "get_class_bid_statistics",
+    "arguments": "class_uuid uuid",
+    "definition": "CREATE OR REPLACE FUNCTION public.get_class_bid_statistics(class_uuid uuid)\n RETURNS jsonb\n LANGUAGE sql\n STABLE\nAS $function$\n  WITH opportunity_stats AS (\n    SELECT \n      o.id,\n      o.description,\n      o.event_date,\n      o.capacity,\n      COUNT(b.id) as bid_count\n    FROM opportunities o\n    LEFT JOIN bids b ON o.id = b.opportunity_id\n    WHERE o.class_id = class_uuid\n    GROUP BY o.id, o.description, o.event_date, o.capacity\n  )\n  SELECT jsonb_build_object(\n    'total_students', (\n      SELECT COUNT(*) FROM students WHERE class_id = class_uuid\n    ),\n    'students_with_tokens', (\n      SELECT COUNT(*) FROM students \n      WHERE class_id = class_uuid AND tokens_remaining > 0\n    ),\n    'students_who_bid', (\n      SELECT COUNT(DISTINCT b.student_id)\n      FROM bids b\n      JOIN opportunities o ON b.opportunity_id = o.id\n      WHERE o.class_id = class_uuid\n    ),\n    'total_bids', (\n      SELECT COUNT(*)\n      FROM bids b\n      JOIN opportunities o ON b.opportunity_id = o.id\n      WHERE o.class_id = class_uuid\n    ),\n    'opportunities', (\n      SELECT jsonb_agg(\n        jsonb_build_object(\n          'opportunity_id', os.id,\n          'description', os.description,\n          'event_date', os.event_date,\n          'capacity', os.capacity,\n          'bid_count', os.bid_count\n        ) ORDER BY os.event_date\n      )\n      FROM opportunity_stats os\n    )\n  );\n$function$\n"
+  },
+  {
+    "schema": "public",
+    "function_name": "get_class_bid_stats",
+    "arguments": "p_class_id uuid",
+    "definition": "CREATE OR REPLACE FUNCTION public.get_class_bid_stats(p_class_id uuid)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nDECLARE\n  v_total_bids integer;\n  v_last_bid_time timestamptz;\n  v_active_bidders integer;\nBEGIN\n  -- Get total bids for the class\n  SELECT COUNT(*)::integer INTO v_total_bids\n  FROM bids b\n  JOIN opportunities o ON b.opportunity_id = o.id\n  WHERE o.class_id = p_class_id;\n  \n  -- Get last bid timestamp\n  SELECT MAX(b.created_at) INTO v_last_bid_time\n  FROM bids b\n  JOIN opportunities o ON b.opportunity_id = o.id\n  WHERE o.class_id = p_class_id;\n  \n  -- Get count of students who have placed bids\n  SELECT COUNT(DISTINCT b.student_id)::integer INTO v_active_bidders\n  FROM bids b\n  JOIN opportunities o ON b.opportunity_id = o.id\n  WHERE o.class_id = p_class_id;\n  \n  RETURN jsonb_build_object(\n    'total_bids', v_total_bids,\n    'last_bid_time', v_last_bid_time,\n    'active_bidders', v_active_bidders\n  );\nEND;\n$function$\n"
+  },
+  {
+    "schema": "public",
+    "function_name": "get_class_deletion_counts",
+    "arguments": "p_class_id uuid",
+    "definition": "CREATE OR REPLACE FUNCTION public.get_class_deletion_counts(p_class_id uuid)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nDECLARE\n  v_students integer := 0;\n  v_opportunities integer := 0;\n  v_bids integer := 0;\n  v_token_history integer := 0;\nBEGIN\n  -- Count students (via student_enrollments)\n  SELECT COUNT(DISTINCT se.user_id)::integer INTO v_students\n  FROM student_enrollments se\n  WHERE se.class_id = p_class_id;\n  \n  -- Count opportunities\n  SELECT COUNT(*)::integer INTO v_opportunities\n  FROM opportunities o \n  WHERE o.class_id = p_class_id;\n  \n  -- Count bids (via opportunities) - explicitly using user_id\n  SELECT COUNT(*)::integer INTO v_bids\n  FROM bids b\n  INNER JOIN opportunities o ON b.opportunity_id = o.id\n  WHERE o.class_id = p_class_id;\n  \n  -- Count token history (via opportunities) - explicitly using user_id\n  SELECT COUNT(*)::integer INTO v_token_history\n  FROM token_history th\n  INNER JOIN opportunities o ON th.opportunity_id = o.id\n  WHERE o.class_id = p_class_id;\n  \n  RETURN jsonb_build_object(\n    'students', v_students,\n    'opportunities', v_opportunities,\n    'bids', v_bids,\n    'token_history', v_token_history\n  );\nEND;\n$function$\n"
+  },
+  {
+    "schema": "public",
+    "function_name": "get_class_opportunity_bid_counts",
+    "arguments": "class_uuid uuid",
+    "definition": "CREATE OR REPLACE FUNCTION public.get_class_opportunity_bid_counts(class_uuid uuid)\n RETURNS TABLE(opportunity_id uuid, opportunity_description text, bid_count bigint, capacity integer, event_date date)\n LANGUAGE sql\n STABLE\nAS $function$\n  SELECT \n    o.id as opportunity_id,\n    o.description as opportunity_description,\n    COUNT(b.id) as bid_count,\n    o.capacity,\n    o.event_date\n  FROM opportunities o\n  LEFT JOIN bids b ON o.id = b.opportunity_id\n  WHERE o.class_id = class_uuid\n  GROUP BY o.id, o.description, o.capacity, o.event_date\n  ORDER BY o.event_date;\n$function$\n"
+  },
+  {
+    "schema": "public",
+    "function_name": "get_class_token_stats",
+    "arguments": "p_class_id uuid",
+    "definition": "CREATE OR REPLACE FUNCTION public.get_class_token_stats(p_class_id uuid)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nDECLARE\n  v_total_students integer;\n  v_available_tokens integer;\n  v_used_tokens integer;\n  v_total_bids integer;\nBEGIN\n  -- Get student counts\n  SELECT \n    COUNT(*)::integer,\n    COUNT(CASE WHEN tokens_remaining > 0 THEN 1 END)::integer,\n    COUNT(CASE WHEN tokens_remaining <= 0 THEN 1 END)::integer\n  INTO v_total_students, v_available_tokens, v_used_tokens\n  FROM students\n  WHERE class_id = p_class_id;\n  \n  -- Get total bids for this class\n  SELECT COUNT(*)::integer INTO v_total_bids\n  FROM bids b\n  JOIN opportunities o ON b.opportunity_id = o.id\n  WHERE o.class_id = p_class_id;\n  \n  RETURN jsonb_build_object(\n    'total_students', v_total_students,\n    'available_tokens', v_available_tokens,\n    'used_tokens', v_used_tokens,\n    'total_bids', v_total_bids,\n    'last_updated', NOW()\n  );\nEND;\n$function$\n"
+  },
+  {
+    "schema": "public",
+    "function_name": "get_opportunity_bid_count",
+    "arguments": "opportunity_uuid uuid",
+    "definition": "CREATE OR REPLACE FUNCTION public.get_opportunity_bid_count(opportunity_uuid uuid)\n RETURNS integer\n LANGUAGE sql\n STABLE\nAS $function$\n  SELECT COUNT(*)::integer\n  FROM bids\n  WHERE opportunity_id = opportunity_uuid;\n$function$\n"
+  },
+  {
+    "schema": "public",
+    "function_name": "get_opportunity_bid_status",
+    "arguments": "p_opportunity_id uuid",
+    "definition": "CREATE OR REPLACE FUNCTION public.get_opportunity_bid_status(p_opportunity_id uuid)\n RETURNS jsonb\n LANGUAGE plpgsql\nAS $function$\nDECLARE\n  v_opportunity record;\n  v_bid_stats record;\n  v_recent_bids jsonb;\n  v_result jsonb;\nBEGIN\n  -- Get opportunity details\n  -- Removed reference to c.capacity_default\n  SELECT o.*, c.name as class_name\n  INTO v_opportunity\n  FROM opportunities o\n  JOIN classes c ON o.class_id = c.id\n  WHERE o.id = p_opportunity_id;\n  \n  IF NOT FOUND THEN\n    RETURN jsonb_build_object(\n      'success', false,\n      'error', 'Opportunity not found'\n    );\n  END IF;\n  \n  -- Get bid statistics\n  SELECT \n    COUNT(*)::integer as total_bids,\n    COUNT(CASE WHEN bid_status = 'placed' THEN 1 END)::integer as active_bids,\n    COUNT(CASE WHEN bid_status = 'selected' THEN 1 END)::integer as selected_bids,\n    MAX(submission_timestamp) as last_bid_time,\n    MIN(submission_timestamp) as first_bid_time\n  INTO v_bid_stats\n  FROM bids\n  WHERE opportunity_id = p_opportunity_id;\n  \n  -- Get recent bids with student details (using 'users' table instead of 'students')\n  SELECT jsonb_agg(\n    jsonb_build_object(\n      'bid_id', b.id,\n      'student_name', u.name,\n      'student_email', u.email,\n      'bid_amount', b.bid_amount,\n      'bid_status', b.bid_status,\n      'submission_timestamp', b.submission_timestamp\n    ) ORDER BY b.submission_timestamp DESC\n  ) INTO v_recent_bids\n  FROM bids b\n  JOIN users u ON b.student_id = u.id -- Corrected: using 'users' table\n  WHERE b.opportunity_id = p_opportunity_id\n  LIMIT 10;\n  \n  -- Build comprehensive result\n  v_result := jsonb_build_object(\n    'success', true,\n    'opportunity_id', p_opportunity_id,\n    'opportunity_details', jsonb_build_object(\n      'description', v_opportunity.description,\n      'opens_at', v_opportunity.opens_at,\n      'closes_at', v_opportunity.closes_at,\n      'event_date', v_opportunity.event_date,\n      'capacity', COALESCE(v_opportunity.capacity, 7), -- Corrected: using opportunity capacity or default 7\n      'status', v_opportunity.status,\n      'class_name', v_opportunity.class_name\n    ),\n    'bid_statistics', jsonb_build_object(\n      'total_bids', COALESCE(v_bid_stats.total_bids, 0),\n      'active_bids', COALESCE(v_bid_stats.active_bids, 0),\n      'selected_bids', COALESCE(v_bid_stats.selected_bids, 0),\n      'last_bid_time', v_bid_stats.last_bid_time,\n      'first_bid_time', v_bid_stats.first_bid_time,\n      'capacity_exceeded', COALESCE(v_bid_stats.total_bids, 0) > COALESCE(v_opportunity.capacity, 7) -- Corrected: using opportunity capacity or default 7\n    ),\n    'recent_bids', COALESCE(v_recent_bids, '[]'::jsonb),\n    'last_updated', NOW()\n  );\n  \n  RETURN v_result;\nEND;\n$function$\n"
+  },
+  {
+    "schema": "public",
+    "function_name": "get_opportunity_selections",
+    "arguments": "p_opportunity_id uuid",
+    "definition": "CREATE OR REPLACE FUNCTION public.get_opportunity_selections(p_opportunity_id uuid)\n RETURNS json\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nDECLARE\n  v_class_id uuid;\n  v_result json;\nBEGIN\n  -- Get the class_id for this opportunity\n  SELECT class_id INTO v_class_id\n  FROM opportunities\n  WHERE id = p_opportunity_id;\n  \n  IF v_class_id IS NULL THEN\n    RETURN json_build_object(\n      'success', false,\n      'error', 'Opportunity not found'\n    );\n  END IF;\n\n  -- Get selected students\n  SELECT json_build_object(\n    'success', true,\n    'selected_students', json_agg(\n      json_build_object(\n        'id', u.id,\n        'name', u.name,\n        'email', u.email,\n        'student_number', u.student_number,\n        'bidding_result', se.bidding_result\n      )\n    )\n  ) INTO v_result\n  FROM student_enrollments se\n  JOIN users u ON se.user_id = u.id\n  WHERE se.class_id = v_class_id\n    AND se.bidding_result = 'won';\n\n  RETURN COALESCE(v_result, json_build_object('success', true, 'selected_students', '[]'::json));\nEND;\n$function$\n"
+  },
+  {
+    "schema": "public",
+    "function_name": "get_student_bid_status",
+    "arguments": "user_uuid uuid, class_uuid uuid",
+    "definition": "CREATE OR REPLACE FUNCTION public.get_student_bid_status(user_uuid uuid, class_uuid uuid)\n RETURNS TABLE(opportunity_id uuid, opportunity_description text, has_bid boolean, bid_amount integer, is_winner boolean, bid_created_at timestamp with time zone)\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nBEGIN\n  RETURN QUERY\n  SELECT\n    o.id as opportunity_id,\n    o.description as opportunity_description,\n    CASE WHEN b.id IS NOT NULL THEN true ELSE false END as has_bid,\n    COALESCE(b.bid_amount, 0) as bid_amount,\n    COALESCE(b.is_winner, false) as is_winner,\n    b.created_at as bid_created_at\n  FROM opportunities o\n  LEFT JOIN bids b ON o.id = b.opportunity_id AND b.user_id = user_uuid\n  WHERE o.class_id = class_uuid\n  ORDER BY o.event_date;\nEND;\n$function$\n"
+  },
+  {
+    "schema": "public",
+    "function_name": "get_student_token_status",
+    "arguments": "p_user_id uuid, p_class_id uuid",
+    "definition": "CREATE OR REPLACE FUNCTION public.get_student_token_status(p_user_id uuid, p_class_id uuid)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nDECLARE\n  v_user_data record;\n  v_enrollment_data record;\nBEGIN\n  -- Get user details\n  SELECT id, name, email, student_number INTO v_user_data\n  FROM users\n  WHERE id = p_user_id;\n\n  IF NOT FOUND THEN\n    RETURN jsonb_build_object(\n      'found', false,\n      'error', 'User not found'\n    );\n  END IF;\n\n  -- Get enrollment details for the specific class\n  SELECT tokens_remaining, token_status INTO v_enrollment_data\n  FROM student_enrollments\n  WHERE user_id = p_user_id AND class_id = p_class_id;\n\n  IF NOT FOUND THEN\n    RETURN jsonb_build_object(\n      'found', false,\n      'error', 'User not enrolled in this class'\n    );\n  END IF;\n\n  RETURN jsonb_build_object(\n    'found', true,\n    'user_id', v_user_data.id,\n    'name', v_user_data.name,\n    'email', v_user_data.email,\n    'student_number', v_user_data.student_number,\n    'tokens_remaining', v_enrollment_data.tokens_remaining,\n    'token_status', v_enrollment_data.token_status,\n    'has_used_token', v_enrollment_data.tokens_remaining <= 0\n  );\nEND;\n$function$\n"
+  },
+  {
+    "schema": "public",
+    "function_name": "log_dinner_table_action",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION public.log_dinner_table_action()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nBEGIN\n  INSERT INTO dinner_table_audit (table_name, action, details, performed_by)\n  VALUES (\n    TG_TABLE_NAME,\n    TG_OP,\n    CASE \n      WHEN TG_OP = 'DELETE' THEN to_jsonb(OLD)\n      ELSE to_jsonb(NEW)\n    END,\n    auth.uid()\n  );\n  \n  RETURN COALESCE(NEW, OLD);\nEND;\n$function$\n"
+  },
+  {
+    "schema": "public",
+    "function_name": "reset_opportunity_selection",
+    "arguments": "p_opportunity_id uuid",
+    "definition": "CREATE OR REPLACE FUNCTION public.reset_opportunity_selection(p_opportunity_id uuid)\n RETURNS jsonb\n LANGUAGE plpgsql\nAS $function$\nDECLARE\n    v_class_id uuid;\n    v_updated_enrollments_count integer := 0;\n    v_updated_bids_count integer := 0;\nBEGIN\n    -- Get the class_id associated with the opportunity\n    SELECT class_id INTO v_class_id FROM opportunities WHERE id = p_opportunity_id;\n\n    IF v_class_id IS NULL THEN\n        RETURN jsonb_build_object('success', false, 'error_message', 'Opportunity not found.');\n    END IF;\n\n    -- Reset student_enrollments for students who bid on this opportunity\n    -- ONLY reset bidding_result to 'pending' and update timestamp\n    UPDATE student_enrollments se\n    SET\n        bidding_result = 'pending',\n        updated_at = now()\n    FROM bids b\n    WHERE se.user_id = b.user_id\n      AND b.opportunity_id = p_opportunity_id\n      AND se.class_id = v_class_id\n    RETURNING 1 INTO v_updated_enrollments_count;\n\n    -- Reset bid status and is_winner for bids related to this opportunity\n    UPDATE bids\n    SET\n        bid_status = 'placed', -- Reset to 'placed' so it can be withdrawn\n        is_winner = FALSE,     -- Ensure it's not marked as a winner\n        validation_status = 'validated', -- Assuming it's valid again\n        submission_timestamp = now() -- Update timestamp to reflect reset\n    WHERE opportunity_id = p_opportunity_id\n    RETURNING 1 INTO v_updated_bids_count;\n\n    RETURN jsonb_build_object('success', true, 'message', 'Selection reset successfully.', 'reset_count', v_updated_enrollments_count, 'bids_reset_count', v_updated_bids_count);\n\nEXCEPTION\n    WHEN OTHERS THEN\n        RETURN jsonb_build_object('success', false, 'error_message', SQLERRM);\nEND;\n$function$\n"
+  },
+  {
+    "schema": "public",
+    "function_name": "restore_tokens_on_opportunity_deletion",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION public.restore_tokens_on_opportunity_deletion()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nDECLARE\n  bid_record RECORD;\n  class_id_var UUID;\n  restored_count INTEGER := 0;\nBEGIN\n  -- Get the class_id from the deleted opportunity\n  class_id_var := OLD.class_id;\n  \n  -- Log the opportunity deletion\n  RAISE NOTICE 'Opportunity deleted: % (Class: %)', OLD.id, class_id_var;\n  \n  -- Find all students who had bids on this opportunity and restore their tokens\n  FOR bid_record IN \n    SELECT DISTINCT b.user_id, u.name, u.email\n    FROM bids b\n    JOIN users u ON u.id = b.user_id\n    WHERE b.opportunity_id = OLD.id\n  LOOP\n    -- Update student enrollment to restore token\n    UPDATE student_enrollments \n    SET \n      tokens_remaining = tokens_remaining + 1,\n      token_status = 'unused',\n      bidding_result = 'pending',\n      updated_at = NOW()\n    WHERE user_id = bid_record.user_id \n      AND class_id = class_id_var;\n    \n    -- Log the token restoration in token_history\n    INSERT INTO token_history (\n      user_id, -- Changed from student_id to user_id\n      opportunity_id,\n      amount,\n      type,\n      description,\n      created_at\n    ) VALUES (\n      bid_record.user_id, -- Changed from student_id to user_id\n      OLD.id,\n      1,\n      'refund',\n      'Token restored due to opportunity deletion: ' || OLD.title,\n      NOW()\n    );\n    \n    restored_count := restored_count + 1;\n    \n    RAISE NOTICE 'Token restored for student: % (%) - Total restored: %', \n      bid_record.name, bid_record.email, restored_count;\n  END LOOP;\n  \n  -- Log summary\n  RAISE NOTICE 'Opportunity deletion complete. Restored tokens for % students', restored_count;\n  \n  RETURN OLD;\nEND;\n$function$\n"
+  },
+  {
+    "schema": "public",
+    "function_name": "sanitize_table_name",
+    "arguments": "input_name text",
+    "definition": "CREATE OR REPLACE FUNCTION public.sanitize_table_name(input_name text)\n RETURNS text\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n  -- Convert to lowercase, replace spaces and special chars with underscores\n  -- Remove any characters that aren't alphanumeric or underscore\n  RETURN regexp_replace(\n    regexp_replace(\n      lower(trim(input_name)), \n      '[^a-z0-9_]', '_', 'g'\n    ), \n    '_+', '_', 'g'\n  );\nEND;\n$function$\n"
+  },
+  {
+    "schema": "public",
+    "function_name": "student_has_bid",
+    "arguments": "user_uuid uuid, opportunity_uuid uuid",
+    "definition": "CREATE OR REPLACE FUNCTION public.student_has_bid(user_uuid uuid, opportunity_uuid uuid)\n RETURNS boolean\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nBEGIN\n  RETURN EXISTS(\n    SELECT 1\n    FROM bids\n    WHERE user_id = user_uuid AND opportunity_id = opportunity_uuid\n  );\nEND;\n$function$\n"
+  },
+  {
+    "schema": "public",
+    "function_name": "submit_student_bid_secure",
+    "arguments": "p_user_id uuid, p_opportunity_id uuid, p_bid_amount integer",
+    "definition": "CREATE OR REPLACE FUNCTION public.submit_student_bid_secure(p_user_id uuid, p_opportunity_id uuid, p_bid_amount integer)\n RETURNS json\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$DECLARE\n  v_class_id uuid;\n  v_enrollment_record record;\n  v_opportunity_record record;\n  v_existing_bid_count integer;\n  v_bid_id uuid;\n  v_result json;\nBEGIN\n  -- Get opportunity details including capacity, status, opens_at, closes_at from opportunities table\n  SELECT o.id, o.class_id, o.capacity, o.status, o.opens_at, o.closes_at\n  INTO v_opportunity_record\n  FROM opportunities o\n  WHERE o.id = p_opportunity_id;\n\n  -- Check if opportunity exists\n  IF NOT FOUND THEN\n    RETURN json_build_object(\n      'success', false,\n      'error_message', 'Opportunity not found'\n    );\n  END IF;\n\n  -- Check if bidding window is open based on opens_at and closes_at\n  IF NOW() < v_opportunity_record.opens_at THEN\n    RETURN json_build_object(\n      'success', false,\n      'error_message', 'Bidding has not opened yet'\n    );\n  END IF;\n\n  IF NOW() > v_opportunity_record.closes_at THEN\n    RETURN json_build_object(\n      'success', false,\n      'error_message', 'Bidding has already closed'\n    );\n  END IF;\n\n  -- If bidding window is open and status is 'upcoming', update status to 'open'\n  IF v_opportunity_record.status = 'upcoming' AND NOW() >= v_opportunity_record.opens_at AND NOW() < v_opportunity_record.closes_at THEN\n    UPDATE opportunities\n    SET status = 'open'\n    WHERE id = p_opportunity_id\n    RETURNING status INTO v_opportunity_record.status; -- Update the record variable with the new status\n  END IF;\n\n  -- Final check if opportunity is open for bidding (after potential status update)\n  IF v_opportunity_record.status != 'open' THEN\n    RETURN json_build_object(\n      'success', false,\n      'error_message', 'Opportunity is not open for bidding'\n    );\n  END IF;\n\n  -- Get student enrollment\n  SELECT se.user_id, se.class_id, se.tokens_remaining, se.token_status\n  INTO v_enrollment_record\n  FROM student_enrollments se\n  WHERE se.user_id = p_user_id AND se.class_id = v_opportunity_record.class_id;\n\n  -- Check if student is enrolled\n  IF NOT FOUND THEN\n    RETURN json_build_object(\n      'success', false,\n      'error_message', 'Student is not enrolled in this class'\n    );\n  END IF;\n\n  -- Check if student has tokens\n  IF v_enrollment_record.tokens_remaining < p_bid_amount THEN\n    RETURN json_build_object(\n      'success', false,\n      'error_message', 'Insufficient tokens remaining'\n    );\n  END IF;\n\n  -- Check if student already has a bid for this opportunity\n  SELECT COUNT(*)\n  INTO v_existing_bid_count\n  FROM bids b\n  WHERE b.user_id = p_user_id AND b.opportunity_id = p_opportunity_id;\n\n  IF v_existing_bid_count > 0 THEN\n    RETURN json_build_object(\n      'success', false,\n      'error_message', 'Student has already placed a bid for this opportunity'\n    );\n  END IF;\n\n  -- Check if opportunity has reached capacity\n  SELECT COUNT(*)\n  INTO v_existing_bid_count\n  FROM bids b\n  WHERE b.opportunity_id = p_opportunity_id AND b.bid_status = 'placed';\n\n  -- Create the bid\n  INSERT INTO bids (user_id, opportunity_id, bid_amount, bid_status, validation_status)\n  VALUES (p_user_id, p_opportunity_id, p_bid_amount, 'placed', 'validated')\n  RETURNING id INTO v_bid_id;\n\n  -- Update student enrollment (reduce tokens)\n  UPDATE student_enrollments\n  SET \n    tokens_remaining = tokens_remaining - p_bid_amount,\n    token_status = CASE \n      WHEN tokens_remaining - p_bid_amount <= 0 THEN 'used'\n      ELSE token_status\n    END,\n    updated_at = NOW()\n  WHERE user_id = p_user_id AND class_id = v_opportunity_record.class_id;\n\n  -- Log token usage\n  INSERT INTO token_history (user_id, opportunity_id, amount, type, description)\n  VALUES (p_user_id, p_opportunity_id, -p_bid_amount, 'bid', 'Token used for bid submission');\n\n  -- Return success\n  RETURN json_build_object(\n    'success', true,\n    'bid_id', v_bid_id,\n    'message', 'Bid submitted successfully'\n  );\n\nEXCEPTION\n  WHEN OTHERS THEN\n    RETURN json_build_object(\n      'success', false,\n      'error_message', 'Database error: ' || SQLERRM\n    );\nEND;$function$\n"
+  },
+  {
+    "schema": "public",
+    "function_name": "update_opportunity_on_bid_change",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION public.update_opportunity_on_bid_change()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nDECLARE\n  v_bid_count integer;\n  v_capacity integer;\nBEGIN\n  -- Get current bid count for the opportunity\n  SELECT COUNT(*) INTO v_bid_count\n  FROM bids\n  WHERE opportunity_id = COALESCE(NEW.opportunity_id, OLD.opportunity_id)\n    AND bid_status IN ('placed', 'confirmed');\n  \n  -- Get opportunity capacity directly from opportunities table\n  SELECT o.capacity INTO v_capacity\n  FROM opportunities o\n  WHERE o.id = COALESCE(NEW.opportunity_id, OLD.opportunity_id);\n  \n  -- Update opportunity status if needed\n  -- This could trigger additional business logic based on bid counts\n  \n  RETURN COALESCE(NEW, OLD);\nEND;\n$function$\n"
+  },
+  {
+    "schema": "public",
+    "function_name": "update_opportunity_status",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION public.update_opportunity_status()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n  -- Update status based on current time\n  IF NEW.opens_at > NOW() THEN\n    NEW.status = 'upcoming';\n  ELSIF NEW.opens_at <= NOW() AND NEW.closes_at > NOW() THEN\n    NEW.status = 'open';\n  ELSIF NEW.closes_at <= NOW() AND NEW.event_date >= CURRENT_DATE THEN\n    NEW.status = 'closed';\n  ELSE\n    NEW.status = 'completed';\n  END IF;\n  \n  RETURN NEW;\nEND;\n$function$\n"
+  },
+  {
+    "schema": "public",
+    "function_name": "update_selection_results_atomic",
+    "arguments": "p_opportunity_id uuid, p_selected_user_ids uuid[], p_all_bidder_ids uuid[]",
+    "definition": "CREATE OR REPLACE FUNCTION public.update_selection_results_atomic(p_opportunity_id uuid, p_selected_user_ids uuid[], p_all_bidder_ids uuid[])\n RETURNS jsonb\n LANGUAGE plpgsql\nAS $function$\nDECLARE\n    v_class_id uuid;\n    v_selected_count integer;\n    v_rejected_count integer;\n    v_enrollment_won_count integer;\n    v_enrollment_lost_count integer;\nBEGIN\n    -- Get the class_id for the given opportunity\n    SELECT class_id INTO v_class_id\n    FROM opportunities\n    WHERE id = p_opportunity_id;\n\n    IF v_class_id IS NULL THEN\n        RETURN jsonb_build_object('success', false, 'error_message', 'Opportunity not found.');\n    END IF;\n\n    -- 1. Update bids for selected students\n    UPDATE bids\n    SET\n        is_winner = TRUE,\n        bid_status = 'selected',\n        submission_timestamp = now() -- Update timestamp to reflect selection processing\n    WHERE\n        opportunity_id = p_opportunity_id AND user_id = ANY(p_selected_user_ids)\n    RETURNING 1 INTO v_selected_count; -- Count updated rows\n\n    -- 2. Update bids for non-selected students (who placed a bid on this opportunity)\n    UPDATE bids\n    SET\n        is_winner = FALSE,\n        bid_status = 'rejected',\n        submission_timestamp = now() -- Update timestamp to reflect selection processing\n    WHERE\n        opportunity_id = p_opportunity_id AND user_id = ANY(p_all_bidder_ids) AND NOT (user_id = ANY(p_selected_user_ids))\n    RETURNING 1 INTO v_rejected_count; -- Count updated rows\n\n    -- 3. Update student_enrollments for selected students\n    UPDATE student_enrollments\n    SET\n        bidding_result = 'won',\n        updated_at = now()\n    WHERE\n        user_id = ANY(p_selected_user_ids) AND class_id = v_class_id\n    RETURNING 1 INTO v_enrollment_won_count; -- Count updated rows\n\n    -- 4. Update student_enrollments for non-selected students (who placed a bid on this opportunity)\n    UPDATE student_enrollments\n    SET\n        bidding_result = 'lost',\n        updated_at = now()\n    WHERE\n        user_id = ANY(p_all_bidder_ids) AND NOT (user_id = ANY(p_selected_user_ids)) AND class_id = v_class_id\n    RETURNING 1 INTO v_enrollment_lost_count; -- Count updated rows\n\n    -- Return success with counts of updated records\n    RETURN jsonb_build_object(\n        'success', true,\n        'message', 'Selection results updated successfully.',\n        'updated_bids_selected', COALESCE(v_selected_count, 0),\n        'updated_bids_rejected', COALESCE(v_rejected_count, 0),\n        'updated_enrollments_won', COALESCE(v_enrollment_won_count, 0),\n        'updated_enrollments_lost', COALESCE(v_enrollment_lost_count, 0)\n    );\n\nEXCEPTION\n    WHEN OTHERS THEN\n        RETURN jsonb_build_object('success', false, 'error_message', SQLERRM);\nEND;\n$function$\n"
+  },
+  {
+    "schema": "public",
+    "function_name": "update_token_status",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION public.update_token_status()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n  -- Update token_status based on tokens_remaining\n  IF NEW.tokens_remaining <= 0 THEN\n    NEW.token_status = 'used';\n  ELSE\n    NEW.token_status = 'unused';\n  END IF;\n  \n  RETURN NEW;\nEND;\n$function$\n"
+  },
+  {
+    "schema": "public",
+    "function_name": "update_updated_at_column",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION public.update_updated_at_column()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n    NEW.updated_at = now();\n    RETURN NEW;\nEND;\n$function$\n"
+  },
+  {
+    "schema": "public",
+    "function_name": "withdraw_bid_secure",
+    "arguments": "p_user_id uuid, p_opportunity_id uuid",
+    "definition": "CREATE OR REPLACE FUNCTION public.withdraw_bid_secure(p_user_id uuid, p_opportunity_id uuid)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nDECLARE\n  v_class_id uuid;\n  v_bid_id uuid;\n  v_token_history_id uuid;\n  v_deleted_bids integer := 0;\n  v_deleted_history integer := 0;\n  v_updated_enrollments integer := 0;\nBEGIN\n  -- Get the class_id for this opportunity\n  SELECT class_id INTO v_class_id\n  FROM opportunities\n  WHERE id = p_opportunity_id;\n  \n  IF v_class_id IS NULL THEN\n    RETURN jsonb_build_object(\n      'success', false,\n      'error', 'Opportunity not found'\n    );\n  END IF;\n\n  -- Check if the user has actually placed a bid for this opportunity\n  SELECT id INTO v_bid_id\n  FROM bids\n  WHERE user_id = p_user_id AND opportunity_id = p_opportunity_id;\n  \n  IF v_bid_id IS NULL THEN\n    RETURN jsonb_build_object(\n      'success', false,\n      'error', 'No bid found for this user and opportunity'\n    );\n  END IF;\n\n  -- Start transaction operations\n  BEGIN\n    -- Delete the bid from bids table\n    DELETE FROM bids \n    WHERE user_id = p_user_id AND opportunity_id = p_opportunity_id;\n    \n    GET DIAGNOSTICS v_deleted_bids = ROW_COUNT;\n\n    -- Delete the token history entry for this bid\n    DELETE FROM token_history \n    WHERE user_id = p_user_id \n      AND opportunity_id = p_opportunity_id \n      AND type = 'bid';\n    \n    GET DIAGNOSTICS v_deleted_history = ROW_COUNT;\n\n    -- Restore the student's token in student_enrollments\n    UPDATE student_enrollments \n    SET \n      tokens_remaining = 1,\n      token_status = 'unused'::character varying,\n      bidding_result = 'pending'::character varying,\n      updated_at = now()\n    WHERE user_id = p_user_id AND class_id = v_class_id;\n    \n    GET DIAGNOSTICS v_updated_enrollments = ROW_COUNT;\n\n    -- Verify that we actually updated an enrollment record\n    IF v_updated_enrollments = 0 THEN\n      RETURN jsonb_build_object(\n        'success', false,\n        'error', 'Student enrollment not found for this class'\n      );\n    END IF;\n\n    -- Return success with operation counts\n    RETURN jsonb_build_object(\n      'success', true,\n      'deleted_bids', v_deleted_bids,\n      'deleted_history', v_deleted_history,\n      'updated_enrollments', v_updated_enrollments,\n      'opportunity_id', p_opportunity_id,\n      'class_id', v_class_id,\n      'user_id', p_user_id\n    );\n\n  EXCEPTION WHEN OTHERS THEN\n    -- Rollback happens automatically\n    RETURN jsonb_build_object(\n      'success', false,\n      'error', SQLERRM,\n      'sqlstate', SQLSTATE\n    );\n  END;\nEND;\n$function$\n"
+  },
+  {
+    "schema": "realtime",
+    "function_name": "apply_rls",
+    "arguments": "wal jsonb, max_record_bytes integer",
+    "definition": "CREATE OR REPLACE FUNCTION realtime.apply_rls(wal jsonb, max_record_bytes integer DEFAULT (1024 * 1024))\n RETURNS SETOF realtime.wal_rls\n LANGUAGE plpgsql\nAS $function$\ndeclare\n-- Regclass of the table e.g. public.notes\nentity_ regclass = (quote_ident(wal ->> 'schema') || '.' || quote_ident(wal ->> 'table'))::regclass;\n\n-- I, U, D, T: insert, update ...\naction realtime.action = (\n    case wal ->> 'action'\n        when 'I' then 'INSERT'\n        when 'U' then 'UPDATE'\n        when 'D' then 'DELETE'\n        else 'ERROR'\n    end\n);\n\n-- Is row level security enabled for the table\nis_rls_enabled bool = relrowsecurity from pg_class where oid = entity_;\n\nsubscriptions realtime.subscription[] = array_agg(subs)\n    from\n        realtime.subscription subs\n    where\n        subs.entity = entity_;\n\n-- Subscription vars\nroles regrole[] = array_agg(distinct us.claims_role::text)\n    from\n        unnest(subscriptions) us;\n\nworking_role regrole;\nclaimed_role regrole;\nclaims jsonb;\n\nsubscription_id uuid;\nsubscription_has_access bool;\nvisible_to_subscription_ids uuid[] = '{}';\n\n-- structured info for wal's columns\ncolumns realtime.wal_column[];\n-- previous identity values for update/delete\nold_columns realtime.wal_column[];\n\nerror_record_exceeds_max_size boolean = octet_length(wal::text) > max_record_bytes;\n\n-- Primary jsonb output for record\noutput jsonb;\n\nbegin\nperform set_config('role', null, true);\n\ncolumns =\n    array_agg(\n        (\n            x->>'name',\n            x->>'type',\n            x->>'typeoid',\n            realtime.cast(\n                (x->'value') #>> '{}',\n                coalesce(\n                    (x->>'typeoid')::regtype, -- null when wal2json version <= 2.4\n                    (x->>'type')::regtype\n                )\n            ),\n            (pks ->> 'name') is not null,\n            true\n        )::realtime.wal_column\n    )\n    from\n        jsonb_array_elements(wal -> 'columns') x\n        left join jsonb_array_elements(wal -> 'pk') pks\n            on (x ->> 'name') = (pks ->> 'name');\n\nold_columns =\n    array_agg(\n        (\n            x->>'name',\n            x->>'type',\n            x->>'typeoid',\n            realtime.cast(\n                (x->'value') #>> '{}',\n                coalesce(\n                    (x->>'typeoid')::regtype, -- null when wal2json version <= 2.4\n                    (x->>'type')::regtype\n                )\n            ),\n            (pks ->> 'name') is not null,\n            true\n        )::realtime.wal_column\n    )\n    from\n        jsonb_array_elements(wal -> 'identity') x\n        left join jsonb_array_elements(wal -> 'pk') pks\n            on (x ->> 'name') = (pks ->> 'name');\n\nfor working_role in select * from unnest(roles) loop\n\n    -- Update `is_selectable` for columns and old_columns\n    columns =\n        array_agg(\n            (\n                c.name,\n                c.type_name,\n                c.type_oid,\n                c.value,\n                c.is_pkey,\n                pg_catalog.has_column_privilege(working_role, entity_, c.name, 'SELECT')\n            )::realtime.wal_column\n        )\n        from\n            unnest(columns) c;\n\n    old_columns =\n            array_agg(\n                (\n                    c.name,\n                    c.type_name,\n                    c.type_oid,\n                    c.value,\n                    c.is_pkey,\n                    pg_catalog.has_column_privilege(working_role, entity_, c.name, 'SELECT')\n                )::realtime.wal_column\n            )\n            from\n                unnest(old_columns) c;\n\n    if action <> 'DELETE' and count(1) = 0 from unnest(columns) c where c.is_pkey then\n        return next (\n            jsonb_build_object(\n                'schema', wal ->> 'schema',\n                'table', wal ->> 'table',\n                'type', action\n            ),\n            is_rls_enabled,\n            -- subscriptions is already filtered by entity\n            (select array_agg(s.subscription_id) from unnest(subscriptions) as s where claims_role = working_role),\n            array['Error 400: Bad Request, no primary key']\n        )::realtime.wal_rls;\n\n    -- The claims role does not have SELECT permission to the primary key of entity\n    elsif action <> 'DELETE' and sum(c.is_selectable::int) <> count(1) from unnest(columns) c where c.is_pkey then\n        return next (\n            jsonb_build_object(\n                'schema', wal ->> 'schema',\n                'table', wal ->> 'table',\n                'type', action\n            ),\n            is_rls_enabled,\n            (select array_agg(s.subscription_id) from unnest(subscriptions) as s where claims_role = working_role),\n            array['Error 401: Unauthorized']\n        )::realtime.wal_rls;\n\n    else\n        output = jsonb_build_object(\n            'schema', wal ->> 'schema',\n            'table', wal ->> 'table',\n            'type', action,\n            'commit_timestamp', to_char(\n                ((wal ->> 'timestamp')::timestamptz at time zone 'utc'),\n                'YYYY-MM-DD\"T\"HH24:MI:SS.MS\"Z\"'\n            ),\n            'columns', (\n                select\n                    jsonb_agg(\n                        jsonb_build_object(\n                            'name', pa.attname,\n                            'type', pt.typname\n                        )\n                        order by pa.attnum asc\n                    )\n                from\n                    pg_attribute pa\n                    join pg_type pt\n                        on pa.atttypid = pt.oid\n                where\n                    attrelid = entity_\n                    and attnum > 0\n                    and pg_catalog.has_column_privilege(working_role, entity_, pa.attname, 'SELECT')\n            )\n        )\n        -- Add \"record\" key for insert and update\n        || case\n            when action in ('INSERT', 'UPDATE') then\n                jsonb_build_object(\n                    'record',\n                    (\n                        select\n                            jsonb_object_agg(\n                                -- if unchanged toast, get column name and value from old record\n                                coalesce((c).name, (oc).name),\n                                case\n                                    when (c).name is null then (oc).value\n                                    else (c).value\n                                end\n                            )\n                        from\n                            unnest(columns) c\n                            full outer join unnest(old_columns) oc\n                                on (c).name = (oc).name\n                        where\n                            coalesce((c).is_selectable, (oc).is_selectable)\n                            and ( not error_record_exceeds_max_size or (octet_length((c).value::text) <= 64))\n                    )\n                )\n            else '{}'::jsonb\n        end\n        -- Add \"old_record\" key for update and delete\n        || case\n            when action = 'UPDATE' then\n                jsonb_build_object(\n                        'old_record',\n                        (\n                            select jsonb_object_agg((c).name, (c).value)\n                            from unnest(old_columns) c\n                            where\n                                (c).is_selectable\n                                and ( not error_record_exceeds_max_size or (octet_length((c).value::text) <= 64))\n                        )\n                    )\n            when action = 'DELETE' then\n                jsonb_build_object(\n                    'old_record',\n                    (\n                        select jsonb_object_agg((c).name, (c).value)\n                        from unnest(old_columns) c\n                        where\n                            (c).is_selectable\n                            and ( not error_record_exceeds_max_size or (octet_length((c).value::text) <= 64))\n                            and ( not is_rls_enabled or (c).is_pkey ) -- if RLS enabled, we can't secure deletes so filter to pkey\n                    )\n                )\n            else '{}'::jsonb\n        end;\n\n        -- Create the prepared statement\n        if is_rls_enabled and action <> 'DELETE' then\n            if (select 1 from pg_prepared_statements where name = 'walrus_rls_stmt' limit 1) > 0 then\n                deallocate walrus_rls_stmt;\n            end if;\n            execute realtime.build_prepared_statement_sql('walrus_rls_stmt', entity_, columns);\n        end if;\n\n        visible_to_subscription_ids = '{}';\n\n        for subscription_id, claims in (\n                select\n                    subs.subscription_id,\n                    subs.claims\n                from\n                    unnest(subscriptions) subs\n                where\n                    subs.entity = entity_\n                    and subs.claims_role = working_role\n                    and (\n                        realtime.is_visible_through_filters(columns, subs.filters)\n                        or (\n                          action = 'DELETE'\n                          and realtime.is_visible_through_filters(old_columns, subs.filters)\n                        )\n                    )\n        ) loop\n\n            if not is_rls_enabled or action = 'DELETE' then\n                visible_to_subscription_ids = visible_to_subscription_ids || subscription_id;\n            else\n                -- Check if RLS allows the role to see the record\n                perform\n                    -- Trim leading and trailing quotes from working_role because set_config\n                    -- doesn't recognize the role as valid if they are included\n                    set_config('role', trim(both '\"' from working_role::text), true),\n                    set_config('request.jwt.claims', claims::text, true);\n\n                execute 'execute walrus_rls_stmt' into subscription_has_access;\n\n                if subscription_has_access then\n                    visible_to_subscription_ids = visible_to_subscription_ids || subscription_id;\n                end if;\n            end if;\n        end loop;\n\n        perform set_config('role', null, true);\n\n        return next (\n            output,\n            is_rls_enabled,\n            visible_to_subscription_ids,\n            case\n                when error_record_exceeds_max_size then array['Error 413: Payload Too Large']\n                else '{}'\n            end\n        )::realtime.wal_rls;\n\n    end if;\nend loop;\n\nperform set_config('role', null, true);\nend;\n$function$\n"
+  },
+  {
+    "schema": "realtime",
+    "function_name": "broadcast_changes",
+    "arguments": "topic_name text, event_name text, operation text, table_name text, table_schema text, new record, old record, level text",
+    "definition": "CREATE OR REPLACE FUNCTION realtime.broadcast_changes(topic_name text, event_name text, operation text, table_name text, table_schema text, new record, old record, level text DEFAULT 'ROW'::text)\n RETURNS void\n LANGUAGE plpgsql\nAS $function$\nDECLARE\n    -- Declare a variable to hold the JSONB representation of the row\n    row_data jsonb := '{}'::jsonb;\nBEGIN\n    IF level = 'STATEMENT' THEN\n        RAISE EXCEPTION 'function can only be triggered for each row, not for each statement';\n    END IF;\n    -- Check the operation type and handle accordingly\n    IF operation = 'INSERT' OR operation = 'UPDATE' OR operation = 'DELETE' THEN\n        row_data := jsonb_build_object('old_record', OLD, 'record', NEW, 'operation', operation, 'table', table_name, 'schema', table_schema);\n        PERFORM realtime.send (row_data, event_name, topic_name);\n    ELSE\n        RAISE EXCEPTION 'Unexpected operation type: %', operation;\n    END IF;\nEXCEPTION\n    WHEN OTHERS THEN\n        RAISE EXCEPTION 'Failed to process the row: %', SQLERRM;\nEND;\n\n$function$\n"
+  },
+  {
+    "schema": "realtime",
+    "function_name": "build_prepared_statement_sql",
+    "arguments": "prepared_statement_name text, entity regclass, columns realtime.wal_column[]",
+    "definition": "CREATE OR REPLACE FUNCTION realtime.build_prepared_statement_sql(prepared_statement_name text, entity regclass, columns realtime.wal_column[])\n RETURNS text\n LANGUAGE sql\nAS $function$\n      /*\n      Builds a sql string that, if executed, creates a prepared statement to\n      tests retrive a row from *entity* by its primary key columns.\n      Example\n          select realtime.build_prepared_statement_sql('public.notes', '{\"id\"}'::text[], '{\"bigint\"}'::text[])\n      */\n          select\n      'prepare ' || prepared_statement_name || ' as\n          select\n              exists(\n                  select\n                      1\n                  from\n                      ' || entity || '\n                  where\n                      ' || string_agg(quote_ident(pkc.name) || '=' || quote_nullable(pkc.value #>> '{}') , ' and ') || '\n              )'\n          from\n              unnest(columns) pkc\n          where\n              pkc.is_pkey\n          group by\n              entity\n      $function$\n"
+  },
+  {
+    "schema": "realtime",
+    "function_name": "cast",
+    "arguments": "val text, type_ regtype",
+    "definition": "CREATE OR REPLACE FUNCTION realtime.\"cast\"(val text, type_ regtype)\n RETURNS jsonb\n LANGUAGE plpgsql\n IMMUTABLE\nAS $function$\n    declare\n      res jsonb;\n    begin\n      execute format('select to_jsonb(%L::'|| type_::text || ')', val)  into res;\n      return res;\n    end\n    $function$\n"
+  },
+  {
+    "schema": "realtime",
+    "function_name": "check_equality_op",
+    "arguments": "op realtime.equality_op, type_ regtype, val_1 text, val_2 text",
+    "definition": "CREATE OR REPLACE FUNCTION realtime.check_equality_op(op realtime.equality_op, type_ regtype, val_1 text, val_2 text)\n RETURNS boolean\n LANGUAGE plpgsql\n IMMUTABLE\nAS $function$\n      /*\n      Casts *val_1* and *val_2* as type *type_* and check the *op* condition for truthiness\n      */\n      declare\n          op_symbol text = (\n              case\n                  when op = 'eq' then '='\n                  when op = 'neq' then '!='\n                  when op = 'lt' then '<'\n                  when op = 'lte' then '<='\n                  when op = 'gt' then '>'\n                  when op = 'gte' then '>='\n                  when op = 'in' then '= any'\n                  else 'UNKNOWN OP'\n              end\n          );\n          res boolean;\n      begin\n          execute format(\n              'select %L::'|| type_::text || ' ' || op_symbol\n              || ' ( %L::'\n              || (\n                  case\n                      when op = 'in' then type_::text || '[]'\n                      else type_::text end\n              )\n              || ')', val_1, val_2) into res;\n          return res;\n      end;\n      $function$\n"
+  },
+  {
+    "schema": "realtime",
+    "function_name": "is_visible_through_filters",
+    "arguments": "columns realtime.wal_column[], filters realtime.user_defined_filter[]",
+    "definition": "CREATE OR REPLACE FUNCTION realtime.is_visible_through_filters(columns realtime.wal_column[], filters realtime.user_defined_filter[])\n RETURNS boolean\n LANGUAGE sql\n IMMUTABLE\nAS $function$\n    /*\n    Should the record be visible (true) or filtered out (false) after *filters* are applied\n    */\n        select\n            -- Default to allowed when no filters present\n            $2 is null -- no filters. this should not happen because subscriptions has a default\n            or array_length($2, 1) is null -- array length of an empty array is null\n            or bool_and(\n                coalesce(\n                    realtime.check_equality_op(\n                        op:=f.op,\n                        type_:=coalesce(\n                            col.type_oid::regtype, -- null when wal2json version <= 2.4\n                            col.type_name::regtype\n                        ),\n                        -- cast jsonb to text\n                        val_1:=col.value #>> '{}',\n                        val_2:=f.value\n                    ),\n                    false -- if null, filter does not match\n                )\n            )\n        from\n            unnest(filters) f\n            join unnest(columns) col\n                on f.column_name = col.name;\n    $function$\n"
+  },
+  {
+    "schema": "realtime",
+    "function_name": "list_changes",
+    "arguments": "publication name, slot_name name, max_changes integer, max_record_bytes integer",
+    "definition": "CREATE OR REPLACE FUNCTION realtime.list_changes(publication name, slot_name name, max_changes integer, max_record_bytes integer)\n RETURNS SETOF realtime.wal_rls\n LANGUAGE sql\n SET log_min_messages TO 'fatal'\nAS $function$\n      with pub as (\n        select\n          concat_ws(\n            ',',\n            case when bool_or(pubinsert) then 'insert' else null end,\n            case when bool_or(pubupdate) then 'update' else null end,\n            case when bool_or(pubdelete) then 'delete' else null end\n          ) as w2j_actions,\n          coalesce(\n            string_agg(\n              realtime.quote_wal2json(format('%I.%I', schemaname, tablename)::regclass),\n              ','\n            ) filter (where ppt.tablename is not null and ppt.tablename not like '% %'),\n            ''\n          ) w2j_add_tables\n        from\n          pg_publication pp\n          left join pg_publication_tables ppt\n            on pp.pubname = ppt.pubname\n        where\n          pp.pubname = publication\n        group by\n          pp.pubname\n        limit 1\n      ),\n      w2j as (\n        select\n          x.*, pub.w2j_add_tables\n        from\n          pub,\n          pg_logical_slot_get_changes(\n            slot_name, null, max_changes,\n            'include-pk', 'true',\n            'include-transaction', 'false',\n            'include-timestamp', 'true',\n            'include-type-oids', 'true',\n            'format-version', '2',\n            'actions', pub.w2j_actions,\n            'add-tables', pub.w2j_add_tables\n          ) x\n      )\n      select\n        xyz.wal,\n        xyz.is_rls_enabled,\n        xyz.subscription_ids,\n        xyz.errors\n      from\n        w2j,\n        realtime.apply_rls(\n          wal := w2j.data::jsonb,\n          max_record_bytes := max_record_bytes\n        ) xyz(wal, is_rls_enabled, subscription_ids, errors)\n      where\n        w2j.w2j_add_tables <> ''\n        and xyz.subscription_ids[1] is not null\n    $function$\n"
+  },
+  {
+    "schema": "realtime",
+    "function_name": "quote_wal2json",
+    "arguments": "entity regclass",
+    "definition": "CREATE OR REPLACE FUNCTION realtime.quote_wal2json(entity regclass)\n RETURNS text\n LANGUAGE sql\n IMMUTABLE STRICT\nAS $function$\n      select\n        (\n          select string_agg('' || ch,'')\n          from unnest(string_to_array(nsp.nspname::text, null)) with ordinality x(ch, idx)\n          where\n            not (x.idx = 1 and x.ch = '\"')\n            and not (\n              x.idx = array_length(string_to_array(nsp.nspname::text, null), 1)\n              and x.ch = '\"'\n            )\n        )\n        || '.'\n        || (\n          select string_agg('' || ch,'')\n          from unnest(string_to_array(pc.relname::text, null)) with ordinality x(ch, idx)\n          where\n            not (x.idx = 1 and x.ch = '\"')\n            and not (\n              x.idx = array_length(string_to_array(nsp.nspname::text, null), 1)\n              and x.ch = '\"'\n            )\n          )\n      from\n        pg_class pc\n        join pg_namespace nsp\n          on pc.relnamespace = nsp.oid\n      where\n        pc.oid = entity\n    $function$\n"
+  },
+  {
+    "schema": "realtime",
+    "function_name": "send",
+    "arguments": "payload jsonb, event text, topic text, private boolean",
+    "definition": "CREATE OR REPLACE FUNCTION realtime.send(payload jsonb, event text, topic text, private boolean DEFAULT true)\n RETURNS void\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n  BEGIN\n    -- Set the topic configuration\n    EXECUTE format('SET LOCAL realtime.topic TO %L', topic);\n\n    -- Attempt to insert the message\n    INSERT INTO realtime.messages (payload, event, topic, private, extension)\n    VALUES (payload, event, topic, private, 'broadcast');\n  EXCEPTION\n    WHEN OTHERS THEN\n      -- Capture and notify the error\n      RAISE WARNING 'ErrorSendingBroadcastMessage: %', SQLERRM;\n  END;\nEND;\n$function$\n"
+  },
+  {
+    "schema": "realtime",
+    "function_name": "subscription_check_filters",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION realtime.subscription_check_filters()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\n    /*\n    Validates that the user defined filters for a subscription:\n    - refer to valid columns that the claimed role may access\n    - values are coercable to the correct column type\n    */\n    declare\n        col_names text[] = coalesce(\n                array_agg(c.column_name order by c.ordinal_position),\n                '{}'::text[]\n            )\n            from\n                information_schema.columns c\n            where\n                format('%I.%I', c.table_schema, c.table_name)::regclass = new.entity\n                and pg_catalog.has_column_privilege(\n                    (new.claims ->> 'role'),\n                    format('%I.%I', c.table_schema, c.table_name)::regclass,\n                    c.column_name,\n                    'SELECT'\n                );\n        filter realtime.user_defined_filter;\n        col_type regtype;\n\n        in_val jsonb;\n    begin\n        for filter in select * from unnest(new.filters) loop\n            -- Filtered column is valid\n            if not filter.column_name = any(col_names) then\n                raise exception 'invalid column for filter %', filter.column_name;\n            end if;\n\n            -- Type is sanitized and safe for string interpolation\n            col_type = (\n                select atttypid::regtype\n                from pg_catalog.pg_attribute\n                where attrelid = new.entity\n                      and attname = filter.column_name\n            );\n            if col_type is null then\n                raise exception 'failed to lookup type for column %', filter.column_name;\n            end if;\n\n            -- Set maximum number of entries for in filter\n            if filter.op = 'in'::realtime.equality_op then\n                in_val = realtime.cast(filter.value, (col_type::text || '[]')::regtype);\n                if coalesce(jsonb_array_length(in_val), 0) > 100 then\n                    raise exception 'too many values for `in` filter. Maximum 100';\n                end if;\n            else\n                -- raises an exception if value is not coercable to type\n                perform realtime.cast(filter.value, col_type);\n            end if;\n\n        end loop;\n\n        -- Apply consistent order to filters so the unique constraint on\n        -- (subscription_id, entity, filters) can't be tricked by a different filter order\n        new.filters = coalesce(\n            array_agg(f order by f.column_name, f.op, f.value),\n            '{}'\n        ) from unnest(new.filters) f;\n\n        return new;\n    end;\n    $function$\n"
+  },
+  {
+    "schema": "realtime",
+    "function_name": "to_regrole",
+    "arguments": "role_name text",
+    "definition": "CREATE OR REPLACE FUNCTION realtime.to_regrole(role_name text)\n RETURNS regrole\n LANGUAGE sql\n IMMUTABLE\nAS $function$ select role_name::regrole $function$\n"
+  },
+  {
+    "schema": "realtime",
+    "function_name": "topic",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION realtime.topic()\n RETURNS text\n LANGUAGE sql\n STABLE\nAS $function$\nselect nullif(current_setting('realtime.topic', true), '')::text;\n$function$\n"
+  },
+  {
+    "schema": "storage",
+    "function_name": "can_insert_object",
+    "arguments": "bucketid text, name text, owner uuid, metadata jsonb",
+    "definition": "CREATE OR REPLACE FUNCTION storage.can_insert_object(bucketid text, name text, owner uuid, metadata jsonb)\n RETURNS void\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n  INSERT INTO \"storage\".\"objects\" (\"bucket_id\", \"name\", \"owner\", \"metadata\") VALUES (bucketid, name, owner, metadata);\n  -- hack to rollback the successful insert\n  RAISE sqlstate 'PT200' using\n  message = 'ROLLBACK',\n  detail = 'rollback successful insert';\nEND\n$function$\n"
+  },
+  {
+    "schema": "storage",
+    "function_name": "extension",
+    "arguments": "name text",
+    "definition": "CREATE OR REPLACE FUNCTION storage.extension(name text)\n RETURNS text\n LANGUAGE plpgsql\nAS $function$\nDECLARE\n_parts text[];\n_filename text;\nBEGIN\n\tselect string_to_array(name, '/') into _parts;\n\tselect _parts[array_length(_parts,1)] into _filename;\n\t-- @todo return the last part instead of 2\n\treturn reverse(split_part(reverse(_filename), '.', 1));\nEND\n$function$\n"
+  },
+  {
+    "schema": "storage",
+    "function_name": "filename",
+    "arguments": "name text",
+    "definition": "CREATE OR REPLACE FUNCTION storage.filename(name text)\n RETURNS text\n LANGUAGE plpgsql\nAS $function$\nDECLARE\n_parts text[];\nBEGIN\n\tselect string_to_array(name, '/') into _parts;\n\treturn _parts[array_length(_parts,1)];\nEND\n$function$\n"
+  },
+  {
+    "schema": "storage",
+    "function_name": "foldername",
+    "arguments": "name text",
+    "definition": "CREATE OR REPLACE FUNCTION storage.foldername(name text)\n RETURNS text[]\n LANGUAGE plpgsql\nAS $function$\nDECLARE\n_parts text[];\nBEGIN\n\tselect string_to_array(name, '/') into _parts;\n\treturn _parts[1:array_length(_parts,1)-1];\nEND\n$function$\n"
+  },
+  {
+    "schema": "storage",
+    "function_name": "get_size_by_bucket",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION storage.get_size_by_bucket()\n RETURNS TABLE(size bigint, bucket_id text)\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n    return query\n        select sum((metadata->>'size')::int) as size, obj.bucket_id\n        from \"storage\".objects as obj\n        group by obj.bucket_id;\nEND\n$function$\n"
+  },
+  {
+    "schema": "storage",
+    "function_name": "list_multipart_uploads_with_delimiter",
+    "arguments": "bucket_id text, prefix_param text, delimiter_param text, max_keys integer, next_key_token text, next_upload_token text",
+    "definition": "CREATE OR REPLACE FUNCTION storage.list_multipart_uploads_with_delimiter(bucket_id text, prefix_param text, delimiter_param text, max_keys integer DEFAULT 100, next_key_token text DEFAULT ''::text, next_upload_token text DEFAULT ''::text)\n RETURNS TABLE(key text, id text, created_at timestamp with time zone)\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n    RETURN QUERY EXECUTE\n        'SELECT DISTINCT ON(key COLLATE \"C\") * from (\n            SELECT\n                CASE\n                    WHEN position($2 IN substring(key from length($1) + 1)) > 0 THEN\n                        substring(key from 1 for length($1) + position($2 IN substring(key from length($1) + 1)))\n                    ELSE\n                        key\n                END AS key, id, created_at\n            FROM\n                storage.s3_multipart_uploads\n            WHERE\n                bucket_id = $5 AND\n                key ILIKE $1 || ''%'' AND\n                CASE\n                    WHEN $4 != '''' AND $6 = '''' THEN\n                        CASE\n                            WHEN position($2 IN substring(key from length($1) + 1)) > 0 THEN\n                                substring(key from 1 for length($1) + position($2 IN substring(key from length($1) + 1))) COLLATE \"C\" > $4\n                            ELSE\n                                key COLLATE \"C\" > $4\n                            END\n                    ELSE\n                        true\n                END AND\n                CASE\n                    WHEN $6 != '''' THEN\n                        id COLLATE \"C\" > $6\n                    ELSE\n                        true\n                    END\n            ORDER BY\n                key COLLATE \"C\" ASC, created_at ASC) as e order by key COLLATE \"C\" LIMIT $3'\n        USING prefix_param, delimiter_param, max_keys, next_key_token, bucket_id, next_upload_token;\nEND;\n$function$\n"
+  },
+  {
+    "schema": "storage",
+    "function_name": "list_objects_with_delimiter",
+    "arguments": "bucket_id text, prefix_param text, delimiter_param text, max_keys integer, start_after text, next_token text",
+    "definition": "CREATE OR REPLACE FUNCTION storage.list_objects_with_delimiter(bucket_id text, prefix_param text, delimiter_param text, max_keys integer DEFAULT 100, start_after text DEFAULT ''::text, next_token text DEFAULT ''::text)\n RETURNS TABLE(name text, id uuid, metadata jsonb, updated_at timestamp with time zone)\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n    RETURN QUERY EXECUTE\n        'SELECT DISTINCT ON(name COLLATE \"C\") * from (\n            SELECT\n                CASE\n                    WHEN position($2 IN substring(name from length($1) + 1)) > 0 THEN\n                        substring(name from 1 for length($1) + position($2 IN substring(name from length($1) + 1)))\n                    ELSE\n                        name\n                END AS name, id, metadata, updated_at\n            FROM\n                storage.objects\n            WHERE\n                bucket_id = $5 AND\n                name ILIKE $1 || ''%'' AND\n                CASE\n                    WHEN $6 != '''' THEN\n                    name COLLATE \"C\" > $6\n                ELSE true END\n                AND CASE\n                    WHEN $4 != '''' THEN\n                        CASE\n                            WHEN position($2 IN substring(name from length($1) + 1)) > 0 THEN\n                                substring(name from 1 for length($1) + position($2 IN substring(name from length($1) + 1))) COLLATE \"C\" > $4\n                            ELSE\n                                name COLLATE \"C\" > $4\n                            END\n                    ELSE\n                        true\n                END\n            ORDER BY\n                name COLLATE \"C\" ASC) as e order by name COLLATE \"C\" LIMIT $3'\n        USING prefix_param, delimiter_param, max_keys, next_token, bucket_id, start_after;\nEND;\n$function$\n"
+  },
+  {
+    "schema": "storage",
+    "function_name": "operation",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION storage.operation()\n RETURNS text\n LANGUAGE plpgsql\n STABLE\nAS $function$\nBEGIN\n    RETURN current_setting('storage.operation', true);\nEND;\n$function$\n"
+  },
+  {
+    "schema": "storage",
+    "function_name": "search",
+    "arguments": "prefix text, bucketname text, limits integer, levels integer, offsets integer, search text, sortcolumn text, sortorder text",
+    "definition": "CREATE OR REPLACE FUNCTION storage.search(prefix text, bucketname text, limits integer DEFAULT 100, levels integer DEFAULT 1, offsets integer DEFAULT 0, search text DEFAULT ''::text, sortcolumn text DEFAULT 'name'::text, sortorder text DEFAULT 'asc'::text)\n RETURNS TABLE(name text, id uuid, updated_at timestamp with time zone, created_at timestamp with time zone, last_accessed_at timestamp with time zone, metadata jsonb)\n LANGUAGE plpgsql\n STABLE\nAS $function$\ndeclare\n  v_order_by text;\n  v_sort_order text;\nbegin\n  case\n    when sortcolumn = 'name' then\n      v_order_by = 'name';\n    when sortcolumn = 'updated_at' then\n      v_order_by = 'updated_at';\n    when sortcolumn = 'created_at' then\n      v_order_by = 'created_at';\n    when sortcolumn = 'last_accessed_at' then\n      v_order_by = 'last_accessed_at';\n    else\n      v_order_by = 'name';\n  end case;\n\n  case\n    when sortorder = 'asc' then\n      v_sort_order = 'asc';\n    when sortorder = 'desc' then\n      v_sort_order = 'desc';\n    else\n      v_sort_order = 'asc';\n  end case;\n\n  v_order_by = v_order_by || ' ' || v_sort_order;\n\n  return query execute\n    'with folders as (\n       select path_tokens[$1] as folder\n       from storage.objects\n         where objects.name ilike $2 || $3 || ''%''\n           and bucket_id = $4\n           and array_length(objects.path_tokens, 1) <> $1\n       group by folder\n       order by folder ' || v_sort_order || '\n     )\n     (select folder as \"name\",\n            null as id,\n            null as updated_at,\n            null as created_at,\n            null as last_accessed_at,\n            null as metadata from folders)\n     union all\n     (select path_tokens[$1] as \"name\",\n            id,\n            updated_at,\n            created_at,\n            last_accessed_at,\n            metadata\n     from storage.objects\n     where objects.name ilike $2 || $3 || ''%''\n       and bucket_id = $4\n       and array_length(objects.path_tokens, 1) = $1\n     order by ' || v_order_by || ')\n     limit $5\n     offset $6' using levels, prefix, search, bucketname, limits, offsets;\nend;\n$function$\n"
+  },
+  {
+    "schema": "storage",
+    "function_name": "update_updated_at_column",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION storage.update_updated_at_column()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n    NEW.updated_at = now();\n    RETURN NEW; \nEND;\n$function$\n"
+  },
+  {
+    "schema": "vault",
+    "function_name": "_crypto_aead_det_decrypt",
+    "arguments": "message bytea, additional bytea, key_id bigint, context bytea, nonce bytea",
+    "definition": "CREATE OR REPLACE FUNCTION vault._crypto_aead_det_decrypt(message bytea, additional bytea, key_id bigint, context bytea DEFAULT '\\x7067736f6469756d'::bytea, nonce bytea DEFAULT NULL::bytea)\n RETURNS bytea\n LANGUAGE c\n IMMUTABLE\nAS '$libdir/supabase_vault', $function$pgsodium_crypto_aead_det_decrypt_by_id$function$\n"
+  },
+  {
+    "schema": "vault",
+    "function_name": "_crypto_aead_det_encrypt",
+    "arguments": "message bytea, additional bytea, key_id bigint, context bytea, nonce bytea",
+    "definition": "CREATE OR REPLACE FUNCTION vault._crypto_aead_det_encrypt(message bytea, additional bytea, key_id bigint, context bytea DEFAULT '\\x7067736f6469756d'::bytea, nonce bytea DEFAULT NULL::bytea)\n RETURNS bytea\n LANGUAGE c\n IMMUTABLE\nAS '$libdir/supabase_vault', $function$pgsodium_crypto_aead_det_encrypt_by_id$function$\n"
+  },
+  {
+    "schema": "vault",
+    "function_name": "_crypto_aead_det_noncegen",
+    "arguments": "",
+    "definition": "CREATE OR REPLACE FUNCTION vault._crypto_aead_det_noncegen()\n RETURNS bytea\n LANGUAGE c\n IMMUTABLE\nAS '$libdir/supabase_vault', $function$pgsodium_crypto_aead_det_noncegen$function$\n"
+  },
+  {
+    "schema": "vault",
+    "function_name": "create_secret",
+    "arguments": "new_secret text, new_name text, new_description text, new_key_id uuid",
+    "definition": "CREATE OR REPLACE FUNCTION vault.create_secret(new_secret text, new_name text DEFAULT NULL::text, new_description text DEFAULT ''::text, new_key_id uuid DEFAULT NULL::uuid)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nDECLARE\n  rec record;\nBEGIN\n  INSERT INTO vault.secrets (secret, name, description)\n  VALUES (\n    new_secret,\n    new_name,\n    new_description\n  )\n  RETURNING * INTO rec;\n  UPDATE vault.secrets s\n  SET secret = encode(vault._crypto_aead_det_encrypt(\n    message := convert_to(rec.secret, 'utf8'),\n    additional := convert_to(s.id::text, 'utf8'),\n    key_id := 0,\n    context := 'pgsodium'::bytea,\n    nonce := rec.nonce\n  ), 'base64')\n  WHERE id = rec.id;\n  RETURN rec.id;\nEND\n$function$\n"
+  },
+  {
+    "schema": "vault",
+    "function_name": "update_secret",
+    "arguments": "secret_id uuid, new_secret text, new_name text, new_description text, new_key_id uuid",
+    "definition": "CREATE OR REPLACE FUNCTION vault.update_secret(secret_id uuid, new_secret text DEFAULT NULL::text, new_name text DEFAULT NULL::text, new_description text DEFAULT NULL::text, new_key_id uuid DEFAULT NULL::uuid)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nDECLARE\n  decrypted_secret text := (SELECT decrypted_secret FROM vault.decrypted_secrets WHERE id = secret_id);\nBEGIN\n  UPDATE vault.secrets s\n  SET\n    secret = CASE WHEN new_secret IS NULL THEN s.secret\n                  ELSE encode(vault._crypto_aead_det_encrypt(\n                    message := convert_to(new_secret, 'utf8'),\n                    additional := convert_to(s.id::text, 'utf8'),\n                    key_id := 0,\n                    context := 'pgsodium'::bytea,\n                    nonce := s.nonce\n                  ), 'base64') END,\n    name = coalesce(new_name, s.name),\n    description = coalesce(new_description, s.description),\n    updated_at = now()\n  WHERE s.id = secret_id;\nEND\n$function$\n"
+  }
+]
