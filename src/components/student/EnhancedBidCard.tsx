@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Clock, CheckCircle, AlertTriangle, Coins } from "lucide-react";
+import { Loader2, Clock, CheckCircle, AlertTriangle, Coins, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { Student, ClassConfig, BidOpportunity } from "@/types";
 import { useStudentBidding } from "@/hooks/useStudentBidding";
@@ -16,13 +16,14 @@ interface EnhancedBidCardProps {
   student: Student;
   classConfig: ClassConfig;
   onBidSubmitted?: (bidId: string, updatedStudent: Student, opportunityId: string) => void;
+  onBidWithdrawal?: (updatedStudent: Student, opportunityId: string) => void;
 }
 
-const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCardProps) => {
+const EnhancedBidCard = ({ student, classConfig, onBidSubmitted, onBidWithdrawal }: EnhancedBidCardProps) => {
   const [activeTab, setActiveTab] = useState("opportunity-0");
   const [currentStudent, setCurrentStudent] = useState<Student>(student);
   const [isLoadingStatus, setIsLoadingStatus] = useState(false);
-  const { isSubmitting, lastBidResponse, error, submitBid } = useStudentBidding();
+  const { isSubmitting, isWithdrawing, lastBidResponse, error, submitBid, withdrawBid } = useStudentBidding();
   
   const bidOpportunities = classConfig.bidOpportunities || [];
 
@@ -178,6 +179,64 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
       onBidSubmitted?.(response.bidId, response.updatedStudent || currentStudent, opportunityId);
     } else {
       console.log('=== BID SUBMISSION FAILED ===');
+      console.log('Error:', response.errorMessage);
+    }
+  };
+
+  const handleWithdrawBid = async (opportunityId: string) => {
+    console.log('=== FRONTEND BID WITHDRAWAL STARTED ===');
+    console.log('Current student:', currentStudent);
+    console.log('Opportunity ID:', opportunityId);
+    
+    if (!currentStudent) return;
+
+    // Find the specific opportunity
+    const opportunity = bidOpportunities.find(opp => opp.id === opportunityId);
+    if (!opportunity) {
+      toast.error("Opportunity not found");
+      return;
+    }
+
+    // Check if opportunity is still open for bidding (withdrawal only allowed when bidding is open)
+    if (!isBidOpportunityOpen(opportunity)) {
+      toast.error("Bid withdrawal is only allowed while bidding is still open");
+      return;
+    }
+
+    // Check if student has actually bid on this opportunity
+    const hasStudentBid = opportunity.bidders?.some(bidder => bidder.id === currentStudent.id);
+    if (!hasStudentBid) {
+      toast.error("No bid found to withdraw");
+      return;
+    }
+
+    const response = await withdrawBid({
+      userId: currentStudent.id,
+      opportunityId
+    });
+
+    console.log('=== BID WITHDRAWAL RESPONSE ===');
+    console.log('Response:', response);
+
+    if (response.success && response.updatedStudent) {
+      console.log('=== BID WITHDRAWAL SUCCESSFUL ===');
+      console.log('Calling onBidWithdrawal callback');
+      
+      // Update local state immediately
+      setCurrentStudent(response.updatedStudent);
+      
+      // Add a small delay to ensure database changes are propagated
+      setTimeout(() => {
+        console.log('=== TRIGGERING ADMIN DASHBOARD REFRESH ===');
+        // This will trigger real-time updates in the admin dashboard
+        window.dispatchEvent(new CustomEvent('bidWithdrawn', {
+          detail: { opportunityId, studentId: currentStudent.id }
+        }));
+      }, 500);
+      
+      onBidWithdrawal?.(response.updatedStudent, opportunityId);
+    } else {
+      console.log('=== BID WITHDRAWAL FAILED ===');
       console.log('Error:', response.errorMessage);
     }
   };
@@ -390,7 +449,7 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
                   <Button 
                     className="w-full mt-4" 
                     onClick={() => handleSubmitBid(opportunity.id)}
-                    disabled={!canSubmitBid || isSubmitting || student?.tokenStatus === 'used'}
+                    disabled={!canSubmitBid || isSubmitting || isWithdrawing || student?.tokenStatus === 'used'}
                   >
                     {isSubmitting ? (
                       <>
@@ -407,6 +466,28 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted }: EnhancedBidCa
                       "Use Token to Bid"
                     )}
                   </Button>
+                  
+                  {/* Withdraw Bid Button - Only show if student has bid and bidding is still open */}
+                  {hasStudentBid && isBidOpportunityOpen(opportunity) && (
+                    <Button 
+                      variant="outline"
+                      className="w-full mt-2" 
+                      onClick={() => handleWithdrawBid(opportunity.id)}
+                      disabled={isSubmitting || isWithdrawing}
+                    >
+                      {isWithdrawing ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Withdrawing Bid...
+                        </>
+                      ) : (
+                        <>
+                          <Undo2 className="w-4 h-4 mr-2" />
+                          Withdraw Bid Submission
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </div>
               </TabsContent>
             );

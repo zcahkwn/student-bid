@@ -15,6 +15,18 @@ export interface StudentBidResponse {
   timestamp?: string
 }
 
+export interface WithdrawBidRequest {
+  userId: string
+  opportunityId: string
+}
+
+export interface WithdrawBidResponse {
+  success: boolean
+  updatedStudent?: Student
+  errorMessage?: string
+  timestamp?: string
+}
+
 // Submit a bid and update student token status
 export async function submitStudentBid(request: StudentBidRequest): Promise<StudentBidResponse> {
   const { userId, opportunityId } = request;
@@ -198,6 +210,148 @@ export async function submitStudentBid(request: StudentBidRequest): Promise<Stud
 
   } catch (error) {
     console.error('=== UNEXPECTED ERROR DURING BID SUBMISSION ===');
+    console.error('Error type:', typeof error);
+    console.error('Error message:', error instanceof Error ? error.message : error);
+    console.error('Full error object:', error);
+    return {
+      success: false,
+      errorMessage: error instanceof Error ? error.message : 'Unexpected error occurred'
+    };
+  }
+}
+
+// Withdraw a bid and restore student token status
+export async function withdrawStudentBid(request: WithdrawBidRequest): Promise<WithdrawBidResponse> {
+  const { userId, opportunityId } = request;
+  
+  try {
+    console.log('=== STARTING BID WITHDRAWAL DEBUG ===');
+    console.log('User ID:', userId);
+    console.log('Opportunity ID:', opportunityId);
+    console.log('Supabase client status:', !!supabase);
+
+    // First, verify the opportunity exists and get its class_id
+    console.log('=== STEP 1: VERIFY OPPORTUNITY EXISTS ===');
+    const { data: opportunity, error: oppError } = await supabase
+      .from('opportunities')
+      .select('id, class_id, title, description')
+      .eq('id', opportunityId)
+      .single();
+
+    if (oppError) {
+      console.error('Error fetching opportunity:', oppError);
+      return {
+        success: false,
+        errorMessage: `Opportunity not found: ${oppError.message}`
+      };
+    }
+
+    console.log('Opportunity found:', opportunity);
+
+    // Verify student has actually placed a bid
+    console.log('=== STEP 2: VERIFY BID EXISTS ===');
+    const { data: existingBid, error: bidCheckError } = await supabase
+      .from('bids')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('opportunity_id', opportunityId)
+      .maybeSingle();
+
+    if (bidCheckError) {
+      console.error('Error checking existing bid:', bidCheckError);
+      return {
+        success: false,
+        errorMessage: `Error checking existing bid: ${bidCheckError.message}`
+      };
+    }
+
+    if (!existingBid) {
+      console.log('No bid found for this user and opportunity');
+      return {
+        success: false,
+        errorMessage: 'No bid found to withdraw'
+      };
+    }
+
+    console.log('=== STEP 3: CALLING WITHDRAW RPC FUNCTION ===');
+    
+    // Use RPC function for secure bid withdrawal
+    const { data: result, error } = await supabase.rpc('withdraw_bid_secure', {
+      p_user_id: userId,
+      p_opportunity_id: opportunityId
+    });
+
+    console.log('RPC function result:', result);
+    console.log('RPC function error:', error);
+
+    if (error) {
+      console.error('RPC function failed:', error);
+      return {
+        success: false,
+        errorMessage: `Bid withdrawal failed: ${error.message}`
+      };
+    }
+
+    if (!result || !result.success) {
+      console.error('RPC function returned failure:', result);
+      return {
+        success: false,
+        errorMessage: result?.error || 'Bid withdrawal failed'
+      };
+    }
+
+    console.log('=== STEP 4: FETCH UPDATED DATA ===');
+    // Fetch updated user data
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    // Fetch updated enrollment data
+    const { data: updatedEnrollment, error: updatedEnrollmentError } = await supabase
+      .from('student_enrollments')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('class_id', opportunity.class_id)
+      .single();
+
+    if (userError || updatedEnrollmentError || !user || !updatedEnrollment) {
+      console.error('Error fetching updated data:', userError || updatedEnrollmentError);
+      // Still return success since the withdrawal was completed
+      return {
+        success: true,
+        timestamp: new Date().toISOString()
+      };
+    }
+
+    console.log('Updated user data:', user);
+    console.log('Updated enrollment data:', updatedEnrollment);
+
+    // Create updated student object
+    const updatedStudent: Student = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      studentNumber: user.student_number || '',
+      hasUsedToken: updatedEnrollment.tokens_remaining <= 0,
+      hasBid: updatedEnrollment.token_status === 'used',
+      tokensRemaining: updatedEnrollment.tokens_remaining,
+      tokenStatus: updatedEnrollment.token_status,
+      biddingResult: updatedEnrollment.bidding_result
+    };
+
+    console.log('=== BID WITHDRAWAL SUCCESSFUL ===');
+    console.log('Updated student:', updatedStudent);
+
+    return {
+      success: true,
+      updatedStudent: updatedStudent,
+      timestamp: new Date().toISOString()
+    };
+
+  } catch (error) {
+    console.error('=== UNEXPECTED ERROR DURING BID WITHDRAWAL ===');
     console.error('Error type:', typeof error);
     console.error('Error message:', error instanceof Error ? error.message : error);
     console.error('Full error object:', error);
