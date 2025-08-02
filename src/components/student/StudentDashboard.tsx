@@ -184,7 +184,7 @@ const StudentDashboard = () => {
           };
         });
         
-        // Update classes array with the updated student data
+        // Update classes array with the updated student data - only for the current class
         setClasses(prevClasses => 
           prevClasses.map(classItem => {
             if (classItem.id === currentClass.id) {
@@ -261,34 +261,6 @@ const StudentDashboard = () => {
 
     return unsubscribe;
   }, [student?.id, currentClass?.id, toast]);
-
-  // Load the latest class configuration from localStorage on component mount
-  useEffect(() => {
-    if (student && classes.length > 0) {
-      const storedClassesStr = localStorage.getItem("classData");
-      if (storedClassesStr) {
-        try {
-          const storedClasses = JSON.parse(storedClassesStr);
-          // Update classes with stored data
-          const updatedClasses = classes.map(classConfig => {
-            const storedClass = storedClasses.find((c: ClassConfig) => c.id === classConfig.id);
-            return storedClass || classConfig;
-          });
-          setClasses(updatedClasses);
-          
-          // Update current class if it exists in stored data
-          if (currentClass) {
-            const updatedCurrentClass = updatedClasses.find(c => c.id === currentClass.id);
-            if (updatedCurrentClass) {
-              setCurrentClass(updatedCurrentClass);
-            }
-          }
-        } catch (error) {
-          console.error("Error parsing stored class data:", error);
-        }
-      }
-    }
-  }, []);
   
   const handleSelectClass = (classId: string) => {
     const selectedClass = classes.find(c => c.id === classId);
@@ -314,66 +286,41 @@ const StudentDashboard = () => {
   }
   
   const handleBidSubmitted = (bidId: string, updatedStudent: Student, opportunityId: string) => {
-    // Get current classes from localStorage
-    const storedClassesStr = localStorage.getItem("classData");
-    if (storedClassesStr) {
-      try {
-        const storedClasses = JSON.parse(storedClassesStr);
-        
-        // Find and update the current class
-        const updatedClasses = storedClasses.map((c: ClassConfig) => {
-          if (c.id === currentClass?.id) {
-            // Update the student in the students array
-            const updatedStudents = c.students.map((s: Student) => 
-              s.id === updatedStudent.id ? updatedStudent : s
-            );
+    // Update student state directly
+    setStudent(updatedStudent);
+    
+    // Update current class with the new bidder
+    if (currentClass) {
+      const updatedClass = {
+        ...currentClass,
+        students: currentClass.students.map(s => 
+          s.id === updatedStudent.id ? updatedStudent : s
+        ),
+        bidders: currentClass.bidders.some(b => b.id === updatedStudent.id) 
+          ? currentClass.bidders.map(b => b.id === updatedStudent.id ? updatedStudent : b)
+          : [...currentClass.bidders, updatedStudent],
+        bidOpportunities: currentClass.bidOpportunities.map(opp => {
+          if (opp.id === opportunityId) {
+            // Add student to bidders if not already there
+            const updatedBidders = opp.bidders.some(b => b.id === updatedStudent.id)
+              ? opp.bidders.map(b => b.id === updatedStudent.id ? updatedStudent : b)
+              : [...opp.bidders, updatedStudent];
             
-            // Update the opportunity with the new bidder
-            const updatedOpportunities = c.bidOpportunities.map((opp: BidOpportunity) => {
-              if (opp.id === opportunityId) {
-                // Make sure we're not adding duplicate bidders
-                if (!opp.bidders.some(b => b.id === updatedStudent.id)) {
-                  return {
-                    ...opp,
-                    bidders: [...opp.bidders, updatedStudent]
-                  };
-                }
-              }
-              return opp;
-            });
-            
-            // Also update class-level bidders list for backward compatibility
-            const updatedBidders = c.bidders && Array.isArray(c.bidders) ? 
-              [...c.bidders] : [];
-            
-            if (!updatedBidders.some(b => b.id === updatedStudent.id)) {
-              updatedBidders.push(updatedStudent);
-            }
-            
-            // Return updated class
             return {
-              ...c,
-              students: updatedStudents,
-              bidders: updatedBidders,
-              bidOpportunities: updatedOpportunities
+              ...opp,
+              bidders: updatedBidders
             };
           }
-          return c;
-        });
-        
-        // Save updated classes back to localStorage
-        localStorage.setItem("classData", JSON.stringify(updatedClasses));
-        
-        // Find the updated class config to use for state updates
-        const updatedClassConfig = updatedClasses.find((c: ClassConfig) => c.id === currentClass?.id);
-        
-        // Update UI state
-        setCurrentClass(updatedClassConfig);
-        setClasses(updatedClasses);
-        
-      } catch (error) {
-        console.error("Error updating class data:", error);
-      }
+          return opp;
+        })
+      };
+      
+      setCurrentClass(updatedClass);
+      
+      // Update classes array only for the current class
+      setClasses(prevClasses => 
+        prevClasses.map(c => c.id === currentClass.id ? updatedClass : c)
+      );
     }
     
     toast({
