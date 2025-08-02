@@ -27,17 +27,6 @@ export async function submitStudentBid(request: StudentBidRequest): Promise<Stud
 
     // Step 0: Fetch current student status before submission
     console.log('=== STEP 0: FETCH CURRENT STUDENT STATUS ===');
-    const { data: currentEnrollment, error: currentError } = await supabase
-      .from('student_enrollments')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
-
-    if (currentError) {
-      console.error('Error fetching current enrollment:', currentError);
-    } else {
-      console.log('Current enrollment before bid:', currentEnrollment);
-    }
 
     // First, let's verify the opportunity exists and get its class_id
     console.log('=== STEP 1: VERIFY OPPORTUNITY EXISTS ===');
@@ -56,6 +45,20 @@ export async function submitStudentBid(request: StudentBidRequest): Promise<Stud
     }
 
     console.log('Opportunity found:', opportunity);
+
+    // Step 0: Fetch current student status before submission (moved after opportunity fetch)
+    const { data: currentEnrollment, error: currentError } = await supabase
+      .from('student_enrollments')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('class_id', opportunity.class_id)
+      .single();
+
+    if (currentError) {
+      console.error('Error fetching current enrollment:', currentError);
+    } else {
+      console.log('Current enrollment before bid:', currentEnrollment);
+    }
 
     // Verify student enrollment in the class
     console.log('=== STEP 2: VERIFY STUDENT ENROLLMENT ===');
