@@ -48,7 +48,6 @@ export const createAdminProfile = async (userId: string, name: string, email: st
       p_email: email,
       p_admin_type: 'admin'
     });
-      });
 
     if (error) {
       console.error('Error creating admin profile:', error);
