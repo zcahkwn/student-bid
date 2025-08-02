@@ -639,7 +639,7 @@ const Dashboard = ({
                                         </Label>
                                         <div className="p-4 bg-white rounded-md border">
                                           <div className="space-y-3">
-                                            {currentOpportunityBidders.map((bidder, index) => (
+                                                    {currentOpportunityBidders.length === 0 && getOpportunityBidCount(opportunity.id) === 0 && (
                                               <div key={bidder.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                                                 <div className="flex items-center gap-3">
                                                   <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-sm font-medium text-blue-600">
