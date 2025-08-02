@@ -13,7 +13,12 @@ import { Menu, X, Calendar, Trophy, Coins } from "lucide-react";
 import { subscribeToUserEnrollmentUpdates } from "@/lib/studentBidService";
 import { supabase } from "@/lib/supabase";
 
-const StudentDashboard = () => {
+interface StudentDashboardProps {
+  onBidSubmitted?: (bidId: string, updatedStudent: Student, opportunityId: string) => void;
+  onBidWithdrawal?: (updatedStudent: Student, opportunityId: string) => void;
+}
+
+const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardProps = {}) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -323,9 +328,58 @@ const StudentDashboard = () => {
       );
     }
     
+    // Call parent callback if provided
+    if (onBidSubmitted) {
+      onBidSubmitted(bidId, updatedStudent, opportunityId);
+    }
+    
     toast({
       title: "Bid placed successfully",
       description: `You have placed a bid for the opportunity.`,
+    });
+  };
+  
+  const handleBidWithdrawalInternal = (updatedStudent: Student, opportunityId: string) => {
+    // Update student state directly
+    setStudent(updatedStudent);
+    
+    // Update current class by removing the student from bidders
+    if (currentClass) {
+      const updatedClass = {
+        ...currentClass,
+        students: currentClass.students.map(s => 
+          s.id === updatedStudent.id ? updatedStudent : s
+        ),
+        bidders: currentClass.bidders.filter(b => b.id !== updatedStudent.id),
+        bidOpportunities: currentClass.bidOpportunities.map(opp => {
+          if (opp.id === opportunityId) {
+            // Remove student from bidders and selectedStudents
+            return {
+              ...opp,
+              bidders: opp.bidders.filter(b => b.id !== updatedStudent.id),
+              selectedStudents: opp.selectedStudents.filter(s => s.id !== updatedStudent.id)
+            };
+          }
+          return opp;
+        })
+      };
+      
+      setCurrentClass(updatedClass);
+      
+      // Update classes array only for the current class
+      setClasses(prevClasses => 
+        prevClasses.map(c => c.id === currentClass.id ? updatedClass : c)
+      );
+    }
+    
+    // Call parent callback if provided
+    if (onBidWithdrawal) {
+      onBidWithdrawal(updatedStudent, opportunityId);
+    }
+    
+    toast({
+      title: "Bid withdrawn successfully",
+      description: "Your bid has been withdrawn and your token has been restored.",
     });
   };
   
