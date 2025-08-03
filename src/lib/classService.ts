@@ -1,7 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { ClassConfig, Student, BidOpportunity } from '@/types'
 import { getClassStudents } from '@/lib/userService'
-import { getAdminProfile } from '@/lib/adminService'
 
 interface CreateClassData {
   name: string
@@ -46,19 +45,11 @@ export interface ClassDeletionResult {
 // Create a new class in Supabase
 export const createClass = async (classData: CreateClassData): Promise<ClassConfig> => {
   try {
-    // Get current authenticated user
-    const { data: userSession, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !userSession?.session) {
-      throw new Error('User not authenticated to create a class.');
-    }
-    const createdByUserId = userSession.session.user.id;
-
     // Insert class into Supabase
     const { data: classRecord, error: classError } = await supabase
       .from('classes')
       .insert({
-        name: classData.name,
-        created_by_user_id: createdByUserId
+        name: classData.name
       })
       .select()
       .single()
@@ -346,24 +337,9 @@ export const createBidOpportunity = async (
 // Fetch all classes from Supabase with real-time bid data
 export const fetchClasses = async (): Promise<ClassConfig[]> => {
   try {
-    // Check if user is authenticated
-    const { data: userSession, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !userSession?.session) {
-      // If no session, return empty array for admin view
-      return [];
-    }
-
-    const userId = userSession.session.user.id;
-    const adminProfile = await getAdminProfile(userId);
-
-    // If not an admin, return empty array
-    if (!adminProfile) {
-      return [];
-    }
-
     const { data: classesData, error: classesError } = await supabase
       .from('classes')
-      .select('id, name, created_at, created_by_user_id')
+      .select('id, name, created_at')
       .order('created_at', { ascending: false })
 
     if (classesError) {
