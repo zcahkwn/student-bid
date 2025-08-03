@@ -542,6 +542,30 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
                                   Pending
                                 </Badge>
                               )}
+                              {(() => {
+                                const studentBidDetails = opportunity.bidders?.find(bidder => bidder.id === student.id);
+                                if (studentBidDetails?.bidStatus === 'selected automatically') {
+                                  return (
+                                    <Badge className="text-xs bg-green-500 text-white">
+                                      Selected Automatically
+                                    </Badge>
+                                  );
+                                } else if (student.biddingResult && student.biddingResult !== 'pending') {
+                                  return (
+                                    <Badge 
+                                      variant={student.biddingResult === 'won' ? 'default' : 'secondary'}
+                                      className={`text-xs ${
+                                        student.biddingResult === 'won' 
+                                          ? 'bg-green-500 text-white' 
+                                          : 'bg-red-100 text-red-800'
+                                      }`}
+                                    >
+                                      {student.biddingResult === 'won' ? 'Selected' : 'Not Selected'}
+                                    </Badge>
+                                  );
+                                }
+                                return null;
+                              })()}
                             </div>
                           </div>
                           
@@ -659,19 +683,30 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
                                   <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800">
                                     Bid Submitted
                                   </Badge>
-                                  {/* Show result if available */}
-                                  {student.biddingResult && student.biddingResult !== 'pending' && (
-                                    <Badge 
-                                      variant={student.biddingResult === 'won' ? 'default' : 'secondary'}
-                                      className={`text-xs ${
-                                        student.biddingResult === 'won' 
-                                          ? 'bg-green-500 text-white' 
-                                          : 'bg-red-100 text-red-800'
-                                      }`}
-                                    >
-                                      {student.biddingResult === 'won' ? '🎉 Selected' : 'Not Selected'}
-                                    </Badge>
-                                  )}
+                                  {(() => {
+                                    const studentBidDetails = opportunity.bidders?.find(bidder => bidder.id === student.id);
+                                    if (studentBidDetails?.bidStatus === 'selected automatically') {
+                                      return (
+                                        <Badge className="text-xs bg-green-500 text-white">
+                                          🎉 Selected Automatically
+                                        </Badge>
+                                      );
+                                    } else if (student.biddingResult && student.biddingResult !== 'pending') {
+                                      return (
+                                        <Badge 
+                                          variant={student.biddingResult === 'won' ? 'default' : 'secondary'}
+                                          className={`text-xs ${
+                                            student.biddingResult === 'won' 
+                                              ? 'bg-green-500 text-white' 
+                                              : 'bg-red-100 text-red-800'
+                                          }`}
+                                        >
+                                          {student.biddingResult === 'won' ? '🎉 Selected' : 'Not Selected'}
+                                        </Badge>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
                                 </div>
                               </div>
                             )}
