@@ -355,7 +355,7 @@ const RealtimeSelectionProcess = ({
         // All bidders are selected in automatic selection
         selected = biddersAsStudents.map(student => ({
           ...student,
-          bidStatus: 'selected automatically'
+          bidStatus: 'auto_selected'
         }));
         
         toast({
