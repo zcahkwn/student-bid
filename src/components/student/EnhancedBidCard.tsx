@@ -415,11 +415,11 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted, onBidWithdrawal
                   </div>
                   
                   {/* Success Message */}
-                  {(studentBidDetails?.bidStatus === 'selected automatically' || currentStudent?.biddingResult === 'won') && hasStudentBid && (
+                  {(studentBidDetails?.bidStatus === 'auto_selected' || currentStudent?.biddingResult === 'won') && hasStudentBid && (
                     <Alert>
                       <CheckCircle className="h-4 w-4" />
                       <AlertDescription>
-                        {studentBidDetails?.bidStatus === 'selected automatically' 
+                        {studentBidDetails?.bidStatus === 'auto_selected' 
                           ? '🎉 Congratulations! You have been automatically selected for this opportunity and your token has been refunded!'
                           : '🎉 Congratulations! You have been selected for this opportunity!'
                         }
