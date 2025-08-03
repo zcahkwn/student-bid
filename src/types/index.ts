@@ -28,6 +28,7 @@ export interface Student {
   tokensRemaining?: number;
   tokenStatus?: 'unused' | 'used'; // Already optional
   biddingResult?: 'pending' | 'won' | 'lost'; // Already optional
+  bidStatus?: string; // Specific bid status for individual opportunities
   enrollments?: StudentEnrollment[];
 }
 

@@ -334,6 +334,35 @@ export const createBidOpportunity = async (
   }
 }
 
+// Auto-select all bidders and refund their tokens
+export const autoSelectAndRefundBids = async (opportunityId: string): Promise<void> => {
+  try {
+    console.log('=== STARTING AUTO-SELECT AND REFUND ===');
+    console.log('Opportunity ID:', opportunityId);
+    
+    const { data: result, error } = await supabase.rpc('auto_select_and_refund_bids', {
+      p_opportunity_id: opportunityId
+    });
+    
+    if (error) {
+      console.error('RPC error during auto-select and refund:', error);
+      throw new Error(`Failed to auto-select and refund: ${error.message}`);
+    }
+    
+    if (!result || !result.success) {
+      console.error('RPC function returned failure:', result);
+      throw new Error(result?.error || 'Auto-select and refund failed');
+    }
+    
+    console.log('=== AUTO-SELECT AND REFUND COMPLETED ===');
+    console.log('Result:', result);
+    
+  } catch (error) {
+    console.error('Error in auto-select and refund:', error);
+    throw error;
+  }
+}
+
 // Fetch all classes from Supabase with real-time bid data
 export const fetchClasses = async (): Promise<ClassConfig[]> => {
   try {
@@ -397,7 +426,8 @@ export const fetchClasses = async (): Promise<ClassConfig[]> => {
           email: bid.users.email,
           studentNumber: bid.users.student_number,
           hasUsedToken: true, // They placed a bid, so token is used
-          hasBid: true
+          hasBid: true,
+          bidStatus: bid.bid_status // Include the specific bid status
         }))
 
         // Create selectedStudents array from winning bids
@@ -410,7 +440,8 @@ export const fetchClasses = async (): Promise<ClassConfig[]> => {
             studentNumber: bid.users.student_number,
             hasUsedToken: true,
             hasBid: true,
-            isSelected: true
+            isSelected: true,
+            bidStatus: bid.bid_status // Include the specific bid status
           }))
 
         bidOpportunities.push({

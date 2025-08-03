@@ -9,7 +9,7 @@ import { ClassConfig, Student } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/utils/dates";
 import { supabase } from "@/lib/supabase";
-import { updateSelectionResults, resetOpportunitySelection } from "@/lib/classService";
+import { updateSelectionResults, resetOpportunitySelection, autoSelectAndRefundBids } from "@/lib/classService";
 
 interface RealtimeSelectionProcessProps {
   currentClass: ClassConfig;
@@ -335,48 +335,77 @@ const RealtimeSelectionProcess = ({
       // Simulate selection process with animation
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Random selection
       const selectedOpportunity = bidOpportunities.find(opp => opp.id === selectedOpportunityId);
       const capacity = selectedOpportunity?.capacity || currentClass.capacity;
-      const selectedCount = Math.min(capacity, biddersAsStudents.length);
-      const shuffled = [...biddersAsStudents].sort(() => Math.random() - 0.5);
-      const selected = shuffled.slice(0, selectedCount);
-
-      setSelectedStudents(selected);
-      onSelectionComplete(selected, selectedOpportunityId);
-
-      // Update selection results in the database
-      try {
-        const selectedStudentIds = selected.map(s => s.id);
-        const allBidderIds = biddersAsStudents.map(s => s.id);
+      
+      // Check if bidding has closed and if we should auto-select all bidders
+      const now = new Date();
+      const biddingCloseDate = selectedOpportunity?.bidCloseDate ? new Date(selectedOpportunity.bidCloseDate) : null;
+      const biddingHasClosed = biddingCloseDate ? now >= biddingCloseDate : false;
+      
+      let selected: Student[];
+      
+      if (biddingHasClosed && currentBidCount <= capacity) {
+        // Auto-select all bidders and refund their tokens
+        console.log('=== AUTOMATIC SELECTION TRIGGERED ===');
+        console.log('Bid count:', currentBidCount, 'Capacity:', capacity);
         
-        await updateSelectionResults(
-          selectedOpportunityId,
-          currentClass.id,
-          selectedStudentIds,
-          allBidderIds
-        );
+        await autoSelectAndRefundBids(selectedOpportunityId);
         
-        console.log('Selection results successfully updated in database');
+        // All bidders are selected in automatic selection
+        selected = biddersAsStudents.map(student => ({
+          ...student,
+          bidStatus: 'selected automatically'
+        }));
         
-        // Refresh bidder data to reflect updated bid_status from database
-        console.log('=== REFRESHING BIDDER DATA AFTER SELECTION ===');
-        await fetchBidCounts();
-        
-        console.log('Bidder data refreshed successfully');
-      } catch (updateError) {
-        console.error('Error updating selection results in database:', updateError);
         toast({
-          title: "Database Update Warning",
-          description: "Selection completed but failed to update database records. Please check the console for details.",
-          variant: "destructive",
+          title: "Automatic Selection Complete",
+          description: `All ${selected.length} bidders have been automatically selected and their tokens have been refunded.`,
+        });
+      } else {
+        // Regular random selection process
+        console.log('=== RANDOM SELECTION TRIGGERED ===');
+        console.log('Bid count:', currentBidCount, 'Capacity:', capacity);
+        
+        const selectedCount = Math.min(capacity, biddersAsStudents.length);
+        const shuffled = [...biddersAsStudents].sort(() => Math.random() - 0.5);
+        selected = shuffled.slice(0, selectedCount);
+        
+        // Update selection results in the database for random selection
+        try {
+          const selectedStudentIds = selected.map(s => s.id);
+          const allBidderIds = biddersAsStudents.map(s => s.id);
+          
+          await updateSelectionResults(
+            selectedOpportunityId,
+            currentClass.id,
+            selectedStudentIds,
+            allBidderIds
+          );
+          
+          console.log('Selection results successfully updated in database');
+        } catch (updateError) {
+          console.error('Error updating selection results in database:', updateError);
+          toast({
+            title: "Database Update Warning",
+            description: "Selection completed but failed to update database records. Please check the console for details.",
+            variant: "destructive",
+          });
+        }
+        
+        toast({
+          title: "Random Selection Complete",
+          description: `${selected.length} student${selected.length !== 1 ? 's' : ''} randomly selected.`,
         });
       }
 
-      toast({
-        title: "Selection Complete",
-        description: `${selected.length} student${selected.length !== 1 ? 's' : ''} selected successfully`,
-      });
+      setSelectedStudents(selected);
+      onSelectionComplete(selected, selectedOpportunityId);
+      
+      // Refresh bidder data to reflect updated status from database
+      console.log('=== REFRESHING BIDDER DATA AFTER SELECTION ===');
+      await fetchBidCounts();
+      console.log('Bidder data refreshed successfully');
 
     } catch (error) {
       console.error('Selection error:', error);
@@ -540,13 +569,22 @@ const RealtimeSelectionProcess = ({
                 <Users className="h-4 w-4" />
                 <AlertDescription>
                   <strong>{currentBidCount} student{currentBidCount !== 1 ? 's' : ''}</strong> {currentBidCount === 1 ? 'has' : 'have'} placed bids for this opportunity.
-                  {currentBidCount > (selectedOpportunity.capacity || currentClass.capacity) ? (
-                    <span className="text-blue-600 font-medium"> Random selection will be required.</span>
-                  ) : currentBidCount > 0 ? (
-                    <span className="text-green-600 font-medium"> All bidders can be selected. Students' tokens will be returned.</span>
-                  ) : (
-                    <span className="text-gray-600"> Waiting for bids...</span>
-                  )}
+                  {(() => {
+                    const now = new Date();
+                    const biddingCloseDate = selectedOpportunity?.bidCloseDate ? new Date(selectedOpportunity.bidCloseDate) : null;
+                    const biddingHasClosed = biddingCloseDate ? now >= biddingCloseDate : false;
+                    const capacity = selectedOpportunity?.capacity || currentClass.capacity;
+                    
+                    if (currentBidCount === 0) {
+                      return <span className="text-gray-600"> Waiting for bids...</span>;
+                    } else if (biddingHasClosed && currentBidCount <= capacity) {
+                      return <span className="text-green-600 font-medium"> All bidders will be automatically selected and tokens refunded.</span>;
+                    } else if (currentBidCount > capacity) {
+                      return <span className="text-blue-600 font-medium"> Random selection will be required.</span>;
+                    } else {
+                      return <span className="text-yellow-600 font-medium"> Bidding still open. Selection type will be determined when bidding closes.</span>;
+                    }
+                  })()}
                 </AlertDescription>
               </Alert>
 

@@ -529,19 +529,353 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
                             </div>
                             <div>
                               {/* Real-time Result Display */}
-                              {student.biddingResult === 'won' ? (
-                                <Badge variant="default" className="bg-green-500 text-white text-xs animate-bounce">
-                                  🎉 Selected
-                                </Badge>
-                              ) : student.biddingResult === 'lost' ? (
-                                <Badge variant="secondary" className="bg-red-100 text-red-800 text-xs">
-                                  Not Selected
-                                </Badge>
-                              ) : (
-                                <Badge variant="outline" className="bg-yellow-100 text-yellow-800 text-xs animate-pulse">
-                                  Pending Selection
-                                </Badge>
+                              {(() => {
+                                const studentBidDetails = studentBidOpportunity?.bidders?.find(bidder => bidder.id === student.id);
+                                if (studentBidDetails?.bidStatus === 'selected automatically') {
+                                  return (
+                                    <Badge variant="default" className="bg-green-500 text-white text-xs animate-bounce">
+                                      🎉 Selected Automatically
+                                    </Badge>
+                                  );
+                                } else if (student.biddingResult === 'won') {
+                                  return (
+                                    <Badge variant="default" className="bg-green-500 text-white text-xs animate-bounce">
+                                      🎉 Selected
+                                    </Badge>
+                                  );
+                                } else if (student.biddingResult === 'lost') {
+                                  return (
+                                    <Badge variant="secondary" className="bg-red-100 text-red-800 text-xs">
+                                      Not Selected
+                                    </Badge>
+                                  );
+                                } else {
+                                  return (
+                                    <Badge variant="outline" className="bg-yellow-100 text-yellow-800 text-xs animate-pulse">
+                                      Pending Selection
+                                    </Badge>
+                                  );
+                                }
+                              })()}
+                            </div>
+                          </div>
+                          
+                          {/* Additional Status Information */}
+                          <div className="mt-3 pt-3 border-t border-gray-200">
+                            <div className="text-xs text-gray-600">
+                              <div className="flex justify-between">
+                                <span>Token Status:</span>
+                                <span className={student.tokenStatus === 'used' ? 'text-red-600 font-medium' : 'text-green-600 font-medium'}>
+                                  {student.tokenStatus === 'used' ? 'Used' : 'Available'}
+                                </span>
+                              </div>
+                              {student.tokensRemaining !== undefined && (
+                                <div className="flex justify-between mt-1">
+                                  <span>Tokens Remaining:</span>
+                                  <span className="font-medium">{student.tokensRemaining}</span>
+                                </div>
                               )}
+                              {(() => {
+                                const studentBidDetails = studentBidOpportunity?.bidders?.find(bidder => bidder.id === student.id);
+                                if (studentBidDetails?.bidStatus === 'selected automatically') {
+                                  return (
+                                    <div className="flex justify-between mt-1">
+                                      <span>Selection Type:</span>
+                                      <span className="font-medium text-green-600">Automatic (Token Refunded)</span>
+                                    </div>
+                                  );
+                                }
+                                return null;
+                              })()}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Recent Opportunities */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg font-heading flex items-center gap-2">
+                        <Calendar className="w-5 h-5" />
+                        Recent Opportunities
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3 max-h-72 overflow-y-auto">
+                        {currentClass.bidOpportunities?.slice(0, 5).map((opportunity) => (
+                          <div 
+                            key={opportunity.id}
+                            className="p-3 border rounded-md flex justify-between items-center"
+                          >
+                            <div>
+                              <div className="font-medium">{opportunity.title}</div>
+                              <div className="text-sm text-muted-foreground">{formatDate(opportunity.date)}</div>
+                            </div>
+                            <div className="flex flex-col items-end">
+                              <Badge variant={getBidOpportunityStatus(opportunity) === "Open for Bidding" ? "default" : "secondary"} className="mb-1">
+                                {getBidOpportunityStatus(opportunity)}
+                              </Badge>
+                              {/* Enhanced Bid Status Display */}
+                              {opportunity.bidders && opportunity.bidders.some(bidder => bidder.id === student.id) && (
+                                <div className="flex flex-col items-end gap-1">
+                                  <span className="text-xs text-academy-blue font-medium">✓ Bid Submitted</span>
+                                  {(() => {
+                                    const studentBidDetails = opportunity.bidders?.find(bidder => bidder.id === student.id);
+                                    if (studentBidDetails?.bidStatus === 'selected automatically') {
+                                      return (
+                                        <Badge className="text-xs bg-green-500 text-white">
+                                          🎉 Selected Automatically
+                                        </Badge>
+                                      );
+                                    } else if (student.biddingResult && student.biddingResult !== 'pending') {
+                                      return (
+                                        <Badge 
+                                          variant={student.biddingResult === 'won' ? 'default' : 'secondary'}
+                                          className={`text-xs ${
+                                            student.biddingResult === 'won' 
+                                              ? 'bg-green-500 text-white' 
+                                              : 'bg-red-100 text-red-800'
+                                          }`}
+                                        >
+                                          {student.biddingResult === 'won' ? '🎉 Selected' : 'Not Selected'}
+                                        </Badge>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )) || (
+                          <p className="text-center text-muted-foreground py-4">
+                            No opportunities available yet
+                          </p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="opportunities">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <EnhancedBidCard
+                    student={student} // Always pass the main student state
+                    classConfig={currentClass}
+                    onBidSubmitted={handleBidSubmitted}
+                    onBidWithdrawal={handleBidWithdrawalInternal}
+                  />
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg font-heading">All Opportunities</CardTitle>
+                      <CardDescription>Complete list of bidding opportunities for this class</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3 max-h-96 overflow-y-auto">
+                        {currentClass.bidOpportunities?.map((opportunity) => (
+                          <div 
+                            key={opportunity.id}
+                            className="p-4 border rounded-md"
+                          >
+                            <div className="flex justify-between items-start mb-2">
+                              <h4 className="font-medium">{opportunity.title}</h4>
+                              <Badge variant={getBidOpportunityStatus(opportunity) === "Open for Bidding" ? "default" : "secondary"}>
+                                {getBidOpportunityStatus(opportunity)}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground mb-2">{opportunity.description}</p>
+                            <div className="flex justify-between items-center text-xs text-gray-500">
+                              <span>Event: {formatDate(opportunity.date)}</span>
+                              <span>Capacity: {opportunity.capacity || currentClass.capacity} students</span>
+                            </div>
+                            {opportunity.bidders && opportunity.bidders.some(bidder => bidder.id === student.id) && (
+                              <div className="mt-2">
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800">
+                                    Bid Submitted
+                                  </Badge>
+                                  {(() => {
+                                    const studentBidDetails = opportunity.bidders?.find(bidder => bidder.id === student.id);
+                                    if (studentBidDetails?.bidStatus === 'selected automatically') {
+                                      return (
+                                        <Badge className="text-xs bg-green-500 text-white">
+                                          🎉 Selected Automatically
+                                        </Badge>
+                                      );
+                                    } else if (student.biddingResult && student.biddingResult !== 'pending') {
+                                      return (
+                                        <Badge 
+                                          variant={student.biddingResult === 'won' ? 'default' : 'secondary'}
+                                          className={`text-xs ${
+                                            student.biddingResult === 'won' 
+                                              ? 'bg-green-500 text-white' 
+                                              : 'bg-red-100 text-red-800'
+                                          }`}
+                                        >
+                                          {student.biddingResult === 'won' ? '🎉 Selected' : 'Not Selected'}
+                                        </Badge>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )) || (
+                          <p className="text-center text-muted-foreground py-8">
+                            No opportunities available yet
+                          </p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="profile">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg font-heading">Your Information</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-3 gap-1">
+                          <div className="text-sm text-muted-foreground">Name:</div>
+                          <div className="col-span-2 font-medium">{student.name}</div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-1">
+                          <div className="text-sm text-muted-foreground">Email:</div>
+                          <div className="col-span-2">{student.email}</div>
+                        </div>
+                        {student.studentNumber && (
+                          <div className="grid grid-cols-3 gap-1">
+                            <div className="text-sm text-muted-foreground">Student Number:</div>
+                            <div className="col-span-2">{student.studentNumber}</div>
+                          </div>
+                        )}
+                        <div className="grid grid-cols-3 gap-1">
+                          <div className="text-sm text-muted-foreground">Classes Enrolled:</div>
+                          <div className="col-span-2">{classes.length}</div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-1">
+                          <div className="text-sm text-muted-foreground">Token Status:</div>
+                          <div className="col-span-2">
+                            <Badge 
+                              variant={student?.tokenStatus === 'used' ? 'secondary' : 'default'}
+                              className={`text-xs ${
+                                student?.tokenStatus === 'used' 
+                                  ? 'bg-red-100 text-red-800' 
+                                  : 'bg-green-100 text-green-800'
+                              }`}
+                            >
+                              {student?.tokenStatus === 'used' ? 'Token Used' : 'Token Available'}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg font-heading">Class Summary</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {classes.map((classItem) => {
+                          const studentInClass = classItem.students.find(s => s.id === student.id);
+                          return (
+                            <div key={classItem.id} className="p-3 border rounded-md">
+                              <div className="flex justify-between items-start mb-2">
+                                <h4 className="font-medium">{classItem.className}</h4>
+                                <Badge variant={studentInClass?.tokenStatus === 'used' || studentInClass?.hasUsedToken === true ? "secondary" : "default"}>
+                                  {studentInClass?.tokenStatus === 'used' || studentInClass?.hasUsedToken === true ? "Token Used" : "Token Available"}
+                                </Badge>
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {classItem.bidOpportunities?.length || 0} opportunities • 
+                                {classItem.bidders?.filter(b => b.id === student.id).length || 0} bids placed
+                                {/* Show bidding results summary */}
+                                {(() => {
+                                  // Check for automatic selection first
+                                  const hasAutoSelection = classItem.bidOpportunities?.some(opp => 
+                                    opp.bidders?.some(bidder => bidder.id === student.id && bidder.bidStatus === 'selected automatically')
+                                  );
+                                  
+                                  if (hasAutoSelection) {
+                                    return (
+                                      <span className="ml-2 font-medium text-green-600">
+                                        • Selected Automatically
+                                      </span>
+                                    );
+                                  } else if (studentInClass?.biddingResult && studentInClass.biddingResult !== 'pending') {
+                                    return (
+                                      <span className={`ml-2 font-medium ${
+                                        studentInClass.biddingResult === 'won' ? 'text-green-600' : 'text-red-600'
+                                      }`}>
+                                        • {studentInClass.biddingResult === 'won' ? 'Selected' : 'Not Selected'}
+                                      </span>
+                                    );
+                                  }
+                                  return null;
+                                })()}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+            </Tabs>
+          ) : (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <h2 className="text-xl mb-4">No Class Selected</h2>
+                <p className="text-muted-foreground">
+                  Select a class from the sidebar to view its details and opportunities.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default StudentDashboard;
+                              {(() => {
+                                const studentBidDetails = opportunity.bidders?.find(bidder => bidder.id === student.id);
+                                if (studentBidDetails?.bidStatus === 'selected automatically') {
+                                  return (
+                                    <Badge className="text-xs bg-green-500 text-white">
+                                      Selected Automatically
+                                    </Badge>
+                                  );
+                                } else if (student.biddingResult && student.biddingResult !== 'pending') {
+                                  return (
+                                    <Badge 
+                                      variant={student.biddingResult === 'won' ? 'default' : 'secondary'}
+                                      className={`text-xs ${
+                                        student.biddingResult === 'won' 
+                                          ? 'bg-green-500 text-white' 
+                                          : 'bg-red-100 text-red-800'
+                                      }`}
+                                    >
+                                      {student.biddingResult === 'won' ? 'Selected' : 'Not Selected'}
+                                    </Badge>
+                                  );
+                                }
+                                return null;
+                              })()}
                             </div>
                           </div>
                           
@@ -659,19 +993,30 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
                                   <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800">
                                     Bid Submitted
                                   </Badge>
-                                  {/* Show result if available */}
-                                  {student.biddingResult && student.biddingResult !== 'pending' && (
-                                    <Badge 
-                                      variant={student.biddingResult === 'won' ? 'default' : 'secondary'}
-                                      className={`text-xs ${
-                                        student.biddingResult === 'won' 
-                                          ? 'bg-green-500 text-white' 
-                                          : 'bg-red-100 text-red-800'
-                                      }`}
-                                    >
-                                      {student.biddingResult === 'won' ? '🎉 Selected' : 'Not Selected'}
-                                    </Badge>
-                                  )}
+                                  {(() => {
+                                    const studentBidDetails = opportunity.bidders?.find(bidder => bidder.id === student.id);
+                                    if (studentBidDetails?.bidStatus === 'selected automatically') {
+                                      return (
+                                        <Badge className="text-xs bg-green-500 text-white">
+                                          🎉 Selected Automatically
+                                        </Badge>
+                                      );
+                                    } else if (student.biddingResult && student.biddingResult !== 'pending') {
+                                      return (
+                                        <Badge 
+                                          variant={student.biddingResult === 'won' ? 'default' : 'secondary'}
+                                          className={`text-xs ${
+                                            student.biddingResult === 'won' 
+                                              ? 'bg-green-500 text-white' 
+                                              : 'bg-red-100 text-red-800'
+                                          }`}
+                                        >
+                                          {student.biddingResult === 'won' ? '🎉 Selected' : 'Not Selected'}
+                                        </Badge>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
                                 </div>
                               </div>
                             )}

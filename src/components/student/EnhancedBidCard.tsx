@@ -325,6 +325,7 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted, onBidWithdrawal
           {bidOpportunities.map((opportunity, index) => {
             const hasStudentBid = opportunity.bidders?.some(bidder => bidder.id === currentStudent?.id);
             const isStudentSelected = opportunity.selectedStudents?.some(s => s.id === currentStudent?.id);
+            const studentBidDetails = opportunity.bidders?.find(bidder => bidder.id === currentStudent?.id);
             const canSubmitBid = currentStudent?.hasUsedToken !== true && 
                                getBidOpportunityStatus(opportunity) === "Open for Bidding" &&
                                !hasStudentBid;
@@ -362,7 +363,13 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted, onBidWithdrawal
                     {hasStudentBid ? (
                       <div className="flex items-center gap-2">
                         {(() => {
-                          if (currentStudent.biddingResult === 'won') {
+                          if (studentBidDetails?.bidStatus === 'selected automatically') {
+                            return (
+                              <Badge className="bg-green-500 text-white">
+                                🎉 Selected Automatically
+                              </Badge>
+                            );
+                          } else if (currentStudent.biddingResult === 'won') {
                             return (
                               <Badge className="bg-green-500 text-white">
                                 🎉 Selected
@@ -408,11 +415,14 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted, onBidWithdrawal
                   </div>
                   
                   {/* Success Message */}
-                  {currentStudent?.biddingResult === 'won' && hasStudentBid && (
+                  {(studentBidDetails?.bidStatus === 'selected automatically' || currentStudent?.biddingResult === 'won') && hasStudentBid && (
                     <Alert>
                       <CheckCircle className="h-4 w-4" />
                       <AlertDescription>
-                        🎉 Congratulations! You have been selected for this opportunity!
+                        {studentBidDetails?.bidStatus === 'selected automatically' 
+                          ? '🎉 Congratulations! You have been automatically selected for this opportunity and your token has been refunded!'
+                          : '🎉 Congratulations! You have been selected for this opportunity!'
+                        }
                       </AlertDescription>
                     </Alert>
                   )}
