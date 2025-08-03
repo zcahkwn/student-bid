@@ -543,7 +543,7 @@ const RealtimeSelectionProcess = ({
                   {currentBidCount > (selectedOpportunity.capacity || currentClass.capacity) ? (
                     <span className="text-blue-600 font-medium"> Random selection will be required.</span>
                   ) : currentBidCount > 0 ? (
-                    <span className="text-green-600 font-medium"> All bidders can be selected.</span>
+                    <span className="text-green-600 font-medium"> All bidders can be selected. Students' tokens will be returned.</span>
                   ) : (
                     <span className="text-gray-600"> Waiting for bids...</span>
                   )}
