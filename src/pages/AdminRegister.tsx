@@ -56,10 +56,6 @@ const AdminRegister = () => {
         throw new Error("User data not returned after sign up.");
       }
 
-      // Add a small delay to ensure the auth.users record is fully committed
-      // This prevents foreign key constraint violations when creating the admin profile
-      await new Promise(resolve => setTimeout(resolve, 500));
-
       // Step 2: Create admin profile in public.admins table
       await createAdminProfile(data.user.id, name, email);
 
