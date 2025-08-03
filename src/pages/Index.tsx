@@ -13,18 +13,14 @@ import Dashboard from "@/pages/admin/Dashboard";
 import Students from "@/pages/admin/Students";
 import Selection from "@/pages/admin/Selection";
 import StudentDashboard from "@/components/student/StudentDashboard";
-import AdminRegister from "@/pages/AdminRegister";
 import { Student, ClassConfig, BidOpportunity } from "@/types";
 import { createClass, fetchClasses, updateClass, deleteClassAtomic, updateBidOpportunity, ClassDeletionResult } from "@/lib/classService";
 import { cleanupOrphanedUsers } from "@/lib/userService";
-import { getAdminProfile } from "@/lib/adminService";
-import { supabase } from "@/lib/supabase";
 import { Loader2, Menu, X } from "lucide-react";
-import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 
 const Index = () => {
   // Auth state - simplified
-  const [adminUserId, setAdminUserId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isStudent, setIsStudent] = useState(false);
   const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
   const [currentClass, setCurrentClass] = useState<ClassConfig | null>(null);
@@ -41,49 +37,16 @@ const Index = () => {
   const [isCreatingClass, setIsCreatingClass] = useState(false);
   
   const { toast } = useToast();
-  const navigate = useNavigate();
-  const location = useLocation();
   
-  // Check for existing Supabase session and admin profile on component mount
+  // Check for existing admin session on component mount
   useEffect(() => {
-    const checkSessionAndAdmin = async () => {
-      setIsLoading(true);
-      try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-        if (sessionError) {
-          console.error("Error getting session:", sessionError);
-          setAdminUserId(null);
-          setIsStudent(false);
-          return;
-        }
-
-        if (session) {
-          const adminProfile = await getAdminProfile(session.user.id);
-          if (adminProfile) {
-            setAdminUserId(session.user.id);
-            setIsStudent(false);
-          } else {
-            // If there's a session but no admin profile, it might be a student session
-            setAdminUserId(null);
-          }
-        } else {
-          setAdminUserId(null);
-          setIsStudent(false);
-        }
-      } catch (error) {
-        console.error("Error during session check:", error);
-        setAdminUserId(null);
-        setIsStudent(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkSessionAndAdmin();
+    const adminSession = localStorage.getItem('adminSession');
+    if (adminSession === 'true') {
+      setIsAdmin(true);
+    }
   }, []);
   
-  // Load classes from Supabase when adminUserId changes
+  // Load classes from Supabase on first render
   useEffect(() => {
     const loadClasses = async () => {
       try {
@@ -95,7 +58,7 @@ const Index = () => {
           throw new Error("Supabase not configured");
         }
         
-        const fetchedClasses = await fetchClasses(); // fetchClasses now handles RLS based on auth.uid()
+        const fetchedClasses = await fetchClasses();
         setClasses(fetchedClasses);
         
         // If there's a current class in localStorage, try to find it in the fetched data
@@ -160,13 +123,8 @@ const Index = () => {
       }
     };
     
-    // Only load classes if an admin is logged in
-    if (adminUserId !== null) {
-      loadClasses();
-    } else {
-      setIsLoading(false);
-    }
-  }, [adminUserId, toast]);
+    loadClasses();
+  }, [toast]);
   
   // Save current class ID to localStorage when it changes
   useEffect(() => {
@@ -177,18 +135,21 @@ const Index = () => {
     }
   }, [currentClass]);
   
-  const handleAdminLogin = (isSuccess: boolean, userId?: string) => {
-    if (isSuccess && userId) {
-      setAdminUserId(userId);
+  const handleAdminLogin = (isSuccess: boolean) => {
+    if (isSuccess) {
+      setIsAdmin(true);
+      // Persist admin session in localStorage
+      localStorage.setItem('adminSession', 'true');
     }
   };
   
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setAdminUserId(null);
+  const handleLogout = () => {
+    setIsAdmin(false);
     setIsStudent(false);
     setCurrentStudent(null);
     setCurrentClass(null);
+    // Clear admin session from localStorage
+    localStorage.removeItem('adminSession');
   };
   
   const handleSelectClass = (classId: string) => {
@@ -217,6 +178,7 @@ const Index = () => {
     try {
       const newClass = await createClass({
         name: newClassName,
+        rewardTitle: "Bidding Opportunities",
         capacity: 7
       });
       
@@ -623,7 +585,7 @@ const Index = () => {
   }
   
   // Render based on authentication state
-  if (adminUserId) {
+  if (isAdmin) {
     return (
       <div className="min-h-screen bg-gray-50">
         <header className="bg-white border-b relative z-50">
@@ -746,43 +708,50 @@ const Index = () => {
         </Dialog>
       </div>
     );
+  } else if (isStudent && currentStudent && currentClass) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <StudentDashboard 
+          student={currentStudent}
+          classConfig={currentClass}
+          onBidSubmitted={handleBidSubmitted}
+          onBidWithdrawal={handleBidWithdrawal}
+          onLogout={handleLogout}
+        />
+      </div>
+    );
   }
   
-  // Handle routing for login and registration pages
+  // Login screen (default)
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-4xl">
-          <Routes>
-            <Route path="/admin-register" element={<AdminRegister />} />
-            <Route path="/" element={
-              <>
-                <div className="text-center mb-8">
-                  <h1 className="text-3xl md:text-4xl font-heading font-bold text-academy-blue mb-3">
-                    Token Bidding Platform
-                  </h1>
-                </div>
-                
-                <Tabs defaultValue="student" className="w-full">
-                  <TabsList className="grid grid-cols-2 mb-8">
-                    <TabsTrigger value="student">Student Login</TabsTrigger>
-                    <TabsTrigger value="admin">Admin Login</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="student" className="flex justify-center">
-                    <StudentLogin 
-                      classes={classes}
-                      onLogin={() => {}}
-                    />
-                  </TabsContent>
-                  
-                  <TabsContent value="admin" className="flex justify-center">
-                    <AdminLoginForm onLogin={handleAdminLogin} />
-                  </TabsContent>
-                </Tabs>
-              </>
-            } />
-          </Routes>
+          <div className="text-center mb-8">
+            <h1 className="text-3xl md:text-4xl font-heading font-bold text-academy-blue mb-3">
+              Token Bidding Platform
+            </h1>
+          </div>
+          
+          <Tabs defaultValue="student" className="w-full">
+            <TabsList className="grid grid-cols-2 mb-8">
+              <TabsTrigger value="student">Student Login</TabsTrigger>
+              <TabsTrigger value="admin">Admin Login</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="student" className="flex justify-center">
+              <StudentLogin 
+                classes={classes}
+                onLogin={() => {}}
+              />
+            </TabsContent>
+            
+            <TabsContent value="admin" className="flex justify-center">
+              <AdminLoginForm onLogin={handleAdminLogin} />
+            </TabsContent>
+          </Tabs>
+
+          
         </div>
       </div>
       

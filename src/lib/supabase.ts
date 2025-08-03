@@ -51,47 +51,27 @@ interface Database {
           updated_at?: string
         }
       }
-      admins: {
-        Row: {
-          user_id: string
-          name: string
-          email: string
-          admin_type: 'admin' | 'super_admin'
-          created_at: string
-        }
-        Insert: {
-          user_id: string
-          name: string
-          email: string
-          admin_type?: 'admin' | 'super_admin'
-          created_at?: string
-        }
-        Update: {
-          user_id?: string
-          name?: string
-          email?: string
-          admin_type?: 'admin' | 'super_admin'
-          created_at?: string
-        }
-      }
       classes: {
         Row: {
           id: string
           name: string
+          capacity_default: number
           created_at: string
-          created_by_user_id: string | null
+          updated_at: string
         }
         Insert: {
           id?: string
           name: string
+          capacity_default?: number
           created_at?: string
-          created_by_user_id?: string | null
+          updated_at?: string
         }
         Update: {
           id?: string
           name?: string
+          capacity_default?: number
           created_at?: string
-          created_by_user_id?: string | null
+          updated_at?: string
         }
       }
       student_enrollments: {
@@ -134,7 +114,6 @@ interface Database {
           capacity: number
           status: string
           created_at: string
-          title: string | null
         }
         Insert: {
           id?: string
@@ -146,7 +125,6 @@ interface Database {
           capacity?: number
           status?: string
           created_at?: string
-          title?: string | null
         }
         Update: {
           id?: string
@@ -158,7 +136,6 @@ interface Database {
           capacity?: number
           status?: string
           created_at?: string
-          title?: string | null
         }
       }
       bids: {
@@ -200,6 +177,7 @@ interface Database {
         Row: {
           id: string
           user_id: string
+          class_id: string
           opportunity_id: string
           amount: number
           type: string
@@ -209,6 +187,7 @@ interface Database {
         Insert: {
           id?: string
           user_id: string
+          class_id: string
           opportunity_id?: string
           amount: number
           type: string
@@ -218,6 +197,7 @@ interface Database {
         Update: {
           id?: string
           user_id?: string
+          class_id?: string
           opportunity_id?: string
           amount?: number
           type?: string
