@@ -8,7 +8,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useToast } from "@/hooks/use-toast";
 import AdminLoginForm from "@/components/admin/LoginForm";
 import StudentLogin from "@/components/student/StudentLogin";
-import AdminRegister from "@/pages/AdminRegister";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import Dashboard from "@/pages/admin/Dashboard";
 import Students from "@/pages/admin/Students";
@@ -17,14 +16,11 @@ import StudentDashboard from "@/components/student/StudentDashboard";
 import { Student, ClassConfig, BidOpportunity } from "@/types";
 import { createClass, fetchClasses, updateClass, deleteClassAtomic, updateBidOpportunity, ClassDeletionResult } from "@/lib/classService";
 import { cleanupOrphanedUsers } from "@/lib/userService";
-import { getAdminProfile } from "@/lib/adminService";
-import { supabase } from "@/lib/supabase";
 import { Loader2, Menu, X } from "lucide-react";
-import { Routes, Route, useLocation } from "react-router-dom";
 
 const Index = () => {
   // Auth state - simplified
-  const [adminUserId, setAdminUserId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isStudent, setIsStudent] = useState(false);
   const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
   const [currentClass, setCurrentClass] = useState<ClassConfig | null>(null);
@@ -41,47 +37,16 @@ const Index = () => {
   const [isCreatingClass, setIsCreatingClass] = useState(false);
   
   const { toast } = useToast();
-  const location = useLocation();
   
-  // Check for existing Supabase session and admin profile on component mount
+  // Check for existing admin session on component mount
   useEffect(() => {
-    const checkSessionAndAdmin = async () => {
-      setIsLoading(true);
-      try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-        if (sessionError) {
-          console.error("Error getting session:", sessionError);
-          setAdminUserId(null);
-          setIsStudent(false);
-          return;
-        }
-
-        if (session) {
-          const adminProfile = await getAdminProfile(session.user.id);
-          if (adminProfile) {
-            setAdminUserId(session.user.id);
-            setIsStudent(false);
-          } else {
-            setAdminUserId(null);
-          }
-        } else {
-          setAdminUserId(null);
-          setIsStudent(false);
-        }
-      } catch (error) {
-        console.error("Error during session check:", error);
-        setAdminUserId(null);
-        setIsStudent(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkSessionAndAdmin();
+    const adminSession = localStorage.getItem('adminSession');
+    if (adminSession === 'true') {
+      setIsAdmin(true);
+    }
   }, []);
   
-  // Load classes from Supabase when adminUserId changes
+  // Load classes from Supabase on first render
   useEffect(() => {
     const loadClasses = async () => {
       try {
@@ -158,10 +123,8 @@ const Index = () => {
       }
     };
     
-    if (adminUserId !== null) {
-      loadClasses();
-    }
-  }, [adminUserId, toast]);
+    loadClasses();
+  }, [toast]);
   
   // Save current class ID to localStorage when it changes
   useEffect(() => {
@@ -172,18 +135,21 @@ const Index = () => {
     }
   }, [currentClass]);
   
-  const handleAdminLogin = (isSuccess: boolean, userId?: string) => {
-    if (isSuccess && userId) {
-      setAdminUserId(userId);
+  const handleAdminLogin = (isSuccess: boolean) => {
+    if (isSuccess) {
+      setIsAdmin(true);
+      // Persist admin session in localStorage
+      localStorage.setItem('adminSession', 'true');
     }
   };
   
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setAdminUserId(null);
+  const handleLogout = () => {
+    setIsAdmin(false);
     setIsStudent(false);
     setCurrentStudent(null);
     setCurrentClass(null);
+    // Clear admin session from localStorage
+    localStorage.removeItem('adminSession');
   };
   
   const handleSelectClass = (classId: string) => {
@@ -619,7 +585,7 @@ const Index = () => {
   }
   
   // Render based on authentication state
-  if (adminUserId) {
+  if (isAdmin) {
     return (
       <div className="min-h-screen bg-gray-50">
         <header className="bg-white border-b relative z-50">
@@ -757,11 +723,6 @@ const Index = () => {
   }
   
   // Login screen (default)
-  // Handle routing for admin registration
-  if (location.pathname === '/admin-register') {
-    return <AdminRegister />;
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <div className="flex-1 flex items-center justify-center p-4">
@@ -789,6 +750,8 @@ const Index = () => {
               <AdminLoginForm onLogin={handleAdminLogin} />
             </TabsContent>
           </Tabs>
+
+          
         </div>
       </div>
       
