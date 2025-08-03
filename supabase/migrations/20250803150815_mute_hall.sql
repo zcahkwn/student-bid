@@ -12,6 +12,9 @@
     - Use type = 'refund' with descriptive message
 */
 
+-- Drop the existing function
+DROP FUNCTION IF EXISTS public.auto_select_and_refund_bids(uuid);
+
 CREATE OR REPLACE FUNCTION public.auto_select_and_refund_bids(
     p_opportunity_id uuid
 )
