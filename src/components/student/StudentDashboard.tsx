@@ -577,7 +577,7 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
                               )}
                               {(() => {
                                 const studentBidDetails = studentBidOpportunity?.bidders?.find(bidder => bidder.id === student.id);
-                                if (studentBidDetails?.bidStatus === 'auto_selected') {
+                                if (studentBidDetails?.bidStatus === 'selected automatically') {
                                   return (
                                     <div className="flex justify-between mt-1">
                                       <span>Selection Type:</span>
@@ -700,7 +700,7 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
                                   </Badge>
                                   {(() => {
                                     const studentBidDetails = opportunity.bidders?.find(bidder => bidder.id === student.id);
-                                    if (studentBidDetails?.bidStatus === 'selected automatically') {
+                                    if (studentBidDetails?.bidStatus === 'auto_selected') {
                                       return (
                                         <Badge className="text-xs bg-green-500 text-white">
                                           🎉 Selected Automatically
