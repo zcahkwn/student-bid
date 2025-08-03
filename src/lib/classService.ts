@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { ClassConfig, Student, BidOpportunity } from '@/types'
 import { getClassStudents } from '@/lib/userService'
+import { getAdminProfile } from '@/lib/adminService'
 
 interface CreateClassData {
   name: string
@@ -45,11 +46,25 @@ export interface ClassDeletionResult {
 // Create a new class in Supabase
 export const createClass = async (classData: CreateClassData): Promise<ClassConfig> => {
   try {
+    // Get current user session
+    const { data: userSession, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !userSession?.session) {
+      throw new Error('User not authenticated to create a class.');
+    }
+    const createdByUserId = userSession.session.user.id;
+
+    // Verify user is an admin
+    const adminProfile = await getAdminProfile(createdByUserId);
+    if (!adminProfile) {
+      throw new Error('User is not authorized to create classes.');
+    }
+
     // Insert class into Supabase
     const { data: classRecord, error: classError } = await supabase
       .from('classes')
       .insert({
-        name: classData.name
+        name: classData.name,
+        created_by_user_id: createdByUserId
       })
       .select()
       .single()
@@ -337,9 +352,24 @@ export const createBidOpportunity = async (
 // Fetch all classes from Supabase with real-time bid data
 export const fetchClasses = async (): Promise<ClassConfig[]> => {
   try {
+    // Get current user session
+    const { data: userSession, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !userSession?.session) {
+      // If no session, return empty array for admin view
+      return [];
+    }
+
+    const userId = userSession.session.user.id;
+    const adminProfile = await getAdminProfile(userId);
+    
+    // Only proceed if user is an admin
+    if (!adminProfile) {
+      return [];
+    }
+
     const { data: classesData, error: classesError } = await supabase
       .from('classes')
-      .select('id, name, created_at')
+      .select('id, name, created_at, created_by_user_id')
       .order('created_at', { ascending: false })
 
     if (classesError) {

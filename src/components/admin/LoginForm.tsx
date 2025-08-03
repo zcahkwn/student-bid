@@ -5,13 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
+import { getAdminProfile } from "@/lib/adminService";
 
 interface AdminLoginProps {
-  onLogin: (isAdmin: boolean) => void;
+  onLogin: (isSuccess: boolean, userId?: string) => void;
 }
 
 const AdminLoginForm = ({ onLogin }: AdminLoginProps) => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -22,14 +24,32 @@ const AdminLoginForm = ({ onLogin }: AdminLoginProps) => {
 
     // Simulate API call
     setTimeout(() => {
-      // Simple hardcoded admin check
-      if (username === "admin" && password === "admin123") {
+      // Step 1: Authenticate with Supabase Auth
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        throw new Error(signInError.message);
+      }
+
+      if (!data.user) {
+        throw new Error("Authentication failed: No user data.");
+      }
+
+      // Step 2: Check if the authenticated user has an admin profile
+      const adminProfile = await getAdminProfile(data.user.id);
+
+      if (adminProfile) {
         toast({
           title: "Login successful",
-          description: "Welcome to the admin dashboard",
+          description: `Welcome, ${adminProfile.name} (${adminProfile.admin_type})`,
         });
-        onLogin(true);
+        onLogin(true, data.user.id);
       } else {
+        // If no admin profile, sign out the user from auth.users
+        await supabase.auth.signOut();
         toast({
           title: "Login failed",
           description: "Invalid username or password",
@@ -51,13 +71,13 @@ const AdminLoginForm = ({ onLogin }: AdminLoginProps) => {
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
+            <Label htmlFor="email">Email</Label>
             <Input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter your username"
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
               required
               disabled={isLoading}
             />
