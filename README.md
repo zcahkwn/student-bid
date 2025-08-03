@@ -6,7 +6,13 @@ npm install
 npm run dev
 ```
 
+Store Supabase RPC function definitions, schemas, table structures, and roles as .sql files.
+```
+supabase db dump > supabase/migrations/manual_dump.sql
+```
+
 Build the site and zip the build folder
 ```
 npm run build-and-zip
 ```
+
