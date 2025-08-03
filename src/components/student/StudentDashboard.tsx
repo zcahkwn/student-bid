@@ -8,6 +8,7 @@ import StudentSidebar from "@/components/student/StudentSidebar";
 import { Student, ClassConfig, BidOpportunity } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate, getBidOpportunityStatus } from "@/utils/dates";
+import { isBidOpportunityOpen } from "@/utils/dates";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Menu, X, Calendar, Trophy, Coins } from "lucide-react";
 import { subscribeToUserEnrollmentUpdates } from "@/lib/studentBidService";
@@ -461,14 +462,7 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
                         </div>
                         <div className="text-center">
                           <div className="text-2xl font-bold text-green-600">
-                            {currentClass.bidOpportunities?.filter(opp => {
-                              const now = new Date();
-                              const eventDate = new Date(opp.date);
-                              const biddingOpensDate = opp.bidOpenDate 
-                                ? new Date(opp.bidOpenDate)
-                                : new Date(eventDate.getTime() - 7 * 24 * 60 * 60 * 1000);
-                              return now >= biddingOpensDate && now < eventDate;
-                            }).length || 0}
+                            {currentClass.bidOpportunities?.filter(opp => isBidOpportunityOpen(opp)).length || 0}
                           </div>
                           <div className="text-sm text-gray-600">Open for Bidding</div>
                         </div>

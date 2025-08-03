@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ClassConfig, Student } from "@/types";
 import { cn } from "@/lib/utils";
+import { isBidOpportunityOpen } from "@/utils/dates";
 import { 
   Coins, 
   Calendar, 
@@ -69,14 +70,7 @@ const StudentSidebar = ({
               classes.map((classItem) => {
                 // Calculate class statistics
                 const totalOpportunities = classItem.bidOpportunities?.length || 0;
-                const openOpportunities = classItem.bidOpportunities?.filter(opp => {
-                  const now = new Date();
-                  const eventDate = new Date(opp.date);
-                  const biddingOpensDate = opp.bidOpenDate 
-                    ? new Date(opp.bidOpenDate)
-                    : new Date(eventDate.getTime() - 7 * 24 * 60 * 60 * 1000);
-                  return now >= biddingOpensDate && now < eventDate;
-                }).length || 0;
+                const openOpportunities = classItem.bidOpportunities?.filter(opp => isBidOpportunityOpen(opp)).length || 0;
 
                 // Find the current student's enrollment in this specific class
                 const studentInThisClass = classItem.students.find(s => s.id === currentStudent?.id);
