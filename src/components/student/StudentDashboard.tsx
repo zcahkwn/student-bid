@@ -531,7 +531,7 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
                               {/* Real-time Result Display */}
                               {(() => {
                                 const studentBidDetails = studentBidOpportunity?.bidders?.find(bidder => bidder.id === student.id);
-                                if (studentBidDetails?.bidStatus === 'selected automatically') {
+                                if (studentBidDetails?.bidStatus === 'auto_selected') {
                                   return (
                                     <Badge variant="default" className="bg-green-500 text-white text-xs animate-bounce">
                                       🎉 Selected Automatically
@@ -623,7 +623,7 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
                                   <span className="text-xs text-academy-blue font-medium">✓ Bid Submitted</span>
                                   {(() => {
                                     const studentBidDetails = opportunity.bidders?.find(bidder => bidder.id === student.id);
-                                    if (studentBidDetails?.bidStatus === 'selected automatically') {
+                                    if (studentBidDetails?.bidStatus === 'auto_selected') {
                                       return (
                                         <Badge className="text-xs bg-green-500 text-white">
                                           🎉 Selected Automatically
@@ -700,7 +700,7 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
                                   </Badge>
                                   {(() => {
                                     const studentBidDetails = opportunity.bidders?.find(bidder => bidder.id === student.id);
-                                    if (studentBidDetails?.bidStatus === 'selected automatically') {
+                                    if (studentBidDetails?.bidStatus === 'auto_selected') {
                                       return (
                                         <Badge className="text-xs bg-green-500 text-white">
                                           🎉 Selected Automatically
@@ -804,7 +804,7 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
                                 {/* Show bidding results summary */}
                                 {(() => {
                                   const hasAutoSelection = classItem.bidOpportunities?.some(opp => 
-                                    opp.bidders?.some(bidder => bidder.id === student.id && bidder.bidStatus === 'selected automatically')
+                                    opp.bidders?.some(bidder => bidder.id === student.id && bidder.bidStatus === 'auto_selected')
                                   );
                                   
                                   if (hasAutoSelection) {

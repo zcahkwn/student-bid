@@ -363,7 +363,7 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted, onBidWithdrawal
                     {hasStudentBid ? (
                       <div className="flex items-center gap-2">
                         {(() => {
-                          if (studentBidDetails?.bidStatus === 'selected automatically') {
+                          if (studentBidDetails?.bidStatus === 'auto_selected') {
                             return (
                               <Badge className="bg-green-500 text-white">
                                 🎉 Selected Automatically
