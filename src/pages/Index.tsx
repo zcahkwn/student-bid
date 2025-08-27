@@ -834,7 +834,7 @@ const Index = () => {
             
             <TabsContent value="student" className="flex justify-center">
               <StudentLogin 
-                classes={classes}
+                classes={[...classes, ...archivedClasses]}
                 onLogin={() => {}}
               />
             </TabsContent>
