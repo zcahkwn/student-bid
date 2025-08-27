@@ -27,6 +27,8 @@ const Index = () => {
   
   // App state
   const [classes, setClasses] = useState<ClassConfig[]>([]);
+  const [archivedClasses, setArchivedClasses] = useState<ClassConfig[]>([]);
+  const [viewArchivedClasses, setViewArchivedClasses] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isLoading, setIsLoading] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -58,13 +60,16 @@ const Index = () => {
           throw new Error("Supabase not configured");
         }
         
-        const fetchedClasses = await fetchClasses();
+        const fetchedClasses = await fetchClasses(false); // Active classes only
+        const fetchedArchivedClasses = await fetchClasses(true); // Archived classes only
         setClasses(fetchedClasses);
+        setArchivedClasses(fetchedArchivedClasses);
         
         // If there's a current class in localStorage, try to find it in the fetched data
         const storedCurrentClassId = localStorage.getItem("currentClassId");
         if (storedCurrentClassId) {
-          const foundClass = fetchedClasses.find(c => c.id === storedCurrentClassId);
+          const foundClass = fetchedClasses.find(c => c.id === storedCurrentClassId) || 
+                            fetchedArchivedClasses.find(c => c.id === storedCurrentClassId);
           if (foundClass) {
             setCurrentClass(foundClass);
           } else {
@@ -84,7 +89,10 @@ const Index = () => {
           const storedClasses = localStorage.getItem("classData");
           if (storedClasses) {
             const parsedClasses = JSON.parse(storedClasses) as ClassConfig[];
-            setClasses(parsedClasses);
+            const activeClasses = parsedClasses.filter(c => !c.isArchived);
+            const archivedClassesList = parsedClasses.filter(c => c.isArchived);
+            setClasses(activeClasses);
+            setArchivedClasses(archivedClassesList);
             
             // Set current class if available
             const storedCurrentClassId = localStorage.getItem("currentClassId");
@@ -93,8 +101,8 @@ const Index = () => {
               if (foundClass) {
                 setCurrentClass(foundClass);
               }
-            } else if (parsedClasses.length > 0) {
-              setCurrentClass(parsedClasses[0]);
+            } else if (activeClasses.length > 0) {
+              setCurrentClass(activeClasses[0]);
             }
             
             toast({
@@ -187,6 +195,10 @@ const Index = () => {
       setCurrentClass(newClass);
       setIsDialogOpen(false);
       setNewClassName("");
+      
+      // Update localStorage with both active and archived classes
+      const allClasses = [...updatedClasses, ...archivedClasses];
+      localStorage.setItem("classData", JSON.stringify(allClasses));
       
       toast({
         title: "Class created successfully",
