@@ -163,7 +163,8 @@ const Index = () => {
   };
   
   const handleSelectClass = (classId: string) => {
-    const selectedClass = classes.find(c => c.id === classId);
+    const selectedClass = classes.find(c => c.id === classId) || 
+                          archivedClasses.find(c => c.id === classId);
     if (selectedClass) {
       setCurrentClass(selectedClass);
     }
