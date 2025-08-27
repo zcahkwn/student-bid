@@ -12,6 +12,7 @@ import AdminSidebar from "@/components/admin/AdminSidebar";
 import Dashboard from "@/pages/admin/Dashboard";
 import Students from "@/pages/admin/Students";
 import Selection from "@/pages/admin/Selection";
+import Archive from "@/pages/admin/Archive";
 import StudentDashboard from "@/components/student/StudentDashboard";
 import { Student, ClassConfig, BidOpportunity } from "@/types";
 import { createClass, fetchClasses, updateClass, deleteClassAtomic, updateBidOpportunity, ClassDeletionResult } from "@/lib/classService";
