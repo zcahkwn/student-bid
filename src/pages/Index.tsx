@@ -468,6 +468,51 @@ export default function Index() {
     }
   };
   
+  const handleBidWithdrawal = (bidId: string, updatedStudent: Student, opportunityId: string) => {
+    if (!currentClass || !currentStudent) return;
+    
+    // Update the student in the class's students list
+    const updatedStudents = currentClass.students.map(s => 
+      s.id === updatedStudent.id ? updatedStudent : s
+    );
+    
+    // Remove the student from the opportunity's bidders
+    const updatedOpportunities = currentClass.bidOpportunities.map(opportunity => {
+      if (opportunity.id === opportunityId) {
+        const updatedBidders = opportunity.bidders.filter(b => b.id !== updatedStudent.id);
+        
+        return {
+          ...opportunity,
+          bidders: updatedBidders
+        };
+      }
+      return opportunity;
+    });
+    
+    // Also remove from class-level bidders if they have no more bids
+    const hasOtherBids = updatedStudent.bids.length > 0;
+    const updatedBidders = hasOtherBids
+      ? currentClass.bidders
+      : currentClass.bidders.filter(b => b.id !== updatedStudent.id);
+    
+    const updatedClass: ClassConfig = {
+      ...currentClass,
+      students: updatedStudents,
+      bidders: updatedBidders,
+      bidOpportunities: updatedOpportunities
+    };
+    
+    const updatedClasses = classes.map(c => 
+      c.id === currentClass.id ? updatedClass : c
+    );
+    
+    setClasses(updatedClasses);
+    setCurrentClass(updatedClass);
+    setCurrentStudent(updatedStudent);
+    
+    localStorage.setItem("classData", JSON.stringify(updatedClasses));
+  };
+  
   const handleArchiveClass = async (classId: string, isArchived: boolean) => {
     try {
       await updateClassArchiveStatus(classId, isArchived);
@@ -855,3 +900,4 @@ export default function Index() {
       </footer>
     </div>
   );
+}
