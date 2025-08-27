@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import RealtimeSelectionProcess from "@/components/admin/RealtimeSelectionProcess";
 import { ClassConfig, Student } from "@/types";
 import { useToast } from "@/hooks/use-toast";
