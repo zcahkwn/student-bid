@@ -8,10 +8,10 @@ npm run dev
 
 Store Supabase RPC function definitions, schemas, table structures, and roles as .sql files.
 ```
-supabase db dump > supabase/migrations/manual_dump.sql
+supabase db dump > supabase/past_migrations/manual_dump.sql
 ```
 
-Build the site and zip the build folder
+Build the site and zip the build folder (build.zip)
 ```
 npm run build-and-zip
 ```
