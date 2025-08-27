@@ -90,12 +90,6 @@ const AdminLoginForm = ({ onLogin }: AdminLoginProps) => {
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
-          <Alert>
-            <Shield className="h-4 w-4" />
-            <AlertDescription>
-              Use your registered admin credentials to access the management dashboard
-            </AlertDescription>
-          </Alert>
           
           <div className="space-y-2">
             <Label htmlFor="username">Username</Label>
