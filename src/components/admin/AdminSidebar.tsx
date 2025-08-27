@@ -167,12 +167,12 @@ const AdminSidebar = ({
           </div>
         </ScrollArea>
 
-        {/* Footer */}
+        {/* Footer */} 
         {!isCollapsed && (
           <div className="p-4 border-t border-gray-100">
             <div className="text-xs text-gray-500 text-center">
-              {displayedClasses.length} {viewArchivedClasses ? 'archived' : 'active'} {displayedClasses.length === 1 ? 'class' : 'classes'}
-              <br />
+              {/* {displayedClasses.length} {viewArchivedClasses ? 'archived' : 'active'} {displayedClasses.length === 1 ? 'class' : 'classes'}
+              <br /> */}
               {totalActiveClasses} active classes • {totalArchivedClasses} archived
             </div>
           </div>
