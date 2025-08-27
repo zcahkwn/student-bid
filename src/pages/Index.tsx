@@ -669,6 +669,7 @@ const Index = () => {
           isCollapsed={sidebarCollapsed}
           viewArchivedClasses={viewArchivedClasses}
           onToggleArchiveView={setViewArchivedClasses}
+          onUnarchiveClass={handleArchiveClass}
         />
         
         <main className={`min-h-[calc(100vh-64px)] transition-all duration-300 ${

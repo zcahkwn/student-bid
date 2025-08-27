@@ -8,7 +8,9 @@ import { cn } from "@/lib/utils";
 import { 
   Plus,
   ChevronRight,
-  BookOpen
+  BookOpen,
+  ArchiveRestore,
+  Loader2
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -20,6 +22,7 @@ interface AdminSidebarProps {
   isCollapsed?: boolean;
   viewArchivedClasses: boolean;
   onToggleArchiveView: (isArchived: boolean) => void;
+  onUnarchiveClass?: (classId: string, isArchived: boolean) => void;
 }
 
 const AdminSidebar = ({ 
@@ -30,14 +33,26 @@ const AdminSidebar = ({
   onCreateClass,
   isCollapsed = false,
   viewArchivedClasses,
-  onToggleArchiveView
+  onToggleArchiveView,
+  onUnarchiveClass
 }: AdminSidebarProps) => {
   const [hoveredClass, setHoveredClass] = useState<string | null>(null);
+  const [unarchivingClassId, setUnarchivingClassId] = useState<string | null>(null);
   
   const displayedClasses = viewArchivedClasses ? archivedClasses : classes;
   const totalActiveClasses = classes.length;
   const totalArchivedClasses = archivedClasses.length;
 
+  const handleUnarchive = async (classId: string) => {
+    if (!onUnarchiveClass) return;
+    
+    setUnarchivingClassId(classId);
+    try {
+      await onUnarchiveClass(classId, false);
+    } finally {
+      setUnarchivingClassId(null);
+    }
+  };
   return (
     <div className={cn(
       "fixed left-0 top-16 h-[calc(100vh-64px)] bg-white border-r border-gray-200 shadow-sm transition-all duration-300 z-40",
@@ -150,9 +165,27 @@ const AdminSidebar = ({
                           </CardTitle>
                           <div className="flex items-center gap-2">
                             {viewArchivedClasses && (
-                              <Badge variant="secondary" className="text-xs">
-                                Archived
-                              </Badge>
+                              <>
+                                <Badge variant="secondary" className="text-xs">
+                                  Archived
+                                </Badge>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleUnarchive(classItem.id);
+                                  }}
+                                  disabled={unarchivingClassId === classItem.id}
+                                  className="h-6 px-2 text-xs"
+                                >
+                                  {unarchivingClassId === classItem.id ? (
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                  ) : (
+                                    <ArchiveRestore className="w-3 h-3" />
+                                  )}
+                                </Button>
+                              </>
                             )}
                           </div>
                           {currentClass?.id === classItem.id && (
