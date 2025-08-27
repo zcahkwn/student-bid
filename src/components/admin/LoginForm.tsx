@@ -81,7 +81,6 @@ const AdminLoginForm = ({ onLogin }: AdminLoginProps) => {
     <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle className="text-2xl font-heading flex items-center gap-2">
-          <Shield className="w-5 h-5" />
           Admin Login
         </CardTitle>
         <CardDescription>
