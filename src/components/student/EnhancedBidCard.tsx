@@ -265,6 +265,16 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted, onBidWithdrawal
       </CardHeader>
       
       <CardContent>
+       {/* Archived Class Alert */}
+       {classConfig.isArchived && (
+         <Alert className="mb-4">
+           <AlertTriangle className="h-4 w-4" />
+           <AlertDescription>
+             This class has been archived. You can view your bid history and results, but cannot place new bids or make changes.
+           </AlertDescription>
+         </Alert>
+       )}
+
         {/* Token Status Display */}
         <div className="mb-4">
           <div className="flex justify-between items-center mb-4">
@@ -459,7 +469,7 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted, onBidWithdrawal
                   <Button 
                     className="w-full mt-4" 
                     onClick={() => handleSubmitBid(opportunity.id)}
-                    disabled={!canSubmitBid || isSubmitting || isWithdrawing || student?.tokenStatus === 'used'}
+                   disabled={!canSubmitBid || isSubmitting || isWithdrawing || student?.tokenStatus === 'used' || classConfig.isArchived}
                   >
                     {isSubmitting ? (
                       <>
@@ -468,6 +478,8 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted, onBidWithdrawal
                       </>
                     ) : hasStudentBid ? (
                       "Bid Already Submitted"
+                   ) : classConfig.isArchived ? (
+                     "Class Archived - View Only"
                     ) : currentStudent?.tokenStatus === 'used' || currentStudent?.hasUsedToken === true ? (
                       "Token Unavailable"
                     ) : getBidOpportunityStatus(opportunity) !== "Open for Bidding" ? (
@@ -478,7 +490,7 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted, onBidWithdrawal
                   </Button>
                   
                   {/* Withdraw Bid Button - Only show if student has bid and bidding is still open */}
-                  {hasStudentBid && isBidOpportunityOpen(opportunity) && (
+                 {hasStudentBid && isBidOpportunityOpen(opportunity) && !classConfig.isArchived && (
                     <Button 
                       variant="outline"
                       className="w-full mt-2" 

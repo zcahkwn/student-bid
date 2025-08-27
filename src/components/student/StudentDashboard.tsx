@@ -445,6 +445,11 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-xl font-heading">{currentClass.className}</CardTitle>
+                     {currentClass.isArchived && (
+                       <Badge variant="secondary" className="w-fit mt-2">
+                         Archived (View-only)
+                       </Badge>
+                     )}
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
