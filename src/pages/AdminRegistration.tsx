@@ -138,7 +138,6 @@ const AdminRegistration = () => {
                   <Shield className="h-4 w-4" />
                   <AlertDescription>
                     <strong>Security Notice:</strong> Admin accounts have full access to all classes and student data. 
-                    Choose a strong password and keep your credentials secure.
                   </AlertDescription>
                 </Alert>
 
