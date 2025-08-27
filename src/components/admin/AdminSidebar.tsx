@@ -173,7 +173,7 @@ const AdminSidebar = ({
             <div className="text-xs text-gray-500 text-center">
               {displayedClasses.length} {viewArchivedClasses ? 'archived' : 'active'} {displayedClasses.length === 1 ? 'class' : 'classes'}
               <br />
-              {totalActiveClasses} active • {totalArchivedClasses} archived
+              {totalActiveClasses} active classes • {totalArchivedClasses} archived
             </div>
           </div>
         )}
