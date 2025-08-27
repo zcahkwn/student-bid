@@ -231,8 +231,9 @@ const Index = () => {
     setClasses(updatedClasses);
     setCurrentClass(updatedClass);
     
-    // Also update localStorage for backward compatibility
-    localStorage.setItem("classData", JSON.stringify(updatedClasses));
+    // Update localStorage with both active and archived classes
+    const allClasses = [...updatedClasses, ...archivedClasses];
+    localStorage.setItem("classData", JSON.stringify(allClasses));
   };
   
   const handleSelectionComplete = async (selectedStudents: Student[], opportunityId?: string) => {
@@ -244,18 +245,15 @@ const Index = () => {
 
     try {
       // Re-fetch from database to ensure UI reflects latest state
-      const updatedClasses = await fetchClasses(false);
-      const updatedArchivedClasses = await fetchClasses(true);
+      const updatedClasses = await fetchClasses();
       setClasses(updatedClasses);
-      setArchivedClasses(updatedArchivedClasses);
 
       const updatedCurrentClass = updatedClasses.find(c => c.id === currentClass.id);
       if (updatedCurrentClass) {
         setCurrentClass(updatedCurrentClass);
       }
 
-      const allClasses = [...updatedClasses, ...updatedArchivedClasses];
-      localStorage.setItem("classData", JSON.stringify(allClasses));
+      localStorage.setItem("classData", JSON.stringify(updatedClasses));
 
       if (selectedStudents.length > 0) {
         toast({
@@ -299,8 +297,9 @@ const Index = () => {
     setClasses(updatedClasses);
     setCurrentClass(updatedClass);
     
-    // Also update localStorage for backward compatibility
-    localStorage.setItem("classData", JSON.stringify(updatedClasses));
+    // Update localStorage with both active and archived classes
+    const allClasses = [...updatedClasses, ...archivedClasses];
+    localStorage.setItem("classData", JSON.stringify(allClasses));
   };
   
   const handleOpportunityCreated = (opportunity: BidOpportunity) => {
