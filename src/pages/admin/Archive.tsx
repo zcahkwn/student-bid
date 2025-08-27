@@ -98,7 +98,7 @@ const Archive = ({ archivedClasses, onUnarchiveClass, isLoading = false }: Archi
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {archivedClasses.reduce((total, cls) => total + (cls.students?.length || 0), 0)}
+              {archivedClasses.reduce((total, cls) => total + (cls?.students?.length || 0), 0)}
             </div>
             <p className="text-xs text-muted-foreground">
               Across all archived classes
@@ -113,7 +113,7 @@ const Archive = ({ archivedClasses, onUnarchiveClass, isLoading = false }: Archi
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {archivedClasses.reduce((total, cls) => total + (cls.bidOpportunities?.length || 0), 0)}
+              {archivedClasses.reduce((total, cls) => total + (cls?.bidOpportunities?.length || 0), 0)}
             </div>
             <p className="text-xs text-muted-foreground">
               Across all archived classes
