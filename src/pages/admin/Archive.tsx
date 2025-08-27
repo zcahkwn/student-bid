@@ -13,13 +13,23 @@ interface ArchiveProps {
   archivedClasses: ClassConfig[];
   onUnarchiveClass: (classId: string) => void;
   isLoading?: boolean;
+  isViewOnly?: boolean;
 }
 
-const Archive = ({ archivedClasses, onUnarchiveClass, isLoading = false }: ArchiveProps) => {
+const Archive = ({ archivedClasses, onUnarchiveClass, isLoading = false, isViewOnly = false }: ArchiveProps) => {
   const [unarchivingClass, setUnarchivingClass] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleUnarchive = async (classId: string, className: string) => {
+    if (isViewOnly) {
+      toast({
+        title: "Action not available",
+        description: "Cannot unarchive classes in view-only mode",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const confirmed = window.confirm(
       `Are you sure you want to unarchive "${className}"? This will move it back to the active classes list.`
     );
@@ -170,13 +180,18 @@ const Archive = ({ archivedClasses, onUnarchiveClass, isLoading = false }: Archi
                         variant="outline"
                         size="sm"
                         onClick={() => handleUnarchive(classItem.id, classItem.className)}
-                        disabled={unarchivingClass === classItem.id}
+                        disabled={unarchivingClass === classItem.id || isViewOnly}
                         className="flex items-center gap-2"
                       >
                         {unarchivingClass === classItem.id ? (
                           <>
                             <Loader2 className="w-4 h-4 animate-spin" />
                             Unarchiving...
+                          </>
+                        ) : isViewOnly ? (
+                          <>
+                            <ArchiveRestore className="w-4 h-4" />
+                            View Only
                           </>
                         ) : (
                           <>
