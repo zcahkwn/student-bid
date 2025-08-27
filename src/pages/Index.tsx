@@ -231,9 +231,8 @@ const Index = () => {
     setClasses(updatedClasses);
     setCurrentClass(updatedClass);
     
-    // Update localStorage with both active and archived classes
-    const allClasses = [...updatedClasses, ...archivedClasses];
-    localStorage.setItem("classData", JSON.stringify(allClasses));
+    // Also update localStorage for backward compatibility
+    localStorage.setItem("classData", JSON.stringify(updatedClasses));
   };
   
   const handleSelectionComplete = async (selectedStudents: Student[], opportunityId?: string) => {
@@ -297,9 +296,8 @@ const Index = () => {
     setClasses(updatedClasses);
     setCurrentClass(updatedClass);
     
-    // Update localStorage with both active and archived classes
-    const allClasses = [...updatedClasses, ...archivedClasses];
-    localStorage.setItem("classData", JSON.stringify(allClasses));
+    // Also update localStorage for backward compatibility
+    localStorage.setItem("classData", JSON.stringify(updatedClasses));
   };
   
   const handleOpportunityCreated = (opportunity: BidOpportunity) => {
@@ -570,6 +568,10 @@ const Index = () => {
       if (currentClass && currentClass.id === classId) {
         setCurrentClass({...currentClass, password: newPassword});
       }
+      
+      // Update localStorage with both active and archived classes
+      const allClasses = [...updatedClasses, ...archivedClasses];
+      localStorage.setItem("classData", JSON.stringify(allClasses));
       
       toast({
         title: "Password updated successfully",
