@@ -102,13 +102,15 @@ const AdminSidebar = ({
                         ? "No archived classes" 
                         : "No active classes"
                       }</p>
-                    <Button 
-                      onClick={onCreateClass}
-                      size="sm"
-                      variant="outline"
-                    >
-                      Create First Class
-                    </Button>
+                    {!viewArchivedClasses && (
+                      <Button 
+                        onClick={onCreateClass}
+                        size="sm"
+                        variant="outline"
+                      >
+                        Create First Class
+                      </Button>
+                    )}
                   </>
                 ) : (
                   <BookOpen className="w-6 h-6 mx-auto text-gray-400" />
