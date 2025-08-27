@@ -126,7 +126,6 @@ const AdminLoginForm = ({ onLogin }: AdminLoginProps) => {
               </>
             ) : (
               <>
-                <Shield className="w-4 h-4 mr-2" />
                 Login
               </>
             )}
