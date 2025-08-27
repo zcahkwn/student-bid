@@ -138,23 +138,6 @@ const AdminLoginForm = ({ onLogin }: AdminLoginProps) => {
               </>
             )}
           </Button>
-          
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground mb-2">
-              Need an admin account?
-            </p>
-            <Button 
-              type="button" 
-              variant="outline" 
-              size="sm"
-              onClick={() => navigate("/admin-register")}
-              disabled={isLoading}
-              className="text-academy-blue hover:text-academy-blue"
-            >
-              <UserPlus className="w-4 h-4 mr-2" />
-              Create Admin Account
-            </Button>
-          </div>
         </CardFooter>
       </form>
     </Card>
