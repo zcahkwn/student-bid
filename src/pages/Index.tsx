@@ -681,7 +681,6 @@ const Index = () => {
                 <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
                 <TabsTrigger value="students">Students</TabsTrigger>
                 <TabsTrigger value="selection">Selection</TabsTrigger>
-                <TabsTrigger value="archive">Archive</TabsTrigger>
               </TabsList>
               
               <TabsContent value="dashboard">
@@ -710,14 +709,6 @@ const Index = () => {
                 <Selection 
                   currentClass={currentClass}
                   onSelectionComplete={handleSelectionComplete}
-                />
-              </TabsContent>
-              
-              <TabsContent value="archive">
-                <Archive 
-                  archivedClasses={archivedClasses}
-                  onUnarchiveClass={(classId) => handleArchiveClass(classId, false)}
-                  isLoading={isLoading}
                 />
               </TabsContent>
             </Tabs>
