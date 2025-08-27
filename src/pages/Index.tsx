@@ -610,10 +610,13 @@ const Index = () => {
         {/* Sidebar */}
         <AdminSidebar
           classes={classes}
+          archivedClasses={archivedClasses}
           currentClass={currentClass}
           onSelectClass={handleSelectClass}
           onCreateClass={handleCreateClass}
           isCollapsed={sidebarCollapsed}
+          viewArchivedClasses={viewArchivedClasses}
+          onToggleArchiveView={setViewArchivedClasses}
         />
         
         <main className={`min-h-[calc(100vh-64px)] transition-all duration-300 ${
@@ -621,10 +624,11 @@ const Index = () => {
         }`}>
           <div className="container mx-auto p-4">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid grid-cols-3 mb-6">
+              <TabsList className="grid grid-cols-4 mb-6">
                 <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
                 <TabsTrigger value="students">Students</TabsTrigger>
                 <TabsTrigger value="selection">Selection</TabsTrigger>
+                <TabsTrigger value="archive">Archive</TabsTrigger>
               </TabsList>
               
               <TabsContent value="dashboard">
@@ -636,6 +640,7 @@ const Index = () => {
                   onUpdateOpportunity={handleUpdateBidOpportunity}
                   onRemoveClass={handleRemoveClass}
                   onChangePassword={handleChangePassword}
+                  onArchiveClass={handleArchiveClass}
                   onOpportunityCreated={handleOpportunityCreated}
                   onOpportunityDeleted={handleOpportunityDeleted}
                 />
@@ -652,6 +657,14 @@ const Index = () => {
                 <Selection 
                   currentClass={currentClass}
                   onSelectionComplete={handleSelectionComplete}
+                />
+              </TabsContent>
+              
+              <TabsContent value="archive">
+                <Archive 
+                  archivedClasses={archivedClasses}
+                  onUnarchiveClass={(classId) => handleArchiveClass(classId, false)}
+                  isLoading={isLoading}
                 />
               </TabsContent>
             </Tabs>

@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatDate, getBidOpportunityStatus } from "@/utils/dates";
 import EditBidOpportunityDialog from "@/components/admin/EditBidOpportunityDialog";
 import { useRealtimeBidTracking } from "@/hooks/useRealtimeBidTracking";
-import { Trash2, Users, Coins, Plus, Edit, Eye, EyeOff, Loader2, RefreshCw } from "lucide-react";
+import { Trash2, Users, Coins, Plus, Edit, Eye, EyeOff, Loader2, RefreshCw, Archive } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +27,7 @@ interface DashboardProps {
   onUpdateOpportunity: (opportunityId: string, updatedOpportunity: BidOpportunity) => void;
   onRemoveClass?: (classId: string) => void;
   onChangePassword?: (classId: string, newPassword: string) => void;
+  onArchiveClass?: (classId: string, isArchived: boolean) => void;
   onOpportunityCreated?: (opportunity: BidOpportunity) => void;
   onOpportunityDeleted?: (opportunityId: string) => void;
 }
@@ -39,6 +40,7 @@ const Dashboard = ({
   onUpdateOpportunity,
   onRemoveClass,
   onChangePassword,
+  onArchiveClass,
   onOpportunityCreated,
   onOpportunityDeleted
 }: DashboardProps) => {
@@ -389,6 +391,14 @@ const Dashboard = ({
           >
             <RefreshCw className={`w-4 h-4 ${statsLoading ? 'animate-spin' : ''}`} />
             Refresh Data
+          </Button>
+          <Button 
+            variant="secondary"
+            onClick={() => onArchiveClass?.(currentClass.id, true)}
+            className="flex items-center gap-2"
+          >
+            <Archive className="w-4 h-4" />
+            Archive Class
           </Button>
           <Button 
             variant="destructive"

@@ -12,20 +12,30 @@ import {
 
 interface AdminSidebarProps {
   classes: ClassConfig[];
+  archivedClasses: ClassConfig[];
   currentClass: ClassConfig | null;
   onSelectClass: (classId: string) => void;
   onCreateClass: () => void;
   isCollapsed?: boolean;
+  viewArchivedClasses: boolean;
+  onToggleArchiveView: (isArchived: boolean) => void;
 }
 
 const AdminSidebar = ({ 
   classes, 
+  archivedClasses,
   currentClass, 
   onSelectClass, 
   onCreateClass,
-  isCollapsed = false 
+  isCollapsed = false,
+  viewArchivedClasses,
+  onToggleArchiveView
 }: AdminSidebarProps) => {
   const [hoveredClass, setHoveredClass] = useState<string | null>(null);
+  
+  const displayedClasses = viewArchivedClasses ? archivedClasses : classes;
+  const totalActiveClasses = classes.length;
+  const totalArchivedClasses = archivedClasses.length;
 
   return (
     <div className={cn(
@@ -38,7 +48,7 @@ const AdminSidebar = ({
           <div className="flex items-center justify-between">
             {!isCollapsed && (
               <h2 className="text-lg font-heading font-semibold text-gray-900">
-                Classes
+                {viewArchivedClasses ? "Archived Classes" : "Active Classes"}
               </h2>
             )}
             <Button
@@ -51,11 +61,35 @@ const AdminSidebar = ({
             </Button>
           </div>
         </div>
+        
+        {/* Archive Toggle */}
+        {!isCollapsed && (
+          <div className="px-4 pb-2">
+            <div className="flex gap-2">
+              <Button
+                variant={!viewArchivedClasses ? "default" : "outline"}
+                size="sm"
+                onClick={() => onToggleArchiveView(false)}
+                className="flex-1 text-xs"
+              >
+                Active ({totalActiveClasses})
+              </Button>
+              <Button
+                variant={viewArchivedClasses ? "default" : "outline"}
+                size="sm"
+                onClick={() => onToggleArchiveView(true)}
+                className="flex-1 text-xs"
+              >
+                Archive ({totalArchivedClasses})
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Classes List */}
         <ScrollArea className="flex-1 p-2">
           <div className="space-y-2">
-            {classes.length === 0 ? (
+            {displayedClasses.length === 0 ? (
               <div className={cn(
                 "text-center py-8",
                 isCollapsed && "px-2"
@@ -63,7 +97,11 @@ const AdminSidebar = ({
                 {!isCollapsed ? (
                   <>
                     <BookOpen className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-                    <p className="text-sm text-gray-500 mb-3">No classes yet</p>
+                    <p className="text-sm text-gray-500 mb-3">
+                      {viewArchivedClasses 
+                        ? "No archived classes" 
+                        : "No active classes"
+                      }</p>
                     <Button 
                       onClick={onCreateClass}
                       size="sm"
@@ -77,7 +115,7 @@ const AdminSidebar = ({
                 )}
               </div>
             ) : (
-              classes.map((classItem) => (
+              displayedClasses.map((classItem) => (
                 <Card
                   key={classItem.id}
                   className={cn(
@@ -85,6 +123,7 @@ const AdminSidebar = ({
                     currentClass?.id === classItem.id 
                       ? "border-academy-blue bg-academy-blue/5 shadow-sm" 
                       : "border-gray-200 hover:border-gray-300",
+                    viewArchivedClasses && "opacity-75",
                     isCollapsed && "p-2"
                   )}
                   onClick={() => onSelectClass(classItem.id)}
@@ -106,6 +145,13 @@ const AdminSidebar = ({
                           <CardTitle className="text-base font-semibold text-gray-900 truncate">
                             {classItem.className}
                           </CardTitle>
+                          <div className="flex items-center gap-2">
+                            {viewArchivedClasses && (
+                              <Badge variant="secondary" className="text-xs">
+                                Archived
+                              </Badge>
+                            )}
+                          </div>
                           {currentClass?.id === classItem.id && (
                             <ChevronRight className="w-4 h-4 text-academy-blue" />
                           )}
@@ -123,7 +169,9 @@ const AdminSidebar = ({
         {!isCollapsed && (
           <div className="p-4 border-t border-gray-100">
             <div className="text-xs text-gray-500 text-center">
-              {classes.length} {classes.length === 1 ? 'class' : 'classes'} total
+              {displayedClasses.length} {viewArchivedClasses ? 'archived' : 'active'} {displayedClasses.length === 1 ? 'class' : 'classes'}
+              <br />
+              {totalActiveClasses} active • {totalArchivedClasses} archived
             </div>
           </div>
         )}

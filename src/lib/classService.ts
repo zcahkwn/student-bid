@@ -364,12 +364,19 @@ export const autoSelectAndRefundBids = async (opportunityId: string): Promise<vo
 }
 
 // Fetch all classes from Supabase with real-time bid data
-export const fetchClasses = async (): Promise<ClassConfig[]> => {
+export const fetchClasses = async (isArchivedFilter?: boolean): Promise<ClassConfig[]> => {
   try {
-    const { data: classesData, error: classesError } = await supabase
+    let query = supabase
       .from('classes')
-      .select('id, name, created_at')
+      .select('id, name, is_archived, created_at')
       .order('created_at', { ascending: false })
+
+    // Apply archive filter if specified
+    if (isArchivedFilter !== undefined) {
+      query = query.eq('is_archived', isArchivedFilter)
+    }
+
+    const { data: classesData, error: classesError } = await query
 
     if (classesError) {
       throw new Error(`Failed to fetch classes: ${classesError.message}`)
@@ -479,6 +486,7 @@ export const fetchClasses = async (): Promise<ClassConfig[]> => {
         className: classRecord.name,
         rewardTitle: "Bidding Opportunities",
         capacity: 7,
+        isArchived: classRecord.is_archived || false,
         students,
         bidders: studentsWhoBid,
         selectedStudents: allSelectedStudents,
@@ -512,6 +520,23 @@ export const updateClass = async (classId: string, updates: Partial<CreateClassD
     }
   } catch (error) {
     console.error('Error updating class:', error)
+    throw error
+  }
+}
+
+// Update class archive status
+export const updateClassArchiveStatus = async (classId: string, isArchived: boolean): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('classes')
+      .update({ is_archived: isArchived })
+      .eq('id', classId)
+
+    if (error) {
+      throw new Error(`Failed to update class archive status: ${error.message}`)
+    }
+  } catch (error) {
+    console.error('Error updating class archive status:', error)
     throw error
   }
 }

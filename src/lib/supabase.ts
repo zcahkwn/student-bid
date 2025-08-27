@@ -56,22 +56,20 @@ interface Database {
           id: string
           name: string
           capacity_default: number
+          is_archived: boolean
           created_at: string
-          updated_at: string
         }
         Insert: {
           id?: string
           name: string
-          capacity_default?: number
+          is_archived?: boolean
           created_at?: string
-          updated_at?: string
         }
         Update: {
           id?: string
           name?: string
-          capacity_default?: number
+          is_archived?: boolean
           created_at?: string
-          updated_at?: string
         }
       }
       student_enrollments: {

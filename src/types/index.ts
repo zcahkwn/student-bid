@@ -55,4 +55,5 @@ export interface ClassConfig {
   bidders: Student[];
   selectedStudents: Student[];
   bidOpportunities: BidOpportunity[];
+  isArchived?: boolean;
 }
