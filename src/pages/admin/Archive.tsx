@@ -126,7 +126,7 @@ const Archive = ({ archivedClasses, onUnarchiveClass, isLoading = false }: Archi
       {archivedClasses.length > 0 ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl font-heading">Classes</CardTitle>
+            <CardTitle className="text-xl font-heading">Archived Classes</CardTitle>
             <CardDescription>
               Classes that have been archived and are no longer active
             </CardDescription>
