@@ -104,6 +104,11 @@ const StudentSidebar = ({
                           <div className="flex items-center justify-between">
                             <CardTitle className="text-base font-semibold text-gray-900 truncate">
                               {classItem.className}
+                              {classItem.isArchived && (
+                                <Badge variant="secondary" className="ml-2 text-xs">
+                                  Archived
+                                </Badge>
+                              )}
                             </CardTitle>
                             {currentClass?.id === classItem.id && (
                               <ChevronRight className="w-4 h-4 text-academy-blue" />
