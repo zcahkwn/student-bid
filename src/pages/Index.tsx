@@ -483,9 +483,19 @@ const Index = () => {
       const allClasses = [...updatedActiveClasses, ...updatedArchivedClasses];
       localStorage.setItem("classData", JSON.stringify(allClasses));
       
-      // If we archived the current class, select a new one or set to null
-      if (currentClass && currentClass.id === classId && isArchived) {
-        setCurrentClass(updatedActiveClasses.length > 0 ? updatedActiveClasses[0] : null);
+      // Handle currentClass updates based on archive/unarchive action
+      if (currentClass && currentClass.id === classId) {
+        if (isArchived) {
+          // If we archived the current class, select a new one from active classes or set to null
+          setCurrentClass(updatedActiveClasses.length > 0 ? updatedActiveClasses[0] : null);
+        } else {
+          // If we unarchived the current class, update it with the unarchived version and switch to active view
+          const unarchivedClass = updatedActiveClasses.find(c => c.id === classId);
+          if (unarchivedClass) {
+            setCurrentClass(unarchivedClass);
+            setViewArchivedClasses(false); // Switch to active classes view
+          }
+        }
       }
       
       toast({
