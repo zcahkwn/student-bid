@@ -800,7 +800,7 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
                               <div className="text-sm text-muted-foreground">
                                 {classItem.bidOpportunities?.length || 0} opportunities • 
                                 {classItem.bidders?.filter(b => b.id === student.id).length || 0} bids placed
-                                {/* Show bidding results summary */}
+                                {/* {/* Show bidding results summary */}
                                 {(() => {
                                   const hasAutoSelection = classItem.bidOpportunities?.some(opp => 
                                     opp.bidders?.some(bidder => bidder.id === student.id && bidder.bidStatus === 'auto_selected')
@@ -822,7 +822,7 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
                                     );
                                   }
                                   return null;
-                                })()}
+                                })()} */} 
                               </div>
                             </div>
                           );
