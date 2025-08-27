@@ -170,6 +170,27 @@ const Index = () => {
     }
   };
   
+  const handleToggleArchiveView = (isArchived: boolean) => {
+    setViewArchivedClasses(isArchived);
+    
+    // Automatically select the first class from the newly active list
+    if (isArchived) {
+      // Switching to archived view
+      if (archivedClasses.length > 0) {
+        setCurrentClass(archivedClasses[0]);
+      } else {
+        setCurrentClass(null);
+      }
+    } else {
+      // Switching to active view
+      if (classes.length > 0) {
+        setCurrentClass(classes[0]);
+      } else {
+        setCurrentClass(null);
+      }
+    }
+  };
+  
   const handleCreateClass = () => {
     setIsDialogOpen(true);
   };
@@ -669,7 +690,7 @@ const Index = () => {
           onCreateClass={handleCreateClass}
           isCollapsed={sidebarCollapsed}
           viewArchivedClasses={viewArchivedClasses}
-          onToggleArchiveView={setViewArchivedClasses}
+          onToggleArchiveView={handleToggleArchiveView}
           onUnarchiveClass={handleArchiveClass}
         />
         
