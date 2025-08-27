@@ -690,7 +690,6 @@ const RealtimeSelectionProcess = ({
             </Badge>
           </div>
         ) : null}
-        )}
       </div>
 
       {/* Selected Students Display */}
