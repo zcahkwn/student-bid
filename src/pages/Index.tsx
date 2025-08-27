@@ -244,15 +244,18 @@ const Index = () => {
 
     try {
       // Re-fetch from database to ensure UI reflects latest state
-      const updatedClasses = await fetchClasses();
+      const updatedClasses = await fetchClasses(false);
+      const updatedArchivedClasses = await fetchClasses(true);
       setClasses(updatedClasses);
+      setArchivedClasses(updatedArchivedClasses);
 
       const updatedCurrentClass = updatedClasses.find(c => c.id === currentClass.id);
       if (updatedCurrentClass) {
         setCurrentClass(updatedCurrentClass);
       }
 
-      localStorage.setItem("classData", JSON.stringify(updatedClasses));
+      const allClasses = [...updatedClasses, ...updatedArchivedClasses];
+      localStorage.setItem("classData", JSON.stringify(allClasses));
 
       if (selectedStudents.length > 0) {
         toast({
