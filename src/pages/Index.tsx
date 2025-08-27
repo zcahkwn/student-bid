@@ -15,6 +15,7 @@ import Selection from "@/pages/admin/Selection";
 import StudentDashboard from "@/components/student/StudentDashboard";
 import { Student, ClassConfig, BidOpportunity } from "@/types";
 import { createClass, fetchClasses, updateClass, deleteClassAtomic, updateBidOpportunity, ClassDeletionResult } from "@/lib/classService";
+import { updateClassArchiveStatus } from "@/lib/classService";
 import { cleanupOrphanedUsers } from "@/lib/userService";
 import { Loader2, Menu, X } from "lucide-react";
 
@@ -441,6 +442,40 @@ const Index = () => {
       setCurrentClass(updatedClass);
       
       localStorage.setItem("classData", JSON.stringify(updatedClasses));
+    }
+  };
+  
+  const handleArchiveClass = async (classId: string, isArchived: boolean) => {
+    try {
+      await updateClassArchiveStatus(classId, isArchived);
+      
+      // Re-fetch classes to update the UI
+      const updatedActiveClasses = await fetchClasses(false);
+      const updatedArchivedClasses = await fetchClasses(true);
+      
+      setClasses(updatedActiveClasses);
+      setArchivedClasses(updatedArchivedClasses);
+      
+      // Update localStorage
+      const allClasses = [...updatedActiveClasses, ...updatedArchivedClasses];
+      localStorage.setItem("classData", JSON.stringify(allClasses));
+      
+      // If we archived the current class, select a new one or set to null
+      if (currentClass && currentClass.id === classId && isArchived) {
+        setCurrentClass(updatedActiveClasses.length > 0 ? updatedActiveClasses[0] : null);
+      }
+      
+      toast({
+        title: isArchived ? "Class archived" : "Class unarchived",
+        description: `The class has been ${isArchived ? 'archived' : 'unarchived'} successfully`,
+      });
+    } catch (error) {
+      console.error("Error updating class archive status:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update class archive status",
+        variant: "destructive",
+      });
     }
   };
   
