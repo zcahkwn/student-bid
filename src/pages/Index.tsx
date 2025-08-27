@@ -20,7 +20,7 @@ import { updateClassArchiveStatus } from "@/lib/classService";
 import { cleanupOrphanedUsers } from "@/lib/userService";
 import { Loader2, Menu, X } from "lucide-react";
 
-const Index = () => {
+export default function Index() {
   // Auth state - simplified
   const [isAdmin, setIsAdmin] = useState(false);
   const [isStudent, setIsStudent] = useState(false);
@@ -855,6 +855,3 @@ const Index = () => {
       </footer>
     </div>
   );
-};
-
-export default Index;
