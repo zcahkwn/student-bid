@@ -169,24 +169,6 @@ const AdminSidebar = ({
                                 <Badge variant="secondary" className="text-xs">
                                   Archived
                                 </Badge>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleUnarchive(classItem.id);
-                                  }}
-                                  disabled={unarchivingClassId === classItem.id || viewArchivedClasses}
-                                  className="h-6 px-2 text-xs"
-                                >
-                                  {unarchivingClassId === classItem.id ? (
-                                    <Loader2 className="w-3 h-3 animate-spin" />
-                                  ) : viewArchivedClasses ? (
-                                    <ArchiveRestore className="w-3 h-3" />
-                                  ) : (
-                                    <ArchiveRestore className="w-3 h-3" />
-                                  )}
-                                </Button>
                               </>
                             )}
                           </div>

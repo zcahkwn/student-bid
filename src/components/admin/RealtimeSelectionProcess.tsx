@@ -13,6 +13,7 @@ import { updateSelectionResults, resetOpportunitySelection, autoSelectAndRefundB
 
 interface RealtimeSelectionProcessProps {
   currentClass: ClassConfig;
+  isViewingArchived?: boolean;
   onSelectionComplete: (selectedStudents: Student[], opportunityId?: string) => void;
 }
 
@@ -33,6 +34,7 @@ interface BidderInfo {
 
 const RealtimeSelectionProcess = ({ 
   currentClass, 
+  isViewingArchived = false,
   onSelectionComplete 
 }: RealtimeSelectionProcessProps) => {
   const [selectedOpportunityId, setSelectedOpportunityId] = useState<string | null>(null);
@@ -489,7 +491,7 @@ const RealtimeSelectionProcess = ({
           </div>
           <Button 
             onClick={handleRefresh} 
-            disabled={isRefreshing || isLoading}
+            disabled={isRefreshing || isLoading || isViewingArchived}
             variant="outline"
             size="sm"
           >
@@ -569,7 +571,13 @@ const RealtimeSelectionProcess = ({
                 <Users className="h-4 w-4" />
                 <AlertDescription>
                   <strong>{currentBidCount} student{currentBidCount !== 1 ? 's' : ''}</strong> {currentBidCount === 1 ? 'has' : 'have'} placed bids for this opportunity.
+                  {isViewingArchived && (
+                    <span className="text-blue-600 font-medium"> This is historical data from an archived class.</span>
+                  )}
                   {(() => {
+                    if (isViewingArchived) {
+                      return null; // Don't show selection logic for archived classes
+                    }
                     const now = new Date();
                     const biddingCloseDate = selectedOpportunity?.bidCloseDate ? new Date(selectedOpportunity.bidCloseDate) : null;
                     const biddingHasClosed = biddingCloseDate ? now >= biddingCloseDate : false;
@@ -647,7 +655,7 @@ const RealtimeSelectionProcess = ({
 
       {/* Selection Controls */}
       <div className="text-center space-y-6">
-        {selectedStudents.length === 0 ? (
+        {!isViewingArchived && selectedStudents.length === 0 ? (
           <Button 
             onClick={startSelection} 
             disabled={isSelecting || currentBidCount === 0 || !selectedOpportunityId}
@@ -666,7 +674,7 @@ const RealtimeSelectionProcess = ({
               </>
             )}
           </Button>
-        ) : (
+        ) : !isViewingArchived && selectedStudents.length > 0 ? (
           <Button 
             onClick={resetSelection}
             variant="outline"
@@ -675,6 +683,13 @@ const RealtimeSelectionProcess = ({
           >
             Reset Selection
           </Button>
+        ) : isViewingArchived ? (
+          <div className="text-center py-4">
+            <Badge variant="outline" className="text-lg px-4 py-2">
+              Archived Class - View Only Mode
+            </Badge>
+          </div>
+        ) : null}
         )}
       </div>
 

@@ -10,10 +10,11 @@ import { fetchClasses } from "@/lib/classService";
 
 interface StudentsProps {
   currentClass: ClassConfig | null;
+  isViewingArchived?: boolean;
   onUpdateStudents: (students: Student[]) => void;
 }
 
-const Students = ({ currentClass, onUpdateStudents }: StudentsProps) => {
+const Students = ({ currentClass, isViewingArchived = false, onUpdateStudents }: StudentsProps) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
   
@@ -77,11 +78,16 @@ const Students = ({ currentClass, onUpdateStudents }: StudentsProps) => {
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-heading font-bold">
-          Manage Students - {currentClass.className}
+          {isViewingArchived ? 'View Students' : 'Manage Students'} - {currentClass.className}
+          {isViewingArchived && (
+            <Badge variant="secondary" className="ml-2">
+              Archived (Read-only)
+            </Badge>
+          )}
         </h1>
         <Button 
           onClick={handleRefreshStudents} 
-          disabled={isRefreshing}
+          disabled={isRefreshing || isViewingArchived}
           variant="outline"
         >
           {isRefreshing ? "Refreshing..." : "Refresh from Database"}
@@ -91,7 +97,9 @@ const Students = ({ currentClass, onUpdateStudents }: StudentsProps) => {
       <Tabs defaultValue="manage" className="space-y-6">
         <TabsList>
           <TabsTrigger value="manage">Manage Students</TabsTrigger>
-          <TabsTrigger value="upload">Upload Students</TabsTrigger>
+          <TabsTrigger value="upload" disabled={isViewingArchived}>
+            Upload Students
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="manage">

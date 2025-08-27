@@ -686,7 +686,9 @@ const Index = () => {
               <TabsContent value="dashboard">
                 <Dashboard 
                   classes={classes}
+                  archivedClasses={archivedClasses}
                   currentClass={currentClass}
+                  isViewingArchived={viewArchivedClasses}
                   onSelectClass={handleSelectClass}
                   onCreateClass={handleCreateClass}
                   onUpdateOpportunity={handleUpdateBidOpportunity}
@@ -701,6 +703,7 @@ const Index = () => {
               <TabsContent value="students">
                 <Students 
                   currentClass={currentClass}
+                  isViewingArchived={viewArchivedClasses}
                   onUpdateStudents={handleUpdateStudents}
                 />
               </TabsContent>
@@ -708,6 +711,7 @@ const Index = () => {
               <TabsContent value="selection">
                 <Selection 
                   currentClass={currentClass}
+                  isViewingArchived={viewArchivedClasses}
                   onSelectionComplete={handleSelectionComplete}
                 />
               </TabsContent>

@@ -6,10 +6,11 @@ import { useToast } from "@/hooks/use-toast";
 
 interface SelectionProps {
   currentClass: ClassConfig | null;
+  isViewingArchived?: boolean;
   onSelectionComplete: (selectedStudents: Student[], opportunityId?: string) => void;
 }
 
-const Selection = ({ currentClass, onSelectionComplete }: SelectionProps) => {
+const Selection = ({ currentClass, isViewingArchived = false, onSelectionComplete }: SelectionProps) => {
   const { toast } = useToast();
 
   const handleSelectionComplete = (selectedStudents: Student[], opportunityId?: string) => {
@@ -90,15 +91,24 @@ const Selection = ({ currentClass, onSelectionComplete }: SelectionProps) => {
     <div>
       <div className="mb-6 text-center">
         <h1 className="text-2xl font-heading font-bold">
-          Selection Process - {currentClass.className}
+          {isViewingArchived ? 'View Selection Results' : 'Selection Process'} - {currentClass.className}
+          {isViewingArchived && (
+            <Badge variant="secondary" className="ml-2">
+              Archived (Read-only)
+            </Badge>
+          )}
         </h1>
         <p className="text-muted-foreground">
-          Monitor real-time bids and conduct random selection
+          {isViewingArchived 
+            ? 'View historical bid data and selection results' 
+            : 'Monitor real-time bids and conduct random selection'
+          }
         </p>
       </div>
       
       <RealtimeSelectionProcess 
         currentClass={currentClass} 
+        isViewingArchived={isViewingArchived}
         onSelectionComplete={handleSelectionComplete} 
       />
     </div>

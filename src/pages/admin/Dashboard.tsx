@@ -21,7 +21,9 @@ import { supabase } from "@/lib/supabase";
 
 interface DashboardProps {
   classes: ClassConfig[];
+  archivedClasses: ClassConfig[];
   currentClass: ClassConfig | null;
+  isViewingArchived?: boolean;
   onSelectClass: (classId: string) => void;
   onCreateClass: () => void;
   onUpdateOpportunity: (opportunityId: string, updatedOpportunity: BidOpportunity) => void;
@@ -34,7 +36,9 @@ interface DashboardProps {
 
 const Dashboard = ({ 
   classes, 
+  archivedClasses,
   currentClass, 
+  isViewingArchived = false,
   onSelectClass, 
   onCreateClass,
   onUpdateOpportunity,
@@ -380,33 +384,54 @@ const Dashboard = ({
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-heading font-bold">Class Management</h1>
-          <p className="text-muted-foreground text-lg">Managing: {currentClass.className}</p>
+          <p className="text-muted-foreground text-lg">
+            {isViewingArchived ? 'Viewing (Read-only)' : 'Managing'}: {currentClass.className}
+            {isViewingArchived && (
+              <Badge variant="secondary" className="ml-2 text-xs">
+                Archived
+              </Badge>
+            )}
+          </p>
         </div>
         <div className="flex space-x-3">
           <Button 
             variant="outline"
             onClick={refreshStats}
-            disabled={statsLoading}
+            disabled={statsLoading || isViewingArchived}
             className="flex items-center gap-2"
           >
             <RefreshCw className={`w-4 h-4 ${statsLoading ? 'animate-spin' : ''}`} />
             Refresh Data
           </Button>
-          <Button 
-            variant="secondary"
-            onClick={() => onArchiveClass?.(currentClass.id, true)}
-            className="flex items-center gap-2"
-          >
-            <Archive className="w-4 h-4" />
-            Archive Class
-          </Button>
-          <Button 
-            variant="destructive"
-            onClick={() => onRemoveClass?.(currentClass.id)}
-            className="flex items-center gap-2"
-          >
-            <Trash2 size={16} /> Remove Class
-          </Button>
+          {!isViewingArchived && (
+            <>
+              <Button 
+                variant="secondary"
+                onClick={() => onArchiveClass?.(currentClass.id, true)}
+                className="flex items-center gap-2"
+              >
+                <Archive className="w-4 h-4" />
+                Archive Class
+              </Button>
+              <Button 
+                variant="destructive"
+                onClick={() => onRemoveClass?.(currentClass.id)}
+                className="flex items-center gap-2"
+              >
+                <Trash2 size={16} /> Remove Class
+              </Button>
+            </>
+          )}
+          {isViewingArchived && (
+            <Button 
+              variant="outline"
+              onClick={() => onArchiveClass?.(currentClass.id, false)}
+              className="flex items-center gap-2"
+            >
+              <Archive className="w-4 h-4" />
+              Unarchive Class
+            </Button>
+          )}
         </div>
       </div>
 
@@ -469,6 +494,7 @@ const Dashboard = ({
           <Button 
             onClick={() => setShowCreateOpportunityDialog(true)}
             className="flex items-center gap-2"
+            disabled={isViewingArchived}
           >
             <Plus className="w-4 h-4" />
             Add Opportunity
@@ -561,6 +587,7 @@ const Dashboard = ({
                                     e.stopPropagation();
                                     handleEditOpportunity(opportunity);
                                   }}
+                                  disabled={isViewingArchived}
                                 >
                                   <Edit className="w-4 h-4" />
                                 </Button>
@@ -575,7 +602,7 @@ const Dashboard = ({
                                       handleDeleteOpportunity(opportunity.id);
                                     }
                                   }}
-                                  disabled={isDeleting === opportunity.id}
+                                  disabled={isDeleting === opportunity.id || isViewingArchived}
                                 >
                                   {isDeleting === opportunity.id ? (
                                     <Loader2 className="w-4 h-4 animate-spin" />
