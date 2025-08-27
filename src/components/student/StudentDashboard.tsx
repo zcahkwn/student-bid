@@ -800,29 +800,29 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
                               <div className="text-sm text-muted-foreground">
                                 {classItem.bidOpportunities?.length || 0} opportunities • 
                                 {classItem.bidders?.filter(b => b.id === student.id).length || 0} bids placed
-                                {/* {/* Show bidding results summary */}
-                                {(() => {
-                                  const hasAutoSelection = classItem.bidOpportunities?.some(opp => 
-                                    opp.bidders?.some(bidder => bidder.id === student.id && bidder.bidStatus === 'auto_selected')
-                                  );
+                                {/* Show bidding results summary */}
+                                {(() => { 
+                                  // const hasAutoSelection = classItem.bidOpportunities?.some(opp => 
+                                  //   opp.bidders?.some(bidder => bidder.id === student.id && bidder.bidStatus === 'auto_selected')
+                                  // );
                                   
-                                  if (hasAutoSelection) {
-                                    return (
-                                      <span className="ml-2 font-medium text-green-600">
-                                        • Selected Automatically
-                                      </span>
-                                    );
-                                  } else if (studentInClass?.biddingResult && studentInClass.biddingResult !== 'pending') {
-                                    return (
-                                      <span className={`ml-2 font-medium ${
-                                        studentInClass.biddingResult === 'won' ? 'text-green-600' : 'text-red-600'
-                                      }`}>
-                                        • {studentInClass.biddingResult === 'won' ? 'Selected' : 'Not Selected'}
-                                      </span>
-                                    );
-                                  }
-                                  return null;
-                                })()} */} 
+                                  // if (hasAutoSelection) {
+                                  //   return (
+                                  //     <span className="ml-2 font-medium text-green-600">
+                                  //       • Selected Automatically
+                                  //     </span>
+                                  //   );
+                                  // } else if (studentInClass?.biddingResult && studentInClass.biddingResult !== 'pending') {
+                                  //   return (
+                                  //     <span className={`ml-2 font-medium ${
+                                  //       studentInClass.biddingResult === 'won' ? 'text-green-600' : 'text-red-600'
+                                  //     }`}>
+                                  //       • {studentInClass.biddingResult === 'won' ? 'Selected' : 'Not Selected'}
+                                  //     </span>
+                                  //   );
+                                  // }
+                                  // return null;
+                                })()}
                               </div>
                             </div>
                           );
