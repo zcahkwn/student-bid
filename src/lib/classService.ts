@@ -163,7 +163,8 @@ export const deleteClassAtomic = async (classId: string): Promise<ClassDeletionR
     
     // Use the database RPC function to handle deletion atomically
     const { data: rpcResult, error: rpcError } = await supabase.rpc('delete_class_atomic', {
-      p_class_id: classId
+      p_class_id: classId,
+      p_class_name: '' // Provide empty string to resolve function overload ambiguity
     })
 
     console.log('RPC function result:', rpcResult)
