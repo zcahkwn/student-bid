@@ -2,6 +2,17 @@
 [![Netlify Status](https://api.netlify.com/api/v1/badges/68f46a21-7e83-4e7a-a158-e4d3fddb4893/deploy-status)](https://app.netlify.com/projects/student-bid/deploys)
 Live site: https://student-bid.netlify.app/
 
+## Features
+**Admin Registration** - create new admin accounts
+
+**Admin Dashboard** – upload student lists, create classes and bidding opportunities, and perform random selection.
+
+**Student Portal** – place bids on available opportunities and check bidding results.
+
+**Supabase Backend** – manages authentication, database, and RPC functions to handle bidding logic.
+
+--- 
+
 ## Installation
 
 1. Clone the repo:
