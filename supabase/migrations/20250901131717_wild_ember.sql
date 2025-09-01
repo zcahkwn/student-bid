@@ -1,4 +1,4 @@
-```sql
+
 CREATE OR REPLACE FUNCTION "public"."delete_class_atomic"("p_class_id" "uuid", "p_class_name" "text" DEFAULT NULL::"text") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
     AS $$
@@ -102,4 +102,3 @@ BEGIN
   END;
 END;
 $$;
-```
