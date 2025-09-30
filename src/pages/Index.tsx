@@ -18,7 +18,7 @@ import { Student, ClassConfig, BidOpportunity } from "@/types";
 import { createClass, fetchClasses, updateClass, deleteClassAtomic, updateBidOpportunity, ClassDeletionResult } from "@/lib/classService";
 import { updateClassArchiveStatus } from "@/lib/classService";
 import { cleanupOrphanedUsers } from "@/lib/userService";
-import { Loader2, Menu, X } from "lucide-react";
+import { Loader as Loader2, Menu, X } from "lucide-react";
 
 export default function Index() {
   // Auth state - simplified
@@ -261,10 +261,6 @@ export default function Index() {
   
   const handleSelectionComplete = async (selectedStudents: Student[], opportunityId?: string) => {
     if (!currentClass) return;
-
-    console.log('=== HANDLING SELECTION COMPLETE ===');
-    console.log('Selected students:', selectedStudents);
-    console.log('Opportunity ID:', opportunityId);
 
     try {
       // Re-fetch from database to ensure UI reflects latest state
@@ -560,9 +556,6 @@ export default function Index() {
   const handleRemoveClass = async (classId: string) => {
     const classToDelete = classes.find(c => c.id === classId);
     if (!classToDelete) {
-      console.log('=== CLASS NOT FOUND IN LOCAL STATE ===');
-      console.log('Class ID:', classId);
-      console.log('Available classes:', classes.map(c => ({ id: c.id, name: c.className })));
       toast({
         title: "Class not found",
         description: "The class to delete could not be found",
@@ -570,79 +563,48 @@ export default function Index() {
       });
       return;
     }
-    
-    // Show confirmation dialog
-    console.log('=== SHOWING CONFIRMATION DIALOG ===');
-    console.log('Class to delete:', { id: classToDelete.id, name: classToDelete.className });
     const confirmed = window.confirm(
       `Are you sure you want to delete "${classToDelete.className}"? This action cannot be undone and will remove all associated data including students, bids, and opportunities.`
     );
-    
+
     if (!confirmed) {
-      console.log('=== USER CANCELLED DELETION ===');
       return;
     }
     
-    console.log('=== USER CONFIRMED DELETION ===');
-    console.log('Starting deletion process for class:', classId);
-    
     try {
-      console.log('=== CALLING deleteClassAtomic FUNCTION ===');
       const result = await deleteClassAtomic(classId);
-      console.log('=== deleteClassAtomic RESULT ===');
-      console.log('Result:', result);
-      
+
       if (result.success) {
-        console.log('=== DELETION SUCCESSFUL - UPDATING UI ===');
         const updatedClasses = classes.filter(c => c.id !== classId);
-        console.log('Updated classes count:', updatedClasses.length);
         setClasses(updatedClasses);
-        
-        // If we deleted the current class, select a new one or set to null
+
         if (currentClass && currentClass.id === classId) {
-          console.log('=== DELETED CURRENT CLASS - SELECTING NEW ONE ===');
           setCurrentClass(updatedClasses.length > 0 ? updatedClasses[0] : null);
         }
-        
-        // Update localStorage
+
         localStorage.setItem("classData", JSON.stringify(updatedClasses));
-        
-        // Clean up orphaned users after successful class deletion
-        console.log('=== STARTING ORPHANED USER CLEANUP ===');
         try {
           const cleanupResult = await cleanupOrphanedUsers();
-          
-          if (cleanupResult.success) {
-            if (cleanupResult.deletedCount > 0) {
-              toast({
-                title: "Class and users cleaned up",
-                description: `${result.className} deleted and ${cleanupResult.deletedCount} orphaned user${cleanupResult.deletedCount !== 1 ? 's' : ''} removed`,
-              });
-            } else {
-              toast({
-                title: "Class deleted successfully",
-                description: `${result.className} and ${Object.values(result.deletedRecords).reduce((a, b) => a + b, 0)} related records have been removed`,
-              });
-            }
-          } else {
-            // Class deletion succeeded but cleanup failed
+
+          if (cleanupResult.success && cleanupResult.deletedCount > 0) {
             toast({
-              title: "Class deleted, cleanup warning",
-              description: `${result.className} deleted but orphaned user cleanup failed: ${cleanupResult.message}`,
-              variant: "destructive",
+              title: "Class and users cleaned up",
+              description: `${result.className} deleted and ${cleanupResult.deletedCount} orphaned user${cleanupResult.deletedCount !== 1 ? 's' : ''} removed`,
+            });
+          } else {
+            toast({
+              title: "Class deleted successfully",
+              description: `${result.className} and ${Object.values(result.deletedRecords).reduce((a, b) => a + b, 0)} related records have been removed`,
             });
           }
         } catch (cleanupError) {
           console.error('Error during orphaned user cleanup:', cleanupError);
           toast({
-            title: "Class deleted, cleanup error",
-            description: `${result.className} deleted but orphaned user cleanup encountered an error`,
-            variant: "destructive",
+            title: "Class deleted",
+            description: `${result.className} deleted successfully`,
           });
         }
       } else {
-        console.log('=== DELETION FAILED ===');
-        console.log('Error:', result.error);
         toast({
           title: "Class deletion failed",
           description: result.error || "Failed to delete the class and its associated data.",
@@ -650,17 +612,12 @@ export default function Index() {
         });
       }
     } catch (error) {
-      console.error("=== UNEXPECTED ERROR DURING CLASS DELETION ===");
-      console.error("Error type:", typeof error);
-      console.error("Error message:", error instanceof Error ? error.message : error);
-      console.error("Full error object:", error);
+      console.error("Error during class deletion:", error);
       toast({
         title: "Class deletion failed",
         description: error instanceof Error ? error.message : "An unexpected error occurred",
         variant: "destructive",
       });
-    } finally {
-      console.log('=== CLASS DELETION PROCESS COMPLETED ===');
     }
   };
   

@@ -7,25 +7,6 @@ interface CreateClassData {
   capacity?: number
 }
 
-interface SupabaseClass {
-  id: string
-  name: string
-  created_at: string
-}
-
-interface SupabaseOpportunity {
-  id: string
-  class_id: string
-  description: string | null
-  opens_at: string
-  closes_at: string
-  event_date: string
-  capacity: number
-  status: string
-  draw_seed: string | null
-  created_at: string
-}
-
 export interface ClassDeletionResult {
   success: boolean
   classId: string
@@ -77,114 +58,27 @@ export const createClass = async (classData: CreateClassData): Promise<ClassConf
   }
 }
 
-// Validate class exists and get basic info before deletion
-const validateClassForDeletion = async (classId: string): Promise<{
-  valid: boolean
-  className?: string
-  recordCounts?: {
-    enrollments: number
-    opportunities: number
-    bids: number
-    tokenHistory: number
-  }
-  error?: string
-}> => {
-  try {
-    // Check if class exists
-    const { data: classData, error: classError } = await supabase
-      .from('classes')
-      .select('id, name')
-      .eq('id', classId)
-      .single()
-
-    if (classError || !classData) {
-      return {
-        valid: false,
-        error: 'Class not found or access denied'
-      }
-    }
-
-    // Get opportunity IDs for this class first
-    const { data: opportunities, error: oppError } = await supabase
-      .from('opportunities')
-      .select('id')
-      .eq('class_id', classId)
-
-    if (oppError) {
-      return {
-        valid: false,
-        error: `Failed to fetch opportunities: ${oppError.message}`
-      }
-    }
-
-    const opportunityIds = opportunities?.map(opp => opp.id) || []
-
-    // Get counts of related records
-    const [enrollmentsResult, opportunitiesResult, bidsResult, tokenHistoryResult] = await Promise.all([
-      supabase.from('student_enrollments').select('user_id', { count: 'exact' }).eq('class_id', classId),
-      supabase.from('opportunities').select('id', { count: 'exact' }).eq('class_id', classId),
-      opportunityIds.length > 0 
-        ? supabase.from('bids').select('id', { count: 'exact' }).in('opportunity_id', opportunityIds)
-        : Promise.resolve({ count: 0 }),
-      opportunityIds.length > 0
-        ? supabase.from('token_history').select('id', { count: 'exact' }).in('opportunity_id', opportunityIds)
-        : Promise.resolve({ count: 0 })
-    ])
-
-    return {
-      valid: true,
-      className: classData.name,
-      recordCounts: {
-        enrollments: enrollmentsResult.count || 0,
-        opportunities: opportunitiesResult.count || 0,
-        bids: bidsResult.count || 0,
-        tokenHistory: tokenHistoryResult.count || 0
-      }
-    }
-  } catch (error) {
-    console.error('Error validating class for deletion:', error)
-    return {
-      valid: false,
-      error: error instanceof Error ? error.message : 'Validation failed'
-    }
-  }
-}
-
 // Atomic class deletion with comprehensive cascading
 export const deleteClassAtomic = async (classId: string): Promise<ClassDeletionResult> => {
   const timestamp = new Date().toISOString()
-  
-  console.log('=== STARTING CLASS DELETION DEBUG ===')
-  console.log('Class ID to delete:', classId)
-  console.log('Supabase client status:', !!supabase)
-  
+
   try {
-    console.log('=== CALLING DATABASE RPC FUNCTION ===')
-    
-    // Use the database RPC function to handle deletion atomically
     const { data: rpcResult, error: rpcError } = await supabase.rpc('delete_class_atomic', {
       p_class_id: classId,
-      p_class_name: '' // Provide empty string to resolve function overload ambiguity
+      p_class_name: ''
     })
 
-    console.log('RPC function result:', rpcResult)
-
     if (rpcError) {
-      console.error('RPC error during class deletion:', rpcError)
       throw new Error(`Failed to delete class: ${rpcError.message}`)
     }
 
     if (!rpcResult || !rpcResult.success) {
-      console.error('RPC function returned failure:', rpcResult)
       throw new Error(rpcResult?.error || 'Class deletion failed')
     }
-
-    console.log('=== DELETION COMPLETED SUCCESSFULLY ===')
     
-    // Extract counts from the RPC result
     const deletedCounts = {
       students: rpcResult.deleted_counts?.students || 0,
-      enrollments: rpcResult.deleted_counts?.students || 0, // Use students count for enrollments
+      enrollments: rpcResult.deleted_counts?.students || 0,
       opportunities: rpcResult.deleted_counts?.opportunities || 0,
       bids: rpcResult.deleted_counts?.bids || 0,
       tokenHistory: rpcResult.deleted_counts?.token_history || 0,
@@ -199,11 +93,8 @@ export const deleteClassAtomic = async (classId: string): Promise<ClassDeletionR
     }
 
   } catch (error) {
-    console.error('=== CLASS DELETION FAILED ===')
-    console.error('Error type:', typeof error)
-    console.error('Error message:', error instanceof Error ? error.message : error)
-    console.error('Full error object:', error)
-    
+    console.error('Class deletion failed:', error)
+
     return {
       success: false,
       classId,
@@ -218,34 +109,11 @@ export const deleteClassAtomic = async (classId: string): Promise<ClassDeletionR
 // Update selection results in the database after admin selection
 export const updateSelectionResults = async (
   opportunityId: string,
-  classId: string, // Keep this parameter, even if not directly used by RPC
+  classId: string,
   selectedStudentIds: string[],
   allBidderIds: string[]
 ): Promise<void> => {
   try {
-    console.log('=== UPDATING SELECTION RESULTS ===')
-    console.log('Opportunity ID:', opportunityId)
-    console.log('Class ID:', classId)
-    console.log('Selected students:', selectedStudentIds)
-    console.log('All bidders:', allBidderIds)
-
-    // Step 0: Verify bids exist for this opportunity (optional, can be removed if RPC handles this check)
-    console.log('=== STEP 0: VERIFY BIDS EXIST ===')
-    const { data: existingBids, error: verifyError } = await supabase
-      .from('bids')
-      .select('id, user_id, is_winner')
-      .eq('opportunity_id', opportunityId)
-
-    if (verifyError) {
-      console.error('Error verifying existing bids:', verifyError)
-      throw new Error(`Failed to verify existing bids: ${verifyError.message}`)
-    }
-
-    console.log('Existing bids found:', existingBids?.length || 0)
-    console.log('Existing bids details:', existingBids)
-
-    // Use a single RPC call to update all bids and enrollments atomically
-    console.log('=== STEP 1: CALLING RPC FUNCTION TO UPDATE SELECTION RESULTS ===')
     
     const { data: rpcResult, error: rpcError } = await supabase.rpc('update_selection_results_atomic', {
       p_opportunity_id: opportunityId,
@@ -254,31 +122,12 @@ export const updateSelectionResults = async (
     })
 
     if (rpcError) {
-      console.error('RPC error updating selection results:', rpcError)
       throw new Error(`Failed to update selection results: ${rpcError.message}`)
     }
-
-    console.log('RPC function result:', rpcResult)
-
-    // Verification logs can be simplified or removed as the RPC function guarantees atomicity
-    console.log('=== SELECTION RESULTS UPDATE COMPLETED ===')
   } catch (error) {
     console.error('Error updating selection results:', error)
     throw error
   }
-}
-
-// Legacy delete function - now uses atomic deletion
-const deleteClass = async (classId: string): Promise<void> => {
-  const result = await deleteClassAtomic(classId)
-  
-  if (!result.success) {
-    throw new Error(result.error || 'Class deletion failed')
-  }
-  
-  console.log(`Successfully deleted class ${result.className} and ${
-    Object.values(result.deletedRecords).reduce((a, b) => a + b, 0)
-  } related records`)
 }
 
 // Create a new bidding opportunity
@@ -338,26 +187,17 @@ export const createBidOpportunity = async (
 // Auto-select all bidders and refund their tokens
 export const autoSelectAndRefundBids = async (opportunityId: string): Promise<void> => {
   try {
-    console.log('=== STARTING AUTO-SELECT AND REFUND ===');
-    console.log('Opportunity ID:', opportunityId);
-    
     const { data: result, error } = await supabase.rpc('auto_select_and_refund_bids', {
       p_opportunity_id: opportunityId
     });
-    
+
     if (error) {
-      console.error('RPC error during auto-select and refund:', error);
       throw new Error(`Failed to auto-select and refund: ${error.message}`);
     }
-    
+
     if (!result || !result.success) {
-      console.error('RPC function returned failure:', result);
       throw new Error(result?.error || 'Auto-select and refund failed');
     }
-    
-    console.log('=== AUTO-SELECT AND REFUND COMPLETED ===');
-    console.log('Result:', result);
-    
   } catch (error) {
     console.error('Error in auto-select and refund:', error);
     throw error;
@@ -544,7 +384,7 @@ export const updateClassArchiveStatus = async (classId: string, isArchived: bool
 
 // Update bidding opportunity - FIXED VERSION
 export const updateBidOpportunity = async (
-  opportunityId: string, 
+  opportunityId: string,
   updates: {
     title?: string
     description?: string
@@ -555,10 +395,6 @@ export const updateBidOpportunity = async (
   }
 ): Promise<boolean> => {
   try {
-    console.log('Starting opportunity update for ID:', opportunityId);
-    console.log('Update data:', updates);
-    
-    // Build the update object with proper field mapping
     const updateData: any = {};
     
     if (updates.title !== undefined) {
@@ -588,10 +424,6 @@ export const updateBidOpportunity = async (
     if (updates.capacity !== undefined) {
       updateData.capacity = updates.capacity;
     }
-    
-    console.log('Final update data for Supabase:', updateData);
-    
-    // Perform the update
     const { data: existingOpportunity, error: checkError } = await supabase
       .from('opportunities')
       .update(updateData)
@@ -599,17 +431,10 @@ export const updateBidOpportunity = async (
       .select()
 
     if (checkError) {
-      console.error('Supabase update error:', checkError);
       throw new Error(`Failed to update opportunity: ${checkError.message}`);
     }
 
-    if (!existingOpportunity || existingOpportunity.length === 0) {
-      console.log(`No opportunity found with ID: ${opportunityId}`);
-      return false;
-    }
-
-    console.log('Successfully updated opportunity in Supabase:', existingOpportunity[0]);
-    return true;
+    return !!(existingOpportunity && existingOpportunity.length > 0);
 
   } catch (error) {
     console.error('Error updating opportunity:', error);
@@ -620,9 +445,6 @@ export const updateBidOpportunity = async (
 // Reset selection for a specific opportunity
 export const resetOpportunitySelection = async (opportunityId: string): Promise<void> => {
   try {
-    console.log('=== RESETTING OPPORTUNITY SELECTION ===');
-    console.log('Opportunity ID:', opportunityId);
-
     if (!opportunityId) {
       throw new Error('Opportunity ID is required');
     }
@@ -630,21 +452,14 @@ export const resetOpportunitySelection = async (opportunityId: string): Promise<
     const { data: rpcResult, error } = await supabase.rpc('reset_opportunity_selection', {
       p_opportunity_id: opportunityId
     });
-    
+
     if (error) {
-      console.error('RPC error resetting selection:', error);
       throw new Error(`Failed to reset selection: ${error.message}`);
     }
-
-    console.log('RPC function result:', rpcResult);
 
     if (!rpcResult || !rpcResult.success) {
       throw new Error(rpcResult?.error || 'Selection reset failed');
     }
-
-    console.log('=== SELECTION RESET COMPLETED ===');
-    console.log(`Successfully reset ${rpcResult.reset_count} student enrollments`);
-    
   } catch (error) {
     console.error('Error resetting opportunity selection:', error);
     throw error;
@@ -654,85 +469,33 @@ export const resetOpportunitySelection = async (opportunityId: string): Promise<
 // Delete a bidding opportunity
 export const deleteBidOpportunity = async (opportunityId: string): Promise<void> => {
   try {
-    console.log('=== STARTING OPPORTUNITY DELETION DEBUG ===')
-    console.log('Opportunity ID to delete:', opportunityId)
-    console.log('Supabase client status:', !!supabase)
-    console.log('Environment variables check:', {
-      url: !!import.meta.env.VITE_SUPABASE_URL,
-      key: !!import.meta.env.VITE_SUPABASE_ANON_KEY
-    })
-    
-    // Step 1: Verify the opportunity exists
-    console.log('Step 1: Checking if opportunity exists...')
     const { data: existingOpportunity, error: checkError } = await supabase
       .from('opportunities')
       .select('id, title, description')
       .eq('id', opportunityId)
       .single()
 
-    console.log('Existence check result:', {
-      data: existingOpportunity,
-      error: checkError
-    })
-
     if (checkError) {
       if (checkError.code === 'PGRST116') {
-        console.log('PGRST116: Record not found - opportunity may already be deleted')
         return
       }
-      console.error('Error during existence check:', checkError)
       throw new Error(`Failed to check opportunity existence: ${checkError.message}`)
     }
 
     if (!existingOpportunity) {
-      console.log('No opportunity data returned - treating as already deleted')
       return
     }
 
-    console.log('Step 2: Opportunity found, proceeding with deletion:', existingOpportunity)
-    
-    // Step 2: Perform the actual deletion
-    console.log('Step 3: Executing DELETE operation...')
-    const { error, count } = await supabase
+    const { error } = await supabase
       .from('opportunities')
-      .delete({ count: 'exact' })
+      .delete()
       .eq('id', opportunityId)
 
-    console.log('Delete operation result:', {
-      error: error,
-      count: count,
-      errorCode: error?.code,
-      errorMessage: error?.message,
-      errorDetails: error?.details
-    })
-
     if (error) {
-      console.error('=== DELETE OPERATION FAILED ===')
-      console.error('Error object:', error)
-      console.error('Error code:', error.code)
-      console.error('Error message:', error.message)
-      console.error('Error details:', error.details)
       throw new Error(`Failed to delete opportunity: ${error.message}`)
     }
-
-    console.log('=== DELETE OPERATION COMPLETED ===')
-    console.log(`Records deleted: ${count}`)
-    
-    if (count === 0) {
-      console.warn('WARNING: Delete operation returned 0 affected rows - opportunity may not exist')
-      console.warn('This could indicate:')
-      console.warn('1. Opportunity ID does not exist in database')
-      console.warn('2. RLS policies are blocking the delete')
-      console.warn('3. User does not have delete permissions')
-    }
-
-    console.log('=== DELETION PROCESS COMPLETED SUCCESSFULLY ===')
-
   } catch (error) {
-    console.error('=== DELETION PROCESS FAILED ===')
-    console.error('Error type:', typeof error)
-    console.error('Error message:', error instanceof Error ? error.message : error)
-    console.error('Full error object:', error)
+    console.error('Error deleting opportunity:', error)
     throw error
   }
 }
