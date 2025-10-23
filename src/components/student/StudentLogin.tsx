@@ -3,7 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { HelpCircle } from "lucide-react";
 import { ClassConfig, Student } from "@/types";
 import { useNavigate } from "react-router-dom";
 import { authenticateStudent } from "@/utils/auth";
@@ -65,8 +67,31 @@ const StudentLogin = ({ classes, onLogin }: StudentLoginProps) => {
     <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle className="text-2xl font-heading">Student Login</CardTitle>
-        <CardDescription>
-          Enter your email address and student number to access your classes
+        <CardDescription className="flex items-center justify-between">
+          <span>Enter your email address and student number to access your classes</span>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-6 w-6 ml-2 flex-shrink-0">
+                <HelpCircle className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Need Help?</DialogTitle>
+                <DialogDescription>
+                  If you have any technical problems, please contact:
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-4">
+                <p className="text-sm text-gray-700">
+                  <strong>Alice</strong>
+                </p>
+                <p className="text-sm text-gray-700 mt-2">
+                  Email: <a href="mailto:zcahkwn@ucl.ac.uk" className="text-academy-blue hover:underline">zcahkwn@ucl.ac.uk</a>
+                </p>
+              </div>
+            </DialogContent>
+          </Dialog>
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
