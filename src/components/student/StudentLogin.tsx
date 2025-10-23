@@ -78,7 +78,7 @@ const StudentLogin = ({ classes, onLogin }: StudentLoginProps) => {
             <DialogContent>
               <DialogHeader>
                 <DialogDescription>
-                  If you have any technical problems, please contact Alice at zcahkwn@ucl.ac.uk
+                  If you have any technical problems, please contact Professor Kathy Yuan or Alice (zcahkwn@ucl.ac.uk).
                 </DialogDescription>
               </DialogHeader>
             </DialogContent>
