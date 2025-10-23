@@ -81,7 +81,6 @@ const StudentLogin = ({ classes, onLogin }: StudentLoginProps) => {
                   If you have any technical problems, please contact Alice at zcahkwn@ucl.ac.uk
                 </DialogDescription>
               </DialogHeader>
-              </div>
             </DialogContent>
           </Dialog>
         </CardDescription>
