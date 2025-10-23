@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import EnhancedBidCard from "@/components/student/EnhancedBidCard";
 import StudentSidebar from "@/components/student/StudentSidebar";
 import { Student, ClassConfig, BidOpportunity } from "@/types";
@@ -10,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatDate, getBidOpportunityStatus } from "@/utils/dates";
 import { isBidOpportunityOpen } from "@/utils/dates";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, Calendar, Trophy, Coins } from "lucide-react";
+import { Menu, X, Calendar, Trophy, Coins, HelpCircle } from "lucide-react";
 import { subscribeToUserEnrollmentUpdates } from "@/lib/studentBidService";
 import { supabase } from "@/lib/supabase";
 
@@ -413,6 +414,24 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
           </div>
           <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-600">Welcome, {student.name}</span>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="icon" title="Help">
+                  <HelpCircle className="w-5 h-5" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Technical Support</DialogTitle>
+                  <DialogDescription>
+                    If you have any technical problems, please contact Alice at:
+                    <a href="mailto:zcahkwn@ucl.ac.uk" className="block mt-2 text-blue-600 hover:underline font-medium">
+                      zcahkwn@ucl.ac.uk
+                    </a>
+                  </DialogDescription>
+                </DialogHeader>
+              </DialogContent>
+            </Dialog>
             <Button variant="outline" onClick={handleLogout}>Logout</Button>
           </div>
         </div>
