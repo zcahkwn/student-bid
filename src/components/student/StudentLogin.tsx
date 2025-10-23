@@ -77,18 +77,10 @@ const StudentLogin = ({ classes, onLogin }: StudentLoginProps) => {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Need Help?</DialogTitle>
                 <DialogDescription>
-                  If you have any technical problems, please contact:
+                  If you have any technical problems, please contact Alice at zcahkwn@ucl.ac.uk
                 </DialogDescription>
               </DialogHeader>
-              <div className="py-4">
-                <p className="text-sm text-gray-700">
-                  <strong>Alice</strong>
-                </p>
-                <p className="text-sm text-gray-700 mt-2">
-                  Email: <a href="mailto:zcahkwn@ucl.ac.uk" className="text-academy-blue hover:underline">zcahkwn@ucl.ac.uk</a>
-                </p>
               </div>
             </DialogContent>
           </Dialog>
