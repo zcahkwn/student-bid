@@ -279,7 +279,7 @@ const RealtimeStudentManager = ({ currentClass, onStudentUpdate }: RealtimeStude
                   <TableHead>Token Status</TableHead>
                   <TableHead>Bid Status</TableHead>
                   <TableHead>Tokens Remaining</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-right">Remove Student</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
