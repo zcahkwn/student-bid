@@ -55,15 +55,41 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
 
       try {
         setIsLoadingClasses(true);
+
+        const { data: currentEnrollments, error: enrollmentError } = await supabase
+          .from('student_enrollments')
+          .select('*')
+          .eq('user_id', initialStudent.id);
+
+        if (enrollmentError || !currentEnrollments || currentEnrollments.length === 0) {
+          console.log('=== ENROLLMENT VERIFICATION FAILED ===');
+          toast({
+            title: "Access Denied",
+            description: "You are no longer enrolled in any classes. Redirecting to login...",
+            variant: "destructive",
+            duration: 5000,
+          });
+          setTimeout(() => {
+            navigate("/", { replace: true });
+          }, 2000);
+          setIsLoadingClasses(false);
+          return;
+        }
+
+        const currentEnrolledClassIds = currentEnrollments.map(e => e.class_id);
+
         const allClasses = await fetchClasses();
-        const studentClasses = allClasses.filter(c => enrolledClassIds.includes(c.id));
+        const studentClasses = allClasses.filter(c => currentEnrolledClassIds.includes(c.id));
 
         if (studentClasses.length === 0) {
           toast({
             title: "No classes found",
-            description: "Your enrolled classes could not be loaded",
+            description: "Your enrolled classes could not be loaded. Redirecting to login...",
             variant: "destructive"
           });
+          setTimeout(() => {
+            navigate("/", { replace: true });
+          }, 2000);
           setIsLoadingClasses(false);
           return;
         }
@@ -121,7 +147,7 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
     };
 
     loadClassesData();
-  }, [initialStudent, enrolledClassIds, toast]);
+  }, [initialStudent, enrolledClassIds, toast, navigate]);
 
   useEffect(() => {
     if (!student?.id || !currentClass?.id) {
