@@ -12,8 +12,16 @@ import { formatDate, getBidOpportunityStatus } from "@/utils/dates";
 import { isBidOpportunityOpen } from "@/utils/dates";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Menu, X, Calendar, Trophy, Coins, HelpCircle } from "lucide-react";
-import { subscribeToUserEnrollmentUpdates } from "@/lib/studentBidService";
 import { supabase } from "@/lib/supabase";
+import {
+  subscribeToUserEnrollmentUpdates,
+  subscribeToOpportunityChanges,
+  subscribeToClassChanges,
+  subscribeToBidActivity,
+  OpportunityUpdatePayload,
+  ClassUpdatePayload,
+  BidActivityPayload
+} from "@/lib/studentRealtimeService";
 
 interface StudentDashboardProps {
   onBidSubmitted?: (bidId: string, updatedStudent: Student, opportunityId: string) => void;
@@ -40,14 +48,14 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
   // Add state for tracking real-time updates
   const [isLoadingStatus, setIsLoadingStatus] = useState(false);
   
-  // Subscribe to real-time user enrollment updates
+  // Subscribe to real-time updates for opportunities, class changes, and enrollment
   useEffect(() => {
     if (!student?.id || !currentClass?.id) {
       console.log('Skipping real-time subscription setup: student or currentClass not ready.');
       return;
     }
 
-    console.log('=== SETTING UP REAL-TIME SUBSCRIPTION ===');
+    console.log('=== SETTING UP REAL-TIME SUBSCRIPTIONS ===');
     console.log('Student ID:', student.id, 'Class ID:', currentClass.id);
 
     // Enhanced initial fetch of current status from database
@@ -114,7 +122,122 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
 
     fetchCurrentStatus();
 
-    const unsubscribe = subscribeToUserEnrollmentUpdates(
+    // Subscribe to opportunity changes (INSERT, UPDATE, DELETE)
+    const unsubscribeOpportunities = subscribeToOpportunityChanges(
+      currentClass.id,
+      (payload: OpportunityUpdatePayload) => {
+        console.log('=== OPPORTUNITY CHANGE RECEIVED ===', payload);
+
+        setCurrentClass(prevClass => {
+          if (!prevClass) return prevClass;
+
+          let updatedOpportunities = [...prevClass.bidOpportunities];
+
+          if (payload.type === 'INSERT' && payload.opportunity) {
+            updatedOpportunities.push(payload.opportunity);
+            toast({
+              title: "New Opportunity Available",
+              description: `${payload.opportunity.title} has been added`,
+            });
+          } else if (payload.type === 'UPDATE' && payload.opportunity) {
+            updatedOpportunities = updatedOpportunities.map(opp =>
+              opp.id === payload.opportunity!.id ? payload.opportunity! : opp
+            );
+          } else if (payload.type === 'DELETE' && payload.opportunityId) {
+            const deletedOpp = updatedOpportunities.find(o => o.id === payload.opportunityId);
+            updatedOpportunities = updatedOpportunities.filter(opp => opp.id !== payload.opportunityId);
+            if (deletedOpp) {
+              toast({
+                title: "Opportunity Removed",
+                description: `${deletedOpp.title} has been removed`,
+                variant: "destructive"
+              });
+            }
+          }
+
+          return {
+            ...prevClass,
+            bidOpportunities: updatedOpportunities
+          };
+        });
+
+        setClasses(prevClasses =>
+          prevClasses.map(cls => {
+            if (cls.id === currentClass.id) {
+              let updatedOpportunities = [...cls.bidOpportunities];
+
+              if (payload.type === 'INSERT' && payload.opportunity) {
+                updatedOpportunities.push(payload.opportunity);
+              } else if (payload.type === 'UPDATE' && payload.opportunity) {
+                updatedOpportunities = updatedOpportunities.map(opp =>
+                  opp.id === payload.opportunity!.id ? payload.opportunity! : opp
+                );
+              } else if (payload.type === 'DELETE' && payload.opportunityId) {
+                updatedOpportunities = updatedOpportunities.filter(opp => opp.id !== payload.opportunityId);
+              }
+
+              return {
+                ...cls,
+                bidOpportunities: updatedOpportunities
+              };
+            }
+            return cls;
+          })
+        );
+      }
+    );
+
+    // Subscribe to class configuration changes
+    const unsubscribeClass = subscribeToClassChanges(
+      currentClass.id,
+      (payload: ClassUpdatePayload) => {
+        console.log('=== CLASS CHANGE RECEIVED ===', payload);
+
+        setCurrentClass(prevClass => {
+          if (!prevClass) return prevClass;
+          return {
+            ...prevClass,
+            ...payload.updates
+          };
+        });
+
+        setClasses(prevClasses =>
+          prevClasses.map(cls =>
+            cls.id === payload.classId ? { ...cls, ...payload.updates } : cls
+          )
+        );
+      }
+    );
+
+    // Subscribe to bid activity (other students placing/withdrawing bids)
+    const unsubscribeBidActivity = subscribeToBidActivity(
+      currentClass.id,
+      (payload: BidActivityPayload) => {
+        console.log('=== BID ACTIVITY RECEIVED ===', payload);
+
+        setCurrentClass(prevClass => {
+          if (!prevClass) return prevClass;
+
+          const updatedOpportunities = prevClass.bidOpportunities.map(opp => {
+            if (opp.id === payload.opportunityId) {
+              return {
+                ...opp,
+                bidders: opp.bidders
+              };
+            }
+            return opp;
+          });
+
+          return {
+            ...prevClass,
+            bidOpportunities: updatedOpportunities
+          };
+        });
+      }
+    );
+
+    // Subscribe to user enrollment updates
+    const unsubscribeEnrollment = subscribeToUserEnrollmentUpdates(
       student.id,
       currentClass.id,
       async (updatedStudent) => {
@@ -266,7 +389,12 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
       }
     );
 
-    return unsubscribe;
+    return () => {
+      unsubscribeOpportunities();
+      unsubscribeClass();
+      unsubscribeBidActivity();
+      unsubscribeEnrollment();
+    };
   }, [student?.id, currentClass?.id, toast]);
   
   const handleSelectClass = (classId: string) => {
