@@ -447,7 +447,7 @@ const Dashboard = ({
               {statsLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : statistics?.totalStudents || 0}
             </div>
             <p className="text-xs text-muted-foreground">
-              Total enrolled
+              Enrolled in class
             </p>
           </CardContent>
         </Card>
