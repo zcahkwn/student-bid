@@ -687,13 +687,13 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
                     onBidWithdrawal={handleBidWithdrawalInternal}
                   />
                   
-                  <Card>
+                  <Card className="h-full">
                     <CardHeader>
                       <CardTitle className="text-lg font-heading">All Opportunities</CardTitle>
                       <CardDescription>Complete list of bidding opportunities for this class</CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-3 max-h-96 overflow-y-auto">
+                      <div className="space-y-3 max-h-[600px] overflow-y-auto">
                         {currentClass.bidOpportunities?.map((opportunity) => (
                           <div 
                             key={opportunity.id}
