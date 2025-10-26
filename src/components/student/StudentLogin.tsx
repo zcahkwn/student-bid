@@ -27,21 +27,19 @@ const StudentLogin = ({ classes, onLogin }: StudentLoginProps) => {
     setIsLoading(true);
 
     try {
-      // Use the new normalized authentication
-      const authResult = await authenticateStudent(email, studentNumber, classes);
-      
-      if (authResult.success && authResult.student && authResult.enrolledClasses.length > 0) {
+      const authResult = await authenticateStudent(email, studentNumber);
+
+      if (authResult.success && authResult.student && authResult.enrolledClassIds.length > 0) {
         toast({
           title: "Login successful",
-          description: `Welcome, ${authResult.student.name}! Found ${authResult.enrolledClasses.length} class(es).`,
+          description: `Welcome, ${authResult.student.name}! Found ${authResult.enrolledClassIds.length} class(es).`,
         });
         onLogin(true);
-        
-        // Navigate to the student dashboard with student and classes data
-        navigate("/student", { 
-          state: { 
+
+        navigate("/student", {
+          state: {
             student: authResult.student,
-            classes: authResult.enrolledClasses
+            enrolledClassIds: authResult.enrolledClassIds
           }
         });
       } else {

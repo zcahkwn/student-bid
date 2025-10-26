@@ -11,8 +11,9 @@ import { useToast } from "@/hooks/use-toast";
 import { formatDate, getBidOpportunityStatus } from "@/utils/dates";
 import { isBidOpportunityOpen } from "@/utils/dates";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, Calendar, Trophy, Coins, HelpCircle } from "lucide-react";
+import { Menu, X, Calendar, Trophy, Coins, HelpCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { fetchClasses } from "@/lib/classService";
 import {
   subscribeToUserEnrollmentUpdates,
   subscribeToOpportunityChanges,
@@ -32,23 +33,95 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // Get student and classes data from location state
+
   const initialStudent = location.state?.student || null;
-  const allClasses = location.state?.classes || [];
-  
-  // Use local state to track current student and selected class
+  const enrolledClassIds = location.state?.enrolledClassIds || [];
+
   const [student, setStudent] = useState<Student | null>(initialStudent);
-  const [classes, setClasses] = useState<ClassConfig[]>(allClasses);
-  const [currentClass, setCurrentClass] = useState<ClassConfig | null>(
-    allClasses.length > 0 ? allClasses[0] : null
-  );
+  const [classes, setClasses] = useState<ClassConfig[]>([]);
+  const [currentClass, setCurrentClass] = useState<ClassConfig | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  
-  // Add state for tracking real-time updates
+  const [isLoadingClasses, setIsLoadingClasses] = useState(true);
   const [isLoadingStatus, setIsLoadingStatus] = useState(false);
-  
-  // Subscribe to real-time updates for opportunities, class changes, and enrollment
+
+  useEffect(() => {
+    const loadClassesData = async () => {
+      if (!initialStudent || enrolledClassIds.length === 0) {
+        console.log('No student or enrolled classes found');
+        setIsLoadingClasses(false);
+        return;
+      }
+
+      try {
+        setIsLoadingClasses(true);
+        const allClasses = await fetchClasses();
+        const studentClasses = allClasses.filter(c => enrolledClassIds.includes(c.id));
+
+        if (studentClasses.length === 0) {
+          toast({
+            title: "No classes found",
+            description: "Your enrolled classes could not be loaded",
+            variant: "destructive"
+          });
+          setIsLoadingClasses(false);
+          return;
+        }
+
+        const enrichedClasses = studentClasses.map(classConfig => {
+          const enrollment = initialStudent.enrollments?.find(e => e.classId === classConfig.id);
+          const studentInClass = classConfig.students.find(s => s.id === initialStudent.id);
+
+          if (studentInClass && enrollment) {
+            const enrichedStudent: Student = {
+              ...studentInClass,
+              hasUsedToken: enrollment.tokensRemaining <= 0,
+              hasBid: enrollment.tokenStatus === 'used',
+              tokensRemaining: enrollment.tokensRemaining,
+              tokenStatus: enrollment.tokenStatus,
+              biddingResult: enrollment.biddingResult
+            };
+
+            return {
+              ...classConfig,
+              students: classConfig.students.map(s =>
+                s.id === initialStudent.id ? enrichedStudent : s
+              )
+            };
+          }
+
+          return classConfig;
+        });
+
+        setClasses(enrichedClasses);
+        setCurrentClass(enrichedClasses[0]);
+
+        const firstEnrollment = initialStudent.enrollments?.[0];
+        if (firstEnrollment) {
+          setStudent({
+            ...initialStudent,
+            hasUsedToken: firstEnrollment.tokensRemaining <= 0,
+            hasBid: firstEnrollment.tokenStatus === 'used',
+            tokensRemaining: firstEnrollment.tokensRemaining,
+            tokenStatus: firstEnrollment.tokenStatus,
+            biddingResult: firstEnrollment.biddingResult
+          });
+        }
+
+      } catch (error) {
+        console.error('Error loading classes:', error);
+        toast({
+          title: "Error loading data",
+          description: "Failed to load class information",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoadingClasses(false);
+      }
+    };
+
+    loadClassesData();
+  }, [initialStudent, enrolledClassIds, toast]);
+
   useEffect(() => {
     if (!student?.id || !currentClass?.id) {
       console.log('Skipping real-time subscription setup: student or currentClass not ready.');
@@ -403,7 +476,19 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
       setCurrentClass(selectedClass);
     }
   };
-  
+
+  if (isLoadingClasses) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-academy-blue" />
+          <h2 className="text-xl font-heading font-semibold mb-2">Loading your classes...</h2>
+          <p className="text-muted-foreground">Please wait while we fetch your data</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!student || classes.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
