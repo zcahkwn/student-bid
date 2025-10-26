@@ -236,7 +236,7 @@ const RealtimeStudentManager = ({ currentClass, onStudentUpdate }: RealtimeStude
           <CardContent>
             <div className="text-2xl font-bold text-red-600">{tokenStats.used}</div>
             <p className="text-xs text-muted-foreground">
-              Bids submitted
+              Tokens in use
             </p>
           </CardContent>
         </Card>
