@@ -240,19 +240,6 @@ const RealtimeStudentManager = ({ currentClass, onStudentUpdate }: RealtimeStude
             </p>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tokens Refunded</CardTitle>
-            <History className="h-4 w-4 text-orange-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{tokenStats.refunded}</div>
-            <p className="text-xs text-muted-foreground">
-              Total refund events
-            </p>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Real-time Activity Alert */}
