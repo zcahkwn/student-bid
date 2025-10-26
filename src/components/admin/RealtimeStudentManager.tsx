@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Activity, RefreshCw, Coins, Users } from "lucide-react";
+import { Loader2, Activity, RefreshCw, Coins, Users, Plus } from "lucide-react";
 import { ClassConfig, Student } from "@/types";
 import { supabase } from "@/lib/supabase";
 import { getClassStudents } from "@/lib/userService";
 import { useToast } from "@/hooks/use-toast";
+import AddStudentDialog from "./AddStudentDialog";
 
 interface RealtimeStudentManagerProps {
   currentClass: ClassConfig;
@@ -21,12 +22,13 @@ const RealtimeStudentManager = ({ currentClass, onStudentUpdate }: RealtimeStude
   const [students, setStudents] = useState<Student[]>(currentClass.students);
   const [searchQuery, setSearchQuery] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [tokenStats, setTokenStats] = useState({
     total: 0,
     available: 0,
     used: 0
   });
-  
+
   const { toast } = useToast();
 
   // Update students when currentClass changes
@@ -139,10 +141,14 @@ const RealtimeStudentManager = ({ currentClass, onStudentUpdate }: RealtimeStude
   };
 
   // Filter students based on search query
-  const filteredStudents = students.filter(student => 
+  const filteredStudents = students.filter(student =>
     student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     student.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleStudentAdded = async () => {
+    await refreshStudentData();
+  };
 
   return (
     <div className="space-y-6">
@@ -225,16 +231,26 @@ const RealtimeStudentManager = ({ currentClass, onStudentUpdate }: RealtimeStude
         </CardHeader>
         
         <CardContent>
-          <div className="mb-4">
-            <Label htmlFor="search" className="sr-only">Search</Label>
-            <Input
-              id="search"
-              placeholder="Search by name or email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          <div className="mb-4 flex gap-2">
+            <div className="flex-1">
+              <Label htmlFor="search" className="sr-only">Search</Label>
+              <Input
+                id="search"
+                placeholder="Search by name or email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <Button
+              onClick={() => setIsAddDialogOpen(true)}
+              disabled={currentClass.isArchived}
+              className="whitespace-nowrap"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Student
+            </Button>
           </div>
-          
+
           {filteredStudents.length === 0 ? (
             <p className="text-center text-muted-foreground py-4">
               {students.length === 0 
@@ -292,6 +308,13 @@ const RealtimeStudentManager = ({ currentClass, onStudentUpdate }: RealtimeStude
           )}
         </CardContent>
       </Card>
+
+      <AddStudentDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        classId={currentClass.id}
+        onStudentAdded={handleStudentAdded}
+      />
     </div>
   );
 };
