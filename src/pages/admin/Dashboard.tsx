@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatDate, getBidOpportunityStatus } from "@/utils/dates";
 import EditBidOpportunityDialog from "@/components/admin/EditBidOpportunityDialog";
 import { useRealtimeBidTracking } from "@/hooks/useRealtimeBidTracking";
-import { Trash2, Users, Coins, Plus, Edit, Eye, EyeOff, Loader2, RefreshCw, Archive } from "lucide-react";
+import { Trash2, Users, Coins, Plus, Edit, Eye, EyeOff, Loader2, RefreshCw, Archive, History } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -436,7 +436,7 @@ const Dashboard = ({
       </div>
 
       {/* Real-time Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Students</CardTitle>
@@ -469,15 +469,30 @@ const Dashboard = ({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Bidders</CardTitle>
-            <Users className="h-4 w-4 text-blue-500" />
+            <CardTitle className="text-sm font-medium">Tokens Used</CardTitle>
+            <Coins className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {statsLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : statistics?.studentsWhoBid || 0}
+            <div className="text-2xl font-bold text-red-600">
+              {statsLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : (statistics ? statistics.totalStudents - statistics.studentsWithTokens : 0)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Have placed bids
+              Tokens in use
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Tokens Refunded</CardTitle>
+            <History className="h-4 w-4 text-orange-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">
+              {statsLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : statistics?.tokensRefunded || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Total refund events
             </p>
           </CardContent>
         </Card>

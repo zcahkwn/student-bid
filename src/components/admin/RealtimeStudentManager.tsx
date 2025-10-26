@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Activity, RefreshCw, Coins, Users, Plus, Trash2 } from "lucide-react";
+import { Loader2, Activity, RefreshCw, Coins, Users, Plus, Trash2, History } from "lucide-react";
 import { ClassConfig, Student } from "@/types";
 import { supabase } from "@/lib/supabase";
 import { getClassStudents } from "@/lib/userService";
@@ -29,7 +29,8 @@ const RealtimeStudentManager = ({ currentClass, onStudentUpdate }: RealtimeStude
   const [tokenStats, setTokenStats] = useState({
     total: 0,
     available: 0,
-    used: 0
+    used: 0,
+    refunded: 0
   });
 
   const { toast } = useToast();
@@ -109,14 +110,49 @@ const RealtimeStudentManager = ({ currentClass, onStudentUpdate }: RealtimeStude
     await refreshStudentData();
   };
 
-  // Calculate token statistics
+  // Calculate token statistics and fetch refunded count
   useEffect(() => {
-    const total = students.length;
-    const used = students.filter(s => s.hasUsedToken === true).length;
-    const available = total - used;
-    
-    setTokenStats({ total, available, used });
-  }, [students]);
+    const fetchRefundedCount = async () => {
+      try {
+        const { data: opportunities } = await supabase
+          .from('opportunities')
+          .select('id')
+          .eq('class_id', currentClass.id);
+
+        if (opportunities && opportunities.length > 0) {
+          const opportunityIds = opportunities.map(o => o.id);
+
+          const { data: refundedBids } = await supabase
+            .from('bids')
+            .select('id')
+            .in('opportunity_id', opportunityIds)
+            .eq('bid_status', 'auto_selected');
+
+          const total = students.length;
+          const used = students.filter(s => s.hasUsedToken === true).length;
+          const available = total - used;
+          const refunded = refundedBids?.length || 0;
+
+          setTokenStats({ total, available, used, refunded });
+        } else {
+          const total = students.length;
+          const used = students.filter(s => s.hasUsedToken === true).length;
+          const available = total - used;
+
+          setTokenStats({ total, available, used, refunded: 0 });
+        }
+      } catch (error) {
+        console.error('Error fetching refunded count:', error);
+        const total = students.length;
+        const used = students.filter(s => s.hasUsedToken === true).length;
+        const available = total - used;
+
+        setTokenStats({ total, available, used, refunded: 0 });
+      }
+    };
+
+    fetchRefundedCount();
+  }, [students, currentClass.id]);
 
   // Refresh student data from database
   const refreshStudentData = async () => {
@@ -165,7 +201,7 @@ const RealtimeStudentManager = ({ currentClass, onStudentUpdate }: RealtimeStude
   return (
     <div className="space-y-6">
       {/* Token Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Students</CardTitle>
@@ -201,6 +237,19 @@ const RealtimeStudentManager = ({ currentClass, onStudentUpdate }: RealtimeStude
             <div className="text-2xl font-bold text-red-600">{tokenStats.used}</div>
             <p className="text-xs text-muted-foreground">
               Bids submitted
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Tokens Refunded</CardTitle>
+            <History className="h-4 w-4 text-orange-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">{tokenStats.refunded}</div>
+            <p className="text-xs text-muted-foreground">
+              Total refund events
             </p>
           </CardContent>
         </Card>

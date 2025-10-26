@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase'
 export interface ClassBidStatistics {
   totalStudents: number
   studentsWithTokens: number
-  studentsWhoBid: number
+  tokensRefunded: number
   totalBids: number
   opportunities: Array<{
     opportunityId: string
@@ -36,7 +36,7 @@ export async function getClassBidStatistics(classId: string): Promise<ClassBidSt
 
     const opportunityIds = opportunities?.map(o => o.id) || []
     let totalBids = 0
-    let studentsWhoBid = 0
+    let tokensRefunded = 0
     const opportunityStats: Array<{
       opportunityId: string
       description: string
@@ -54,8 +54,7 @@ export async function getClassBidStatistics(classId: string): Promise<ClassBidSt
       if (bidsError) throw bidsError
 
       totalBids = bids?.length || 0
-      const uniqueStudentIds = new Set(bids?.map(b => b.user_id) || [])
-      studentsWhoBid = uniqueStudentIds.size
+      tokensRefunded = bids?.filter(b => b.bid_status === 'auto_selected').length || 0
 
       const bidCountsByOpportunity: Record<string, number> = {}
       bids?.forEach(bid => {
@@ -86,7 +85,7 @@ export async function getClassBidStatistics(classId: string): Promise<ClassBidSt
     return {
       totalStudents,
       studentsWithTokens,
-      studentsWhoBid,
+      tokensRefunded,
       totalBids,
       opportunities: opportunityStats
     }
@@ -95,7 +94,7 @@ export async function getClassBidStatistics(classId: string): Promise<ClassBidSt
     return {
       totalStudents: 0,
       studentsWithTokens: 0,
-      studentsWhoBid: 0,
+      tokensRefunded: 0,
       totalBids: 0,
       opportunities: []
     }
