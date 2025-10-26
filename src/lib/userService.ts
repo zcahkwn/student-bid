@@ -189,6 +189,50 @@ export const getClassStudents = async (classId: string): Promise<Student[]> => {
   }
 }
 
+// Remove student from class
+export interface RemoveStudentResult {
+  success: boolean
+  hasBids: boolean
+  userDeleted: boolean
+  enrollmentDeleted: boolean
+  studentName?: string
+  error?: string
+}
+
+export const removeStudentFromClass = async (
+  userId: string,
+  classId: string
+): Promise<RemoveStudentResult> => {
+  try {
+    const { data: result, error } = await supabase.rpc('remove_student_from_class', {
+      p_user_id: userId,
+      p_class_id: classId
+    })
+
+    if (error) {
+      throw new Error(`Failed to remove student: ${error.message}`)
+    }
+
+    return {
+      success: result.success,
+      hasBids: result.has_bids,
+      userDeleted: result.user_deleted,
+      enrollmentDeleted: result.enrollment_deleted,
+      studentName: result.student_name,
+      error: result.error
+    }
+  } catch (error) {
+    console.error('Error removing student from class:', error)
+    return {
+      success: false,
+      hasBids: false,
+      userDeleted: false,
+      enrollmentDeleted: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    }
+  }
+}
+
 // Clean up orphaned users who are no longer enrolled in any classes
 export const cleanupOrphanedUsers = async (): Promise<{
   success: boolean

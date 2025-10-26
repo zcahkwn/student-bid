@@ -6,12 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Activity, RefreshCw, Coins, Users, Plus } from "lucide-react";
+import { Loader2, Activity, RefreshCw, Coins, Users, Plus, Trash2 } from "lucide-react";
 import { ClassConfig, Student } from "@/types";
 import { supabase } from "@/lib/supabase";
 import { getClassStudents } from "@/lib/userService";
 import { useToast } from "@/hooks/use-toast";
 import AddStudentDialog from "./AddStudentDialog";
+import RemoveStudentDialog from "./RemoveStudentDialog";
 
 interface RealtimeStudentManagerProps {
   currentClass: ClassConfig;
@@ -23,6 +24,8 @@ const RealtimeStudentManager = ({ currentClass, onStudentUpdate }: RealtimeStude
   const [searchQuery, setSearchQuery] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false);
+  const [studentToRemove, setStudentToRemove] = useState<Student | null>(null);
   const [tokenStats, setTokenStats] = useState({
     total: 0,
     available: 0,
@@ -150,6 +153,15 @@ const RealtimeStudentManager = ({ currentClass, onStudentUpdate }: RealtimeStude
     await refreshStudentData();
   };
 
+  const handleRemoveClick = (student: Student) => {
+    setStudentToRemove(student);
+    setIsRemoveDialogOpen(true);
+  };
+
+  const handleStudentRemoved = async () => {
+    await refreshStudentData();
+  };
+
   return (
     <div className="space-y-6">
       {/* Token Statistics Cards */}
@@ -267,6 +279,7 @@ const RealtimeStudentManager = ({ currentClass, onStudentUpdate }: RealtimeStude
                   <TableHead>Token Status</TableHead>
                   <TableHead>Bid Status</TableHead>
                   <TableHead>Tokens Remaining</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -301,6 +314,17 @@ const RealtimeStudentManager = ({ currentClass, onStudentUpdate }: RealtimeStude
                         {student.tokensRemaining ?? (student.hasUsedToken === true ? 0 : 1)}
                       </Badge>
                     </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveClick(student)}
+                        disabled={currentClass.isArchived}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -314,6 +338,14 @@ const RealtimeStudentManager = ({ currentClass, onStudentUpdate }: RealtimeStude
         onOpenChange={setIsAddDialogOpen}
         classId={currentClass.id}
         onStudentAdded={handleStudentAdded}
+      />
+
+      <RemoveStudentDialog
+        open={isRemoveDialogOpen}
+        onOpenChange={setIsRemoveDialogOpen}
+        student={studentToRemove}
+        classId={currentClass.id}
+        onStudentRemoved={handleStudentRemoved}
       />
     </div>
   );
