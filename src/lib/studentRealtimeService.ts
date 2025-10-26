@@ -304,6 +304,35 @@ export function subscribeToBidActivity(
   }
 }
 
+export function subscribeToEnrollmentDeletion(
+  userId: string,
+  classId: string,
+  onEnrollmentDeleted: () => void
+): () => void {
+  const channel = supabase
+    .channel(`enrollment-deletion-${userId}-${classId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'student_enrollments',
+        filter: `user_id=eq.${userId}`
+      },
+      (payload) => {
+        if (payload.old.class_id === classId) {
+          console.log('=== ENROLLMENT DELETED ===', payload)
+          onEnrollmentDeleted()
+        }
+      }
+    )
+    .subscribe()
+
+  return () => {
+    supabase.removeChannel(channel)
+  }
+}
+
 export function subscribeToUserEnrollmentUpdates(
   userId: string,
   classId: string,

@@ -19,6 +19,7 @@ import {
   subscribeToOpportunityChanges,
   subscribeToClassChanges,
   subscribeToBidActivity,
+  subscribeToEnrollmentDeletion,
   OpportunityUpdatePayload,
   ClassUpdatePayload,
   BidActivityPayload
@@ -130,6 +131,8 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
 
     console.log('=== SETTING UP REAL-TIME SUBSCRIPTIONS ===');
     console.log('Student ID:', student.id, 'Class ID:', currentClass.id);
+
+    let verificationInterval: NodeJS.Timeout | null = null;
 
     // Enhanced initial fetch of current status from database
     const fetchCurrentStatus = async () => {
@@ -309,6 +312,55 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
       }
     );
 
+    // Subscribe to enrollment deletion (when student is removed from class)
+    const unsubscribeEnrollmentDeletion = subscribeToEnrollmentDeletion(
+      student.id,
+      currentClass.id,
+      () => {
+        console.log('=== STUDENT REMOVED FROM CLASS ===');
+        toast({
+          title: "Access Revoked",
+          description: "You have been removed from this class. Redirecting to login...",
+          variant: "destructive",
+          duration: 5000,
+        });
+
+        setTimeout(() => {
+          navigate("/", { replace: true });
+        }, 3000);
+      }
+    );
+
+    // Periodic enrollment verification (backup mechanism)
+    const verifyEnrollment = async () => {
+      try {
+        const { data: enrollment, error } = await supabase
+          .from('student_enrollments')
+          .select('*')
+          .eq('user_id', student.id)
+          .eq('class_id', currentClass.id)
+          .maybeSingle();
+
+        if (error || !enrollment) {
+          console.log('=== ENROLLMENT NO LONGER EXISTS ===');
+          toast({
+            title: "Access Revoked",
+            description: "You are no longer enrolled in this class. Redirecting to login...",
+            variant: "destructive",
+            duration: 5000,
+          });
+
+          setTimeout(() => {
+            navigate("/", { replace: true });
+          }, 3000);
+        }
+      } catch (error) {
+        console.error('Error verifying enrollment:', error);
+      }
+    };
+
+    verificationInterval = setInterval(verifyEnrollment, 30000);
+
     // Subscribe to user enrollment updates
     const unsubscribeEnrollment = subscribeToUserEnrollmentUpdates(
       student.id,
@@ -467,8 +519,12 @@ const StudentDashboard = ({ onBidSubmitted, onBidWithdrawal }: StudentDashboardP
       unsubscribeClass();
       unsubscribeBidActivity();
       unsubscribeEnrollment();
+      unsubscribeEnrollmentDeletion();
+      if (verificationInterval) {
+        clearInterval(verificationInterval);
+      }
     };
-  }, [student?.id, currentClass?.id, toast]);
+  }, [student?.id, currentClass?.id, toast, navigate]);
   
   const handleSelectClass = (classId: string) => {
     const selectedClass = classes.find(c => c.id === classId);
