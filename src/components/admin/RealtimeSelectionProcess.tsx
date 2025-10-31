@@ -310,7 +310,7 @@ const RealtimeSelectionProcess = ({
     }
 
     const currentBidCount = bidCounts[selectedOpportunityId]?.bidCount || 0;
-    
+
     if (currentBidCount === 0) {
       toast({
         title: "No Bids Available",
@@ -339,27 +339,27 @@ const RealtimeSelectionProcess = ({
 
       const selectedOpportunity = bidOpportunities.find(opp => opp.id === selectedOpportunityId);
       const capacity = selectedOpportunity?.capacity || currentClass.capacity;
-      
+
       // Check if bidding has closed and if we should auto-select all bidders
       const now = new Date();
       const biddingCloseDate = selectedOpportunity?.bidCloseDate ? new Date(selectedOpportunity.bidCloseDate) : null;
       const biddingHasClosed = biddingCloseDate ? now >= biddingCloseDate : false;
-      
+
       let selected: Student[];
-      
+
       if (biddingHasClosed && currentBidCount <= capacity) {
         // Auto-select all bidders and refund their tokens
         console.log('=== AUTOMATIC SELECTION TRIGGERED ===');
         console.log('Bid count:', currentBidCount, 'Capacity:', capacity);
-        
+
         await autoSelectAndRefundBids(selectedOpportunityId);
-        
+
         // All bidders are selected in automatic selection
         selected = biddersAsStudents.map(student => ({
           ...student,
           bidStatus: 'auto_selected'
         }));
-        
+
         toast({
           title: "Automatic Selection Complete",
           description: `All ${selected.length} bidders have been automatically selected and their tokens have been refunded.`,
@@ -368,52 +368,93 @@ const RealtimeSelectionProcess = ({
         // Regular random selection process
         console.log('=== RANDOM SELECTION TRIGGERED ===');
         console.log('Bid count:', currentBidCount, 'Capacity:', capacity);
-        
+
         const selectedCount = Math.min(capacity, biddersAsStudents.length);
         const shuffled = [...biddersAsStudents].sort(() => Math.random() - 0.5);
         selected = shuffled.slice(0, selectedCount);
-        
+
         // Update selection results in the database for random selection
         try {
           const selectedStudentIds = selected.map(s => s.id);
           const allBidderIds = biddersAsStudents.map(s => s.id);
-          
+
+          console.log('=== CALLING updateSelectionResults ===');
+          console.log('Opportunity ID:', selectedOpportunityId);
+          console.log('Selected IDs:', selectedStudentIds);
+          console.log('All Bidder IDs:', allBidderIds);
+
           await updateSelectionResults(
             selectedOpportunityId,
             currentClass.id,
             selectedStudentIds,
             allBidderIds
           );
-          
-          console.log('Selection results successfully updated in database');
+
+          console.log('✅ Selection results successfully updated in database');
         } catch (updateError) {
-          console.error('Error updating selection results in database:', updateError);
+          console.error('❌ Error updating selection results in database:', updateError);
           toast({
-            title: "Database Update Warning",
-            description: "Selection completed but failed to update database records. Please check the console for details.",
+            title: "Database Update Failed",
+            description: "Failed to save selection results to database. Please try again.",
             variant: "destructive",
           });
+          setIsSelecting(false);
+          return; // Don't continue if database update failed
         }
-        
+
         toast({
           title: "Random Selection Complete",
           description: `${selected.length} student${selected.length !== 1 ? 's' : ''} randomly selected.`,
         });
       }
 
-      setSelectedStudents(selected);
-      onSelectionComplete(selected, selectedOpportunityId);
-      
-      // Refresh bidder data to reflect updated status from database
-      console.log('=== REFRESHING BIDDER DATA AFTER SELECTION ===');
+      // CRITICAL: Fetch the updated data from database to verify the selection was saved
+      console.log('=== FETCHING UPDATED DATA FROM DATABASE ===');
+
+      // Query the database directly to get the selected students
+      const { data: updatedBids, error: bidsError } = await supabase
+        .from('bids')
+        .select(`
+          id,
+          user_id,
+          is_winner,
+          bid_status,
+          users!inner(id, name, email, student_number)
+        `)
+        .eq('opportunity_id', selectedOpportunityId)
+        .eq('is_winner', true);
+
+      if (bidsError) {
+        console.error('Error fetching updated bids:', bidsError);
+      } else {
+        console.log('✅ Database verification - Winners found:', updatedBids?.length || 0);
+
+        // Update selected students from database
+        const verifiedSelected: Student[] = (updatedBids || []).map(bid => ({
+          id: bid.users.id,
+          name: bid.users.name,
+          email: bid.users.email,
+          studentNumber: bid.users.student_number,
+          hasUsedToken: true,
+          hasBid: true,
+          isSelected: true,
+          bidStatus: bid.bid_status
+        }));
+
+        setSelectedStudents(verifiedSelected);
+        onSelectionComplete(verifiedSelected, selectedOpportunityId);
+      }
+
+      // Refresh all bidder data to reflect updated status from database
+      console.log('=== REFRESHING ALL BIDDER DATA ===');
       await fetchBidCounts();
-      console.log('Bidder data refreshed successfully');
+      console.log('✅ Bidder data refreshed successfully');
 
     } catch (error) {
       console.error('Selection error:', error);
       toast({
         title: "Selection Failed",
-        description: "An error occurred during the selection process",
+        description: error instanceof Error ? error.message : "An error occurred during the selection process",
         variant: "destructive",
       });
     } finally {

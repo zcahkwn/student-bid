@@ -15,45 +15,17 @@ const Selection = ({ currentClass, isViewingArchived = false, onSelectionComplet
   const { toast } = useToast();
 
   const handleSelectionComplete = (selectedStudents: Student[], opportunityId?: string) => {
-    // Store the selection results in localStorage
-    const storedClassesStr = localStorage.getItem("classData");
-    if (storedClassesStr) {
-      try {
-        const storedClasses = JSON.parse(storedClassesStr);
-        const updatedClasses = storedClasses.map((c: ClassConfig) => {
-          if (c.id === currentClass?.id) {
-            // First update the class-level selectedStudents for backward compatibility
-            const updatedClass = { ...c, selectedStudents };
-            
-            // If an opportunity ID is provided, update that specific opportunity
-            if (opportunityId && c.bidOpportunities) {
-              updatedClass.bidOpportunities = c.bidOpportunities.map(opp => {
-                if (opp.id === opportunityId) {
-                  return { ...opp, selectedStudents };
-                }
-                return opp;
-              });
-            }
-            return updatedClass;
-          }
-          return c;
-        });
-        
-        // Save updated classes back to localStorage
-        localStorage.setItem("classData", JSON.stringify(updatedClasses));
-        
-        console.log("Selection results saved to localStorage:", { selectedStudents, opportunityId });
-      } catch (error) {
-        console.error("Error updating class data:", error);
-      }
-    }
-    
+    console.log('=== SELECTION COMPLETE HANDLER ===');
+    console.log('Selected students:', selectedStudents.length);
+    console.log('Opportunity ID:', opportunityId);
+
     // Call the parent handler to update global state
+    // The parent should refresh data from the database, not use localStorage
     onSelectionComplete(selectedStudents, opportunityId);
-    
+
     toast({
-      title: "Selection saved",
-      description: `The selection results have been saved and are now visible to students.`,
+      title: "Selection Saved",
+      description: `${selectedStudents.length} student${selectedStudents.length !== 1 ? 's' : ''} selected. Results are now visible to students.`,
     });
   };
 
