@@ -114,16 +114,52 @@ export const updateSelectionResults = async (
   allBidderIds: string[]
 ): Promise<void> => {
   try {
-    
+    console.log('=== UPDATE SELECTION RESULTS - PARAMETERS ===');
+    console.log('Opportunity ID:', opportunityId);
+    console.log('Class ID:', classId);
+    console.log('Selected Student IDs:', selectedStudentIds);
+    console.log('All Bidder IDs:', allBidderIds);
+    console.log('Selected count:', selectedStudentIds.length);
+    console.log('Total bidders count:', allBidderIds.length);
+
     const { data: rpcResult, error: rpcError } = await supabase.rpc('update_selection_results_atomic', {
       p_opportunity_id: opportunityId,
       p_selected_user_ids: selectedStudentIds,
       p_all_bidder_ids: allBidderIds
     })
 
+    console.log('=== RPC RESULT ===');
+    console.log('Data:', rpcResult);
+    console.log('Error:', rpcError);
+
     if (rpcError) {
       throw new Error(`Failed to update selection results: ${rpcError.message}`)
     }
+
+    if (rpcResult && !rpcResult.success) {
+      throw new Error(rpcResult.error_message || 'Selection update failed')
+    }
+
+    // Verify the update by querying the bids table
+    console.log('=== VERIFYING UPDATE ===');
+    const { data: verifyBids, error: verifyError } = await supabase
+      .from('bids')
+      .select('id, user_id, is_winner, bid_status')
+      .eq('opportunity_id', opportunityId)
+
+    console.log('Verification - Bids after update:', verifyBids);
+    console.log('Verification error:', verifyError);
+
+    const winnersCount = verifyBids?.filter(b => b.is_winner === true).length || 0;
+    console.log(`Verification - Winners count: ${winnersCount} (expected: ${selectedStudentIds.length})`);
+
+    if (winnersCount !== selectedStudentIds.length) {
+      console.error('⚠️ MISMATCH: Database update verification failed!');
+      console.error(`Expected ${selectedStudentIds.length} winners but found ${winnersCount}`);
+    } else {
+      console.log('✅ Database update verification successful!');
+    }
+
   } catch (error) {
     console.error('Error updating selection results:', error)
     throw error
