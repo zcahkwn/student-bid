@@ -36,10 +36,24 @@ const EditBidOpportunityDialog = ({
   const [biddingOpenDate, setBiddingOpenDate] = useState<Date | undefined>(
     opportunity && opportunity.bidOpenDate ? new Date(opportunity.bidOpenDate) : undefined
   );
+  const [biddingOpenTime, setBiddingOpenTime] = useState<string>(() => {
+    if (opportunity && opportunity.bidOpenDate) {
+      const date = new Date(opportunity.bidOpenDate);
+      return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    }
+    return "00:00";
+  });
   const [biddingCloseDate, setBiddingCloseDate] = useState<Date | undefined>(
-    opportunity && opportunity.bidCloseDate ? new Date(opportunity.bidCloseDate) : 
+    opportunity && opportunity.bidCloseDate ? new Date(opportunity.bidCloseDate) :
     opportunity ? new Date(opportunity.date) : undefined
   );
+  const [biddingCloseTime, setBiddingCloseTime] = useState<string>(() => {
+    if (opportunity && opportunity.bidCloseDate) {
+      const date = new Date(opportunity.bidCloseDate);
+      return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    }
+    return "23:59";
+  });
   const [capacity, setCapacity] = useState(opportunity?.capacity || currentClass?.capacity);
   const [isSaving, setIsSaving] = useState(false);
   
@@ -117,13 +131,24 @@ const EditBidOpportunityDialog = ({
       });
       
       console.log('=== CALLING updateBidOpportunity FUNCTION ===');
+
+      // Combine date and time for opens_at
+      const [openHours, openMinutes] = biddingOpenTime.split(':').map(Number);
+      const opensAtDateTime = new Date(biddingOpenDate);
+      opensAtDateTime.setHours(openHours, openMinutes, 0, 0);
+
+      // Combine date and time for closes_at
+      const [closeHours, closeMinutes] = biddingCloseTime.split(':').map(Number);
+      const closesAtDateTime = new Date(biddingCloseDate);
+      closesAtDateTime.setHours(closeHours, closeMinutes, 59, 999);
+
       // Update the opportunity in the database
       const updateSuccess = await updateBidOpportunity(opportunity.id, {
         title,
         description,
         event_date: date.toISOString(),
-        opens_at: biddingOpenDate.toISOString(),
-        closes_at: biddingCloseDate.toISOString(),
+        opens_at: opensAtDateTime.toISOString(),
+        closes_at: closesAtDateTime.toISOString(),
         capacity
       });
 
@@ -144,8 +169,8 @@ const EditBidOpportunityDialog = ({
         title,
         description,
         date: date.toISOString(),
-        bidOpenDate: biddingOpenDate.toISOString(),
-        bidCloseDate: biddingCloseDate.toISOString(),
+        bidOpenDate: opensAtDateTime.toISOString(),
+        bidCloseDate: closesAtDateTime.toISOString(),
         capacity
       };
 
@@ -231,7 +256,7 @@ const EditBidOpportunityDialog = ({
             </div>
             
             <div className="space-y-2">
-              <Label>Bidding Opens Date</Label>
+              <Label>Bidding Opens Date & Time</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -251,13 +276,24 @@ const EditBidOpportunityDialog = ({
                   />
                 </PopoverContent>
               </Popover>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="biddingOpenTime" className="text-sm">Time:</Label>
+                <Input
+                  id="biddingOpenTime"
+                  type="time"
+                  value={biddingOpenTime}
+                  onChange={(e) => setBiddingOpenTime(e.target.value)}
+                  disabled={isSaving}
+                  className="w-32"
+                />
+              </div>
               <p className="text-xs text-muted-foreground">
-                This is the date when students can start bidding for this opportunity
+                Students can start bidding from this date and time
               </p>
             </div>
 
            <div className="space-y-2">
-             <Label>Bidding Closes Date</Label>
+             <Label>Bidding Closes Date & Time</Label>
              <Popover>
                <PopoverTrigger asChild>
                  <Button
@@ -277,8 +313,19 @@ const EditBidOpportunityDialog = ({
                  />
                </PopoverContent>
              </Popover>
+             <div className="flex items-center gap-2">
+               <Label htmlFor="biddingCloseTime" className="text-sm">Time:</Label>
+               <Input
+                 id="biddingCloseTime"
+                 type="time"
+                 value={biddingCloseTime}
+                 onChange={(e) => setBiddingCloseTime(e.target.value)}
+                 disabled={isSaving}
+                 className="w-32"
+               />
+             </div>
              <p className="text-xs text-muted-foreground">
-               Students cannot bid after this date and time
+               Bidding closes at this date and time - students cannot bid after
              </p>
            </div>
 

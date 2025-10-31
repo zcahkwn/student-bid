@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ClassConfig, BidOpportunity } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { formatDate, getBidOpportunityStatus } from "@/utils/dates";
+import { formatDate, formatDateTime, getBidOpportunityStatus } from "@/utils/dates";
 import EditBidOpportunityDialog from "@/components/admin/EditBidOpportunityDialog";
 import { useRealtimeBidTracking } from "@/hooks/useRealtimeBidTracking";
 import { Trash2, Users, Coins, Plus, Edit, Eye, EyeOff, Loader2, RefreshCw, Archive, History } from "lucide-react";
@@ -68,7 +68,9 @@ const Dashboard = ({
   const [description, setDescription] = useState("");
   const [eventDate, setEventDate] = useState<Date | undefined>(undefined);
   const [bidOpenDate, setBidOpenDate] = useState<Date | undefined>(undefined);
+  const [bidOpenTime, setBidOpenTime] = useState<string>("00:00");
   const [bidCloseDate, setBidCloseDate] = useState<Date | undefined>(undefined);
+  const [bidCloseTime, setBidCloseTime] = useState<string>("23:59");
   const [capacity, setCapacity] = useState<string>("");
 
   // Use real-time bid tracking
@@ -183,7 +185,9 @@ const Dashboard = ({
     setDescription("");
     setEventDate(undefined);
     setBidOpenDate(undefined);
+    setBidOpenTime("00:00");
     setBidCloseDate(undefined);
+    setBidCloseTime("23:59");
     setCapacity("");
   };
 
@@ -235,12 +239,22 @@ const Dashboard = ({
     setIsCreating(true);
     
     try {
+      // Combine date and time for opens_at
+      const [openHours, openMinutes] = bidOpenTime.split(':').map(Number);
+      const opensAtDateTime = new Date(bidOpenDate);
+      opensAtDateTime.setHours(openHours, openMinutes, 0, 0);
+
+      // Combine date and time for closes_at
+      const [closeHours, closeMinutes] = bidCloseTime.split(':').map(Number);
+      const closesAtDateTime = new Date(bidCloseDate);
+      closesAtDateTime.setHours(closeHours, closeMinutes, 59, 999);
+
       const newOpportunity = await createBidOpportunity(currentClass.id, {
         title,
         description,
         event_date: eventDate.toISOString(),
-        opens_at: bidOpenDate.toISOString(),
-        closes_at: bidCloseDate.toISOString(),
+        opens_at: opensAtDateTime.toISOString(),
+        closes_at: closesAtDateTime.toISOString(),
         capacity: capacityValue
       });
       
@@ -649,7 +663,7 @@ const Dashboard = ({
                                        <Label className="text-sm font-medium text-gray-600">Bidding Opens</Label>
                                        <div className="mt-2 p-3 bg-white rounded-md border">
                                          <p className="text-gray-800">
-                                           {opportunity.bidOpenDate ? formatDate(opportunity.bidOpenDate) : "1 week before event"}
+                                           {opportunity.bidOpenDate ? formatDateTime(opportunity.bidOpenDate) : "1 week before event"}
                                          </p>
                                        </div>
                                      </div>
@@ -658,7 +672,7 @@ const Dashboard = ({
                                        <Label className="text-sm font-medium text-gray-600">Bidding Closes</Label>
                                        <div className="mt-2 p-3 bg-white rounded-md border">
                                          <p className="text-gray-800">
-                                           {opportunity.bidCloseDate ? formatDate(opportunity.bidCloseDate) : formatDate(opportunity.date)}
+                                           {opportunity.bidCloseDate ? formatDateTime(opportunity.bidCloseDate) : formatDate(opportunity.date)}
                                          </p>
                                        </div>
                                      </div>
@@ -850,7 +864,7 @@ const Dashboard = ({
             </div>
             
             <div className="space-y-2">
-              <Label>Bidding Opens Date</Label>
+              <Label>Bidding Opens Date & Time</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -870,13 +884,24 @@ const Dashboard = ({
                   />
                 </PopoverContent>
               </Popover>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="bidOpenTime" className="text-sm">Time:</Label>
+                <Input
+                  id="bidOpenTime"
+                  type="time"
+                  value={bidOpenTime}
+                  onChange={(e) => setBidOpenTime(e.target.value)}
+                  disabled={isCreating}
+                  className="w-32"
+                />
+              </div>
               <p className="text-xs text-muted-foreground">
-                This is when students can start bidding for this opportunity
+                Students can start bidding from this date and time
               </p>
             </div>
             
             <div className="space-y-2">
-              <Label>Bidding Closes Date</Label>
+              <Label>Bidding Closes Date & Time</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -896,8 +921,19 @@ const Dashboard = ({
                   />
                 </PopoverContent>
               </Popover>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="bidCloseTime" className="text-sm">Time:</Label>
+                <Input
+                  id="bidCloseTime"
+                  type="time"
+                  value={bidCloseTime}
+                  onChange={(e) => setBidCloseTime(e.target.value)}
+                  disabled={isCreating}
+                  className="w-32"
+                />
+              </div>
               <p className="text-xs text-muted-foreground">
-                This is when bidding closes for this opportunity
+                Bidding closes at this date and time - students cannot bid after
               </p>
             </div>
             

@@ -24,11 +24,25 @@ export const isBidOpportunityOpen = (opportunity: BidOpportunity): boolean => {
 // Format a date for display
 export const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'short', 
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
     day: 'numeric',
     weekday: 'short'
+  });
+};
+
+// Format a date and time for display
+export const formatDateTime = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
   });
 };
 

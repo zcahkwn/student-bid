@@ -9,7 +9,7 @@ import { Loader2, Clock, CheckCircle, AlertTriangle, Coins, Undo2 } from "lucide
 import { toast } from "sonner";
 import { Student, ClassConfig, BidOpportunity } from "@/types";
 import { useStudentBidding } from "@/hooks/useStudentBidding";
-import { formatDate, getBidOpportunityStatus, isBidOpportunityOpen } from "@/utils/dates";
+import { formatDate, formatDateTime, getBidOpportunityStatus, isBidOpportunityOpen } from "@/utils/dates";
 import { supabase } from "@/lib/supabase";
 
 interface EnhancedBidCardProps {
@@ -356,14 +356,14 @@ const EnhancedBidCard = ({ student, classConfig, onBidSubmitted, onBidWithdrawal
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Bidding Opens:</span>
                     <span className="font-medium text-green-600">
-                      {opportunity.bidOpenDate ? formatDate(opportunity.bidOpenDate) : "Not specified"}
+                      {opportunity.bidOpenDate ? formatDateTime(opportunity.bidOpenDate) : "Not specified"}
                     </span>
                   </div>
                   
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Bidding Closes:</span>
                     <span className="font-medium text-red-600">
-                      {opportunity.bidCloseDate ? formatDate(opportunity.bidCloseDate) : "Not specified"}
+                      {opportunity.bidCloseDate ? formatDateTime(opportunity.bidCloseDate) : "Not specified"}
                     </span>
                   </div>
                   
